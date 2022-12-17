@@ -13,9 +13,9 @@ export TOPDIR	:=	$(CURDIR)
 NITRO_FILES	:=
 
 # These set the information text in the nds file
-GAME_TITLE     := XMXDS
-GAME_SUBTITLE1 := xm/mod player built with libxm7
-GAME_SUBTITLE2 := credits to: merumerutho, sverx
+#GAME_TITLE     := My Wonderful Homebrew
+#GAME_SUBTITLE1 := built with devkitARM
+#GAME_SUBTITLE2 := http://devitpro.org
 
 include $(DEVKITARM)/ds_rules
 
