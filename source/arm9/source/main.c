@@ -1,0 +1,6 @@
+#include <nds.h>
+
+int main()
+{
+	return 0;
+}
