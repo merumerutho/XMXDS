@@ -1,3 +1,5 @@
+#define LIBXM7_ALLOWED_MODULES                  1
+
 // Error defines:
 #define XM7_ERR_NOT_A_VALID_MODULE              0x01
 #define XM7_ERR_UNKNOWN_MODULE_VERSION          0x02
@@ -234,7 +236,7 @@ typedef struct {
     u8 Effect3xxMemory[16];      // the memory for the 3xx effect (and Mx)      [0x00..0xFF]
     u8 Effect4xxMemory[16];      // the memory for the 4xx effect (and Vx/Sx) [0x00..0xFF]
     u8 Effect7xxMemory[16];      // the memory for the 7xx effect                           [0x00..0xFF]
-        u8 Effect9xxMemory[16];      // the memory for the 9xx effect (YES! has memory!) [0x00..0xFF]
+    u8 Effect9xxMemory[16];      // the memory for the 9xx effect (YES! has memory!) [0x00..0xFF]
     u8 EffectAxyMemory[16];      // the memory for the Axy (and 5xx,6xx) effect [0x01..0xF0]
     u8 EffectE1xMemory[16];      // the memory for the E1x effect                        [1..0xF]
     u8 EffectE2xMemory[16];      // the memory for the E2x effect                        [1..0xF]
@@ -265,7 +267,7 @@ typedef struct {
     u16 SongLength;
     u16 RestartPosition;
     u16 NumberofChannels;    //  1..32, > 16 won't be accepted anyway (we've got 16 chn on the DS)
-        u16 NumberofPatterns;
+    u16 NumberofPatterns;
     u16 NumberofInstruments;
     u16 XMModuleFlags;
     u16 DefaultTempo;
@@ -378,6 +380,8 @@ typedef struct {
 
 // end of MOD section
 
+// There are currently two modules handled at a time
+extern XM7_ModuleManager_Type* XM7_Modules[LIBXM7_ALLOWED_MODULES];
 
 // ARM7 functions
 void XM7_Initialize              (void);

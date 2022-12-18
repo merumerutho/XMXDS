@@ -1,35 +1,9 @@
-/*---------------------------------------------------------------------------------
-
-	default ARM7 core
-
-		Copyright (C) 2005 - 2010
-		Michael Noland (joat)
-		Jason Rogers (dovoto)
-		Dave Murphy (WinterMute)
-
-	This software is provided 'as-is', without any express or implied
-	warranty.  In no event will the authors be held liable for any
-	damages arising from the use of this software.
-
-	Permission is granted to anyone to use this software for any
-	purpose, including commercial applications, and to alter it and
-	redistribute it freely, subject to the following restrictions:
-
-	1.	The origin of this software must not be misrepresented; you
-		must not claim that you wrote the original software. If you use
-		this software in a product, an acknowledgment in the product
-		documentation would be appreciated but is not required.
-
-	2.	Altered source versions must be plainly marked as such, and
-		must not be misrepresented as being the original software.
-
-	3.	This notice may not be removed or altered from any source
-		distribution.
-
----------------------------------------------------------------------------------*/
 #include <nds.h>
-#include <dswifi7.h>
-#include <maxmod7.h>
+
+#include "libxm7.h"
+
+// "reserve" FIFO Channel "FIFO_USER_07"
+#define FIFO_XM7    (FIFO_USER_07)
 
 //---------------------------------------------------------------------------------
 void VblankHandler(void) {
@@ -53,32 +27,46 @@ void powerButtonCB() {
 }
 
 //---------------------------------------------------------------------------------
+void XM7_arm7_Value32Handler (u32 command, void* userdata)
+{
+    if (command!=0)
+    {
+        // received a pointer to a module that should start now
+        XM7_Modules[0] = (XM7_ModuleManager_Type*) command;
+        XM7_PlayModule(XM7_Modules[0]);
+    }
+    else
+        // received a 0: stop the module
+        XM7_StopModule(XM7_Modules[0]);
+}
+
+//---------------------------------------------------------------------------------
 int main() {
 //---------------------------------------------------------------------------------
 	// clear sound registers
 	dmaFillWords(0, (void*)0x04000400, 0x100);
 
-	REG_SOUNDCNT |= SOUND_ENABLE;
-	writePowerManagement(PM_CONTROL_REG, ( readPowerManagement(PM_CONTROL_REG) & ~PM_SOUND_MUTE ) | PM_SOUND_AMP );
-	powerOn(POWER_SOUND);
+    irqInit();
+    fifoInit();
 
-	readUserSettings();
-	ledBlink(0);
+    // read User Settings from firmware
+    readUserSettings();
 
-	irqInit();
-	// Start the RTC tracking IRQ
-	initClockIRQ();
-	fifoInit();
-	touchInit();
+    // Start the RTC tracking IRQ
+    initClockIRQ();
 
-	//mmInstall(FIFO_MAXMOD);
+    SetYtrigger(80);
 
-	SetYtrigger(80);
+    //installWifiFIFO();
+    installSoundFIFO();
 
-	//installWifiFIFO();
-	installSoundFIFO();
+    // Initialize XM7
+    XM7_Initialize();
 
-	installSystemFIFO();
+    // Install the FIFO handler for libXM7 "fifo channel"
+    fifoSetValue32Handler(FIFO_XM7, XM7_arm7_Value32Handler, 0);
+
+    installSystemFIFO();
 
 	irqSet(IRQ_VCOUNT, VcountHandler);
 	irqSet(IRQ_VBLANK, VblankHandler);

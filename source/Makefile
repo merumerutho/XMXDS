@@ -5,17 +5,20 @@ ifeq ($(strip $(DEVKITARM)),)
 $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
 endif
 
-export TARGET	:=	$(shell basename $(CURDIR))
+
+# These set the information text in the nds file
+GAME_TITLE     := XMXDS
+GAME_SUBTITLE1 := xm / mod dj tool
+GAME_SUBTITLE2 := based on libxm7
+
+export TARGET	:=	$(shell basename $(GAME_TITLE))
 export TOPDIR	:=	$(CURDIR)
 
 # specify a directory which contains the nitro filesystem
 # this is relative to the Makefile
-NITRO_FILES	:=
+NITRO_FILES	:= data
 
-# These set the information text in the nds file
-#GAME_TITLE     := My Wonderful Homebrew
-#GAME_SUBTITLE1 := built with devkitARM
-#GAME_SUBTITLE2 := http://devitpro.org
+
 
 include $(DEVKITARM)/ds_rules
 

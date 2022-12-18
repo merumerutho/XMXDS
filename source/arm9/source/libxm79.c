@@ -3,6 +3,7 @@
 #include <string.h>  // for memcpy(), memcmp()
 #include <stddef.h>
 
+#include <stdio.h>
 
 #include "../../arm7/source/libxm7.h"
 

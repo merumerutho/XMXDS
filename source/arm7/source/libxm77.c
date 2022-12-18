@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include "libxm7.h"
 
-// There are currently two modules handled at a time
-XM7_ModuleManager_Type* XM7_Modules[2];
+// Modules handled by the library
+XM7_ModuleManager_Type* XM7_Modules[LIBXM7_ALLOWED_MODULES];
 
 // calculated as 
 // Period = 10*12*16*4 - Note*16*4 - FineTune/2;     (finetune = 0)
@@ -1882,6 +1882,8 @@ void ChangeSample (XM7_ModuleManager_Type* module, u8 chn)
 
 void Timer1Handler (void) 
 {
+
+
     // this gets called each time Timer1 'overflows'
     XM7_SingleNoteArray_Type* CurrNoteLine;
     XM7_SingleNote_Type* CurrNote = NULL;
@@ -1923,12 +1925,13 @@ void Timer1Handler (void)
     u8 CurrentLoopEffChannel = 0;
     
     // For every module...
-    for (mm=0;mm<2;mm++)
+    for (mm=0;mm<LIBXM7_ALLOWED_MODULES;mm++)
     {
+
         XM7_ModuleManager_Type* module = XM7_Modules[mm];
         
         // For every channel...
-        for (chn=0;chn<(module->NumberofChannels);chn++) 
+        for (chn=0;chn<(module->NumberofChannels);chn++)
         {
             ShouldTriggerNote = NO;
             ShouldChangeVolume = NO;
@@ -2503,13 +2506,13 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position) {
     // ... START
     
     // 1st: set up the IRQ handler for the timer1 and enable the IRQ.
-    irqSet(IRQ_TIMER1,Timer1Handler);
+    irqSet(IRQ_TIMER1, Timer1Handler);
     irqEnable(IRQ_TIMER1);
 
     // then set the timer and make it start!
     TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
     SetTimerSpeedBPM (module->DefaultBPM);
-    
+
     // set engine state
     module->State = XM7_STATE_PLAYING;
 }
