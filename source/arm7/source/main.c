@@ -34,7 +34,7 @@
 //---------------------------------------------------------------------------------
 void VblankHandler(void) {
 //---------------------------------------------------------------------------------
-	Wifi_Update();
+	//Wifi_Update();
 }
 
 
@@ -71,11 +71,11 @@ int main() {
 	fifoInit();
 	touchInit();
 
-	mmInstall(FIFO_MAXMOD);
+	//mmInstall(FIFO_MAXMOD);
 
 	SetYtrigger(80);
 
-	installWifiFIFO();
+	//installWifiFIFO();
 	installSoundFIFO();
 
 	installSystemFIFO();

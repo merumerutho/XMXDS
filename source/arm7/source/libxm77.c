@@ -1,5 +1,6 @@
 #include <nds.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include "libxm7.h"
 
 // There are currently two modules handled at a time
