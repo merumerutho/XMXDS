@@ -200,7 +200,6 @@ void XM7_lowlevel_startSoundwLoop (int sampleRate, const void* data, u32 looplen
 {
     // use channels starting from last!
     channel = 15 - channel;
-    fifoSendValue32(FIFO_USER_07, channel);
     
     SCHANNEL_CR(channel) = 0;
     offset = format?(offset*2):offset;

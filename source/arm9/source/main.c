@@ -34,6 +34,14 @@ int getFolderName(char* result, char* filepath)
     return(0);
 }
 
+void displayIntro()
+{
+    iprintf("     .oO:Oo. XMXDS .oO:Oo.\n\n");
+    iprintf(" 2-decks module player for NDS!\n");
+    iprintf(" credits: @merumerutho\n");
+    iprintf(" based on libxm7 (@sverx)\n\n");
+}
+
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
@@ -64,10 +72,8 @@ int main(int argc, char **argv)
         }
     }
 
-	iprintf("     .oO:Oo. XMXDS .oO:Oo.\n\n");
-    iprintf(" 2-decks module player for NDS!\n");
-    iprintf(" credits: @merumerutho\n");
-    iprintf(" based on libxm7 (@sverx)\n\n");
+	// :)
+	displayIntro();
 
     iprintf("\tLoading %s...\n", MOD_TO_PLAY);
     // File reading check
