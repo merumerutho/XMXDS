@@ -92,12 +92,12 @@ typedef struct {
 
 typedef struct {
 
-        XM7_Sample_Type* Sample[16];            // pointers to the samples
+    XM7_Sample_Type* Sample[16];            // pointers to the samples
         
     XM7_EnvelopePoints_Type VolumeEnvelopePoint[12];     //  -- Envelope points: x,y...x,y.... 
     XM7_EnvelopePoints_Type PanningEnvelopePoint[12];    //  -- in couples (2 words/point => a maximum of 12 points).
         
-        u32 VibratoSweep;                            //  0..0x10000
+    u32 VibratoSweep;                            //  0..0x10000
     
     u16 VolumeFadeout;
     
@@ -123,7 +123,7 @@ typedef struct {
     
     u8 VibratoType;                              //  0..3 (wave type)
     u8 VibratoDepth;                             //  0..0x0F
-        u8 VibratoRate;                              //  0..0xFF    ( 0..0x3F on FT2)
+    u8 VibratoRate;                              //  0..0xFF    ( 0..0x3F on FT2)
 
 } XM7_Instrument_Type;
 
@@ -320,7 +320,7 @@ typedef struct {
     u16 VolumeFadeOut;
     u16 Reserved[11];                               // no use
 
-        u8 NextDataPart[1];                      // I need this to build a pointer to this point
+    u8 NextDataPart[1];                      // I need this to build a pointer to this point
 }__attribute__ ((packed)) XM7_XMInstrument2ndHeader_Type;
 
 typedef struct {
@@ -390,6 +390,7 @@ void XM7_PlayModule              (XM7_ModuleManager_Type* module);
 void XM7_PlayModuleFromPos       (XM7_ModuleManager_Type* module, u8 position);
 void XM7_StopModule              (XM7_ModuleManager_Type* module);
 
+void SetTimerSpeedBPM (u8 BPM);
 
 // ARM9 functions (... well, you can use them even on ARM7 if you want...)
 u16  XM7_LoadXM      (XM7_ModuleManager_Type*, XM7_XMModuleHeader_Type*, u8 slot);

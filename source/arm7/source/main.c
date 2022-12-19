@@ -1,6 +1,7 @@
 #include <nds.h>
 
 #include "libxm7.h"
+#include "tempo.h"
 
 // "reserve" FIFO Channel "FIFO_USER_07"
 #define FIFO_XM7    (FIFO_USER_07)
@@ -67,6 +68,9 @@ int main() {
 
     // Install the FIFO handler for libXM7 "fifo channel"
     fifoSetValue32Handler(FIFO_XM7, XM7_arm7_Value32Handler, 0);
+
+    // Handler for BPM / Tempo
+    fifoSetValue32Handler(FIFO_TEMPO, arm7_TempoFIFOHandler, 0);
 
     installSystemFIFO();
 

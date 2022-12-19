@@ -931,7 +931,7 @@ u16 XM7_LoadMOD(XM7_ModuleManager_Type* Module, XM7_MODModuleHeader_Type* MODMod
     
     // set State
     Module->State = XM7_STATE_READY;
-    
+
     // end OK!
     return (0);
 }

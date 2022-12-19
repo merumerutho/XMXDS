@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include "libxm7.h"
 
+#include "tempo.h"
+
 // Modules handled by the library
 XM7_ModuleManager_Type* XM7_Modules[LIBXM7_ALLOWED_MODULES];
 
@@ -1916,8 +1918,6 @@ void ChangeSample (XM7_ModuleManager_Type* module, u8 chn)
 
 void Timer1Handler (void) 
 {
-
-
     // this gets called each time Timer1 'overflows'
     XM7_SingleNoteArray_Type* CurrNoteLine;
     XM7_SingleNote_Type* CurrNote = NULL;
@@ -2464,8 +2464,8 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position) {
     // Prepare for playback, set everything to default values ...
 
     // re-set the Module tempo & bpm & global volume
-    module->CurrentBPM = module->DefaultBPM;
-    module->CurrentTempo = module->DefaultTempo;
+    module->CurrentBPM = globalBpm;
+    module->CurrentTempo = globalTempo;
     module->CurrentGlobalVolume = 0x40;
 
     // re-set the Module position
@@ -2543,12 +2543,23 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position) {
     // ... START
     
     // 1st: set up the IRQ handler for the timer1 and enable the IRQ.
-    irqSet(IRQ_TIMER1, Timer1Handler);
-    irqEnable(IRQ_TIMER1);
+    // do it only if no module is already playing. In that case, start the IRQ
+    bool isStopped = TRUE;
+    for(u8 mm=0; mm < LIBXM7_ALLOWED_MODULES; mm++)
+    {
+        if (XM7_Modules[mm]->State == XM7_STATE_PLAYING)
+            isStopped = FALSE;
+    }
+    if (isStopped)
+    {
+        fifoSendValue32(FIFO_USER_07, (u32) 127);
+        irqSet(IRQ_TIMER1, Timer1Handler);
+        irqEnable(IRQ_TIMER1);
+    }
 
     // then set the timer and make it start!
     TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-    SetTimerSpeedBPM (module->DefaultBPM);
+    SetTimerSpeedBPM (globalBpm);
 
     // set engine state
     module->State = XM7_STATE_PLAYING;
@@ -2564,15 +2575,35 @@ void XM7_PlayModule (XM7_ModuleManager_Type* module)
 void XM7_StopModule(XM7_ModuleManager_Type* module) 
 {
     u8 i;
-    // will deactivate the timer IRQ (and stop the channels)
-    TIMER1_CR = 0;
-    irqDisable(IRQ_TIMER1);
 
     for (i=0;i<(module->NumberofChannels);i++)
-    XM7_lowlevel_stopSound (i);
-        
+    {
+        // Playback channel for low level playing must be selected based on the module slot
+        // since, when having multiple modules playing, there might be no direct correspondence
+        // between playback channel and the current module channel
+
+        // E.g. if there are 2 modules playing (SlotA, SlotB), then:
+        // First module has channels 0... 7 and should playback in channels 15 ... 8
+        // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
+        u8 pbChn = i + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
+        XM7_lowlevel_stopSound (pbChn);
+    }
     // change the state
     module->State = XM7_STATE_STOPPED;
+
+    // Now check if everything is stopped. In such case, disable the IRQ
+    bool isStopped = TRUE;
+    for(u8 mm=0; mm < LIBXM7_ALLOWED_MODULES; mm++)
+    {
+        if (XM7_Modules[mm]->State == XM7_STATE_PLAYING)
+            isStopped = FALSE;
+    }
+    if (isStopped)
+    {
+        fifoSendValue32(FIFO_USER_07, (u32) 63);
+        TIMER1_CR = 0;
+        irqDisable(IRQ_TIMER1);
+    }
 }
 /*
 void XM7_PauseModule() 
