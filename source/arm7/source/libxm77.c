@@ -1964,7 +1964,7 @@ void Timer1Handler (void)
 
         XM7_ModuleManager_Type* module = XM7_Modules[mm];
 
-        if (module == NULL)
+        if (module == NULL || module->State != XM7_STATE_PLAYING)
             continue;
 
         // For every channel...
