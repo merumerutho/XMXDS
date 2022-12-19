@@ -246,7 +246,7 @@ u16 XM7_LoadXM (XM7_ModuleManager_Type* Module, XM7_XMModuleHeader_Type* XMModul
     }   
 
     // check how may channels are in the module
-    if (XMModule->NumberofChannels>16)
+    if (XMModule->NumberofChannels>LIBXM7_MAX_CHANNELS_PER_MODULE)
     {
         Module->State = XM7_STATE_ERROR | XM7_ERR_UNSUPPORTED_NUMBER_OF_CHANNELS;
         return (XM7_ERR_UNSUPPORTED_NUMBER_OF_CHANNELS);
@@ -718,7 +718,7 @@ u16 XM7_LoadMOD(XM7_ModuleManager_Type* Module, XM7_MODModuleHeader_Type* MODMod
     }
     
     // if MOD has too many channels:
-    if (Module->NumberofChannels>16)
+    if (Module->NumberofChannels>LIBXM7_MAX_CHANNELS_PER_MODULE)
     {
         Module->NumberofInstruments = 0;
         Module->NumberofPatterns = 0;

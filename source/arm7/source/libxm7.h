@@ -1,4 +1,5 @@
 #define LIBXM7_ALLOWED_MODULES                  1
+#define LIBXM7_MAX_CHANNELS_PER_MODULE          (16 / LIBXM7_ALLOWED_MODULES)
 
 // Error defines:
 #define XM7_ERR_NOT_A_VALID_MODULE              0x01

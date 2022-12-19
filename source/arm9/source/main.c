@@ -8,7 +8,7 @@
 
 // FIFO 07 for libxm7
 #define FIFO_XM7    (FIFO_USER_07)
-#define MOD_TO_PLAY "mods/demo_C.xm"
+#define MOD_TO_PLAY "data/mods/demo_C.xm"
 
 //---------------------------------------------------------------------------------
 void XM7_arm9_Value32Handler (u32 command, void* userdata)
@@ -19,9 +19,26 @@ void XM7_arm9_Value32Handler (u32 command, void* userdata)
     return;
 }
 
-//---------------------------------------------------------------------------------
-int main(void)
+int getFolderName(char* result, char* filepath)
 {
+    char c = filepath[0];
+    u8 i, lastKnownSlashPosition = 0;
+    for(i=0 ; c!='\0' ; c=filepath[i++])
+    {
+        if (c == '/')
+            lastKnownSlashPosition = i;
+    }
+    memcpy(result, filepath, lastKnownSlashPosition+1);
+    result[i] = '\0';
+
+    return(0);
+}
+
+//---------------------------------------------------------------------------------
+int main(int argc, char **argv)
+{
+    // touchPosition touch;
+    consoleDemoInit();  // setup the sub screen for printing
 
     u16 playing = 0;
 
@@ -30,9 +47,10 @@ int main(void)
     FILE* modA_file;
 
     long fsz = 0;
+    char path[255];
+    getFolderName(path, argv[0]);
 
-	// touchPosition touch;
-	consoleDemoInit();  // setup the sub screen for printing
+    //iprintf("%s\n", path);
 
 	if(! nitroFSInit(NULL))  // load nitro FileSystem
     {

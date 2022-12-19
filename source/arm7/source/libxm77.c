@@ -2412,7 +2412,7 @@ void Timer1Handler (void)
                         module->CurrentPatternNumber = module->PatternOrder[module->CurrentSongPosition];
                         
                         // reset the loopbegin[], we are in a new pattern!
-                        for (chn=0;chn<16;chn++)
+                        for (chn=0;chn<LIBXM7_MAX_CHANNELS_PER_MODULE;chn++)
                             module->CurrentLoopBegin[chn]=0;
                     }
                 }
@@ -2443,7 +2443,7 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position) {
     module->CurrentAdditionalTick = 0;
 
     u8 i;
-    for (i=0;i<16;i++) 
+    for (i=0;i<LIBXM7_MAX_CHANNELS_PER_MODULE;i++)
     {
     
         // re-set the channels
@@ -2526,9 +2526,7 @@ void XM7_PlayModule (XM7_ModuleManager_Type* module)
 
 void XM7_StopModule(XM7_ModuleManager_Type* module) 
 {
-
     u8 i;
-
     // will deactivate the timer IRQ (and stop the channels)
     TIMER1_CR = 0;
     irqDisable(IRQ_TIMER1);
