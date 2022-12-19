@@ -111,25 +111,17 @@ int main(int argc, char **argv)
     {
         // read keys
         scanKeys();
-        if ((keysDown() & KEY_A) && (playing==0))
+        if (keysDown() & KEY_A)
         {
             // sending pointer to the libxm7 engine on ARM7
             if (!fifoSendValue32(FIFO_XM7, (u32)module_A))
                 iprintf("Could not send data correctly...\n");
 
-            iprintf(" Playing... ");
-            playing=1;
-
-        }
-
-        if ((keysDown() & KEY_B) && (playing!=0)) {
-
-            // sending a ZERO to the libxm7 engine on ARM7
-            if (!fifoSendValue32(FIFO_XM7, 0))
-                iprintf("Could not send data correctly...");
-
-            iprintf("Stop.\n");
-            playing=0;
+            playing= 1-playing;
+            if (playing)
+                iprintf(" Playing... ");
+            else
+                iprintf(" Stop.\n");
         }
 
         // Wait for VBlank

@@ -35,13 +35,11 @@ void XM7_arm7_Value32Handler (u32 command, void* userdata)
         XM7_ModuleManager_Type* module = (XM7_ModuleManager_Type*) command;
         XM7_Modules[module->moduleIndex] = module;
 
-        XM7_PlayModule(XM7_Modules[module->moduleIndex]);
+        if (module->State == XM7_STATE_PLAYING)
+            XM7_StopModule(XM7_Modules[module->moduleIndex]);
+        else
+            XM7_PlayModule(XM7_Modules[module->moduleIndex]);
     }
-    else
-        // received a 0: stop the modules
-        for (u8 i=0; i < LIBXM7_ALLOWED_MODULES; i++)
-            XM7_StopModule(XM7_Modules[i]);
-
 }
 
 //---------------------------------------------------------------------------------
