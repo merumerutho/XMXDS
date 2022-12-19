@@ -224,8 +224,11 @@ XM7_Sample_Type* PrepareNewSample (u32 len, u32 looplen, u8 flags)
     return (ptr);
 }
 
-u16 XM7_LoadXM (XM7_ModuleManager_Type* Module, XM7_XMModuleHeader_Type* XMModule)
+u16 XM7_LoadXM (XM7_ModuleManager_Type* Module, XM7_XMModuleHeader_Type* XMModule, u8 slot)
 {    // returns 0 if OK, an error otherwise
+
+    // Set module index
+    Module->moduleIndex = slot;
 
     // reset these values
     Module->NumberofPatterns = 0;
@@ -695,12 +698,15 @@ u16 XM7_LoadXM (XM7_ModuleManager_Type* Module, XM7_XMModuleHeader_Type* XMModul
 }
 
 
-u16 XM7_LoadMOD(XM7_ModuleManager_Type* Module, XM7_MODModuleHeader_Type* MODModule)
+u16 XM7_LoadMOD(XM7_ModuleManager_Type* Module, XM7_MODModuleHeader_Type* MODModule, u8 slot)
 {
     // returns 0 if OK, an error otherwise
     
+    // Set module index
+    Module->moduleIndex = slot;
+
     int FLT8Flag;
-    
+
     // file format ID check
     Module->NumberofChannels = IdentifyMOD (MODModule->FileFormat[0],MODModule->FileFormat[1],
                                             MODModule->FileFormat[2],MODModule->FileFormat[3]);

@@ -1,4 +1,4 @@
-#define LIBXM7_ALLOWED_MODULES                  1
+#define LIBXM7_ALLOWED_MODULES                  2
 #define LIBXM7_MAX_CHANNELS_PER_MODULE          (16 / LIBXM7_ALLOWED_MODULES)
 
 // Error defines:
@@ -129,22 +129,22 @@ typedef struct {
 
 typedef struct {
 
-        // status of the engine/module/playback
-    u16 State;                           // bit 15: error if set
-                                                         // bit 14: module loaded if set
-                                                         // bit 13: module playing if set
+    // status of the engine/module/playback
+    u16 State;                                              // bit 15: error if set
+                                                            // bit 14: module loaded if set
+                                                            // bit 13: module playing if set
     u16 ModuleLength;
     u16 RestartPoint;
-        u16 NumberofPatterns;           // ...up to 256
+    u16 NumberofPatterns;           // ...up to 256
         
-        // -
+    // -
 
     u8 NumberofChannels;            // 1..16 ok, > 16 NO!
     u8 NumberofInstruments;     // 1..128
     u8 FreqTable;                           // Frequency table  ( 0= Amiga , 1= linear )
     u8 DefaultTempo;                    // 1..31    (ticks per 'line', default 6)
         
-        // -
+    // -
         
     u8 DefaultBPM;                  // 32..255 (BeatPerMinute)
 
@@ -152,13 +152,11 @@ typedef struct {
     u8 AmigaPanningDisplacement;        // amiga panning 'displacement'
                                                                     // will be added to 0x00 / subtracted to 0x7F
 
-        u8 ReplayStyle;                                 // bit 0: 0 = FT2 style
+    u8 ReplayStyle;                                 // bit 0: 0 = FT2 style
                                                                         //              1 = MOD player style
                                                                         // bit 1: on-the-fly sample change flag (1=ON)
-
-        // -
-        
-        // these _could_ change during the playback!
+    // -
+    // these _could_ change during the playback!
     u8 CurrentTempo;                // copy of DefaultTempo (at startup)
     u8 CurrentBPM;                  // copy of DefaultBPM       (at startup)
     u8 CurrentGlobalVolume; // 0x40                                 (at startup)
@@ -169,9 +167,9 @@ typedef struct {
     u8 CurrentTick;                          //  the tick in playback now (0..31)
         
     u8 CurrentDelayLines;                //  the lines to "delay" after this line (effect EEx)
-        // -
+    // -
         
-        u16 CurrentDelayTick;                //  the ticks to "delay" after this line (effect EEx)
+    u16 CurrentDelayTick;                //  the ticks to "delay" after this line (effect EEx)
     u16 CurrentAdditionalTick;   //  the "additional" tick we are in (effect EEx)
 
         // -
@@ -183,18 +181,18 @@ typedef struct {
     XM7_SingleNoteArray_Type* Pattern [256];     // pointer to the beginning of every single pattern
                                                                                          // length = (PatternLength)*(NumberofChannels)*5    (bytes)
 
-        XM7_Instrument_Type* Instrument[128]; // pointer to the instruments
-        
-        // -
+    XM7_Instrument_Type* Instrument[128]; // pointer to the instruments
+
+    // -
 
     u8 CurrentSampleVolume[16];         // the volume of the sample on this channel ( 0..0x40 )
     u8 CurrentSamplePanning[16];        // the panning of sample in this channel        ( 0..0xFF left to right, 0x80 = center )
     
     u8 CurrentSampleVolumeEnvelopeState[16];     // the volume envelope state of the sample on this channel
-        u8 CurrentSamplePanningEnvelopeState[16];       // the panning envelope state of the sample on this channel
-        
-        u8 CurrentSampleVolumeEnvelope[16];              // the envelope volume of the sample on this channel ( 0..0x40 )
-        u8 CurrentSamplePanningEnvelope[16];             // the envelope panning of the sample on this channel ( 0..0x40 )
+    u8 CurrentSamplePanningEnvelopeState[16];       // the panning envelope state of the sample on this channel
+
+    u8 CurrentSampleVolumeEnvelope[16];              // the envelope volume of the sample on this channel ( 0..0x40 )
+    u8 CurrentSamplePanningEnvelope[16];             // the envelope panning of the sample on this channel ( 0..0x40 )
 
     u16 CurrentSampleVolumeEnvelopePoint[16];    // the volume envelope point (x) of the sample on this channel
     u16 CurrentSamplePanningEnvelopePoint[16]; // the panning envelope point (x) of the sample on this channel
@@ -223,14 +221,14 @@ typedef struct {
     u8 CurrentTremoloType    [16];                  // which tremolo waveform are we using [0..2, 4..6]
     u8 CurrentTremoloPoint [16];                    // where we are in the tremolo wave      [0..63]
         
-        u8 CurrentTremorPoint    [16];                  // where we are in the tremor square wave    [0..x+y+2]
-        u8 CurrentTremorMuting [16];                    // 1 = Tremor is muting.
-        
-        u8  CurrentAutoVibratoPoint[16];            // modulator wave is 8 bit for 1 period
-        u32 CurrentAutoVibratoSweep[16];            // values 0..0x10000
+    u8 CurrentTremorPoint    [16];                  // where we are in the tremor square wave    [0..x+y+2]
+    u8 CurrentTremorMuting [16];                    // 1 = Tremor is muting.
+
+    u8  CurrentAutoVibratoPoint[16];                // modulator wave is 8 bit for 1 period
+    u32 CurrentAutoVibratoSweep[16];                // values 0..0x10000
     
-    s8 CurrentFinetuneOverride   [16];      // this is the value for overriding finetune
-    u8 CurrentFinetuneOverrideOn [16];      // the flag...
+    s8 CurrentFinetuneOverride   [16];              // this is the value for overriding finetune
+    u8 CurrentFinetuneOverrideOn [16];              // the flag...
     
     u8 Effect1xxMemory[16];      // the memory for the 1xx effect                           [0x00..0xFF]
     u8 Effect2xxMemory[16];      // the memory for the 2xx effect                           [0x00..0xFF]
@@ -249,12 +247,14 @@ typedef struct {
     u8 EffectX1xMemory[16];      // the memory for the X1x effect                        [1..0xF]
     u8 EffectX2xMemory[16];      // the memory for the X2x effect                        [1..0xF]
         
-        u32 Silence;                             // ... a silent 4-bytes sample
+    u32 Silence;                 // ... a silent 4-bytes sample
         
-        // -
+    // -
         
     char ModuleName  [20];
     char TrackerName [20];
+
+    u8 moduleIndex;
 
 } XM7_ModuleManager_Type;
 
@@ -392,10 +392,10 @@ void XM7_StopModule              (XM7_ModuleManager_Type* module);
 
 
 // ARM9 functions (... well, you can use them even on ARM7 if you want...)
-u16  XM7_LoadXM      (XM7_ModuleManager_Type*, XM7_XMModuleHeader_Type*);
+u16  XM7_LoadXM      (XM7_ModuleManager_Type*, XM7_XMModuleHeader_Type*, u8 slot);
 void XM7_UnloadXM    (XM7_ModuleManager_Type*);
 
-u16  XM7_LoadMOD     (XM7_ModuleManager_Type*, XM7_MODModuleHeader_Type*);
+u16  XM7_LoadMOD     (XM7_ModuleManager_Type*, XM7_MODModuleHeader_Type*, u8 slot);
 void XM7_UnloadMOD (XM7_ModuleManager_Type*);
 
 void XM7_SetReplayStyle  (XM7_ModuleManager_Type* Module, u8 style);

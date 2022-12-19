@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         iprintf("\tLoaded %ld bytes\n", fsz);
         // allocate memory for the module
         module_A = malloc(sizeof(XM7_ModuleManager_Type));
-        u16 res = XM7_LoadXM(module_A, (XM7_XMModuleHeader_Type*) modA_data);
+        u16 res = XM7_LoadXM(module_A, (XM7_XMModuleHeader_Type*) modA_data, 0);
 
         // ensure data gets written to main RAM
         DC_FlushAll();
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);
 
     // Install the FIFO handler for libXM7 "fifo channel"
-    fifoSetValue32Handler(FIFO_XM7, XM7_arm9_Value32Handler, 0);
+    fifoSetValue32Handler(FIFO_XM7, XM7_arm9_Value32Handler, NULL);
 
     iprintf("\n\tPress A to play, B to stop.\n");
     while(1) 

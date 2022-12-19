@@ -200,6 +200,7 @@ void XM7_lowlevel_startSoundwLoop (int sampleRate, const void* data, u32 looplen
 {
     // use channels starting from last!
     channel = 15 - channel;
+    fifoSendValue32(FIFO_USER_07, channel);
     
     SCHANNEL_CR(channel) = 0;
     offset = format?(offset*2):offset;
@@ -401,11 +402,20 @@ void ChangeVolumeonRetrigTable(XM7_ModuleManager_Type* module, u8 chn, u8 param)
     }
 }
 
-void ApplyVolumeandPanning(XM7_ModuleManager_Type* module, u8 chn) 
+void ApplyVolumeandPanning(XM7_ModuleManager_Type* module, u8 chn)
 {
     u8 volume = module->CurrentSampleVolume [chn];
     s8 tremolo = module->CurrentTremoloVolume [chn];
     u8 tremormute = module->CurrentTremorMuting [chn];
+
+    // Playback channel for low level playing must be selected based on the module slot
+    // since, when having multiple modules playing, there might be no direct correspondence
+    // between playback channel and the current module channel
+
+    // E.g. if there are 2 modules playing (SlotA, SlotB), then:
+    // First module has channels 0... 7 and should playback in channels 15 ... 8
+    // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
+    u8 pbChn = chn + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
 
     if (tremormute) 
     {
@@ -428,7 +438,6 @@ void ApplyVolumeandPanning(XM7_ModuleManager_Type* module, u8 chn)
                 volume+=tremolo;
         }
         
-        
         // final calculation of volume & panning
         volume  = CalculateFinalVolume(module, volume ,module->CurrentSampleVolumeEnvelope[chn],
                                        module->CurrentSampleVolumeFadeOut[chn]);
@@ -439,10 +448,10 @@ void ApplyVolumeandPanning(XM7_ModuleManager_Type* module, u8 chn)
                                        module->CurrentSamplePanningEnvelope[chn]);
     
     // CHANGE VOLUME & PAN !
-    XM7_lowlevel_setVolumeandPanning (chn,volume,panning);
+    XM7_lowlevel_setVolumeandPanning(pbChn, volume, panning);
 }
 
-void ApplyNewGlobalVolume(XM7_ModuleManager_Type* module) 
+void ApplyNewGlobalVolume(XM7_ModuleManager_Type* module)
 {
     u8 chn;
     // for every channel
@@ -1790,7 +1799,7 @@ s8 CalculateAutoVibrato(XM7_ModuleManager_Type* module, u8 chn, u8 instrument)
 }
 
 
-void PitchNote(XM7_ModuleManager_Type* module, u8 chn, u8 pitch, s32 porta, s8 vibra) 
+void PitchNote(XM7_ModuleManager_Type* module, u8 chn, u8 pitch, s32 porta, s8 vibra)
 {
     u8 note = module->CurrentChannelLastNote[chn]-1;
     u8 instrument = module->CurrentChannelLastInstrument[chn];
@@ -1798,19 +1807,27 @@ void PitchNote(XM7_ModuleManager_Type* module, u8 chn, u8 pitch, s32 porta, s8 v
 
     XM7_Sample_Type* sample_ptr = GetSamplePointer(module, note, instrument);
     
+    // Playback channel for low level playing must be selected based on the module slot
+    // since, when having multiple modules playing, there might be no direct correspondence
+    // between playback channel and the current module channel
+
+    // E.g. if there are 2 modules playing (SlotA, SlotB), then:
+    // First module has channels 0... 7 and should playback in channels 15 ... 8
+    // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
+    u8 pbChn = chn + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
+
     if (sample_ptr!=NULL) 
     {
         s8 finetune = (module->CurrentFinetuneOverrideOn[chn]) ? module->CurrentFinetuneOverride[chn] : (sample_ptr->FineTune & 0xF8);
         // finetune = (finetune)?finetune:sample_ptr->FineTune; ????
         s8 autovibra = ((instrument!=0) && (module->Instrument[instrument-1]->VibratoDepth!=0) && (module->Instrument[instrument-1]->VibratoRate!=0))? CalculateAutoVibrato(module, chn, instrument) : 0;
         int freq=CalculateFreq(module->FreqTable, (note+pitch), sample_ptr->RelativeNote, finetune, porta, vibra, autovibra, glis);
-        XM7_lowlevel_pitchSound (freq, chn);
+        XM7_lowlevel_pitchSound (freq, pbChn);
     }
 }
 
-void PlayNote(XM7_ModuleManager_Type* module, u8 chn, u16 sample_offset) 
+void PlayNote(XM7_ModuleManager_Type* module, u8 chn, u16 sample_offset)
 {
- 
     u8 note = module->CurrentChannelLastNote[chn]-1;
     u8 instrument = module->CurrentChannelLastInstrument[chn];
     u8 glis = module->CurrentGlissandoType[chn];
@@ -1818,6 +1835,16 @@ void PlayNote(XM7_ModuleManager_Type* module, u8 chn, u16 sample_offset)
 
     XM7_Sample_Type* sample_ptr = GetSamplePointer(module, note, instrument);
     
+    // Playback channel for low level playing must be selected based on the module slot
+    // since, when having multiple modules playing, there might be no direct correspondence
+    // between playback channel and the current module channel
+
+    // E.g. if there are 2 modules playing (SlotA, SlotB), then:
+    // First module has channels 0... 7 and should playback in channels 15 ... 8
+    // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
+    u8 pbChn = chn + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
+
+
     if (sample_ptr!=NULL) 
     {
         s8 finetune = (module->CurrentFinetuneOverrideOn[chn]) ? module->CurrentFinetuneOverride[chn] : (sample_ptr->FineTune & 0xF8);
@@ -1847,37 +1874,45 @@ void PlayNote(XM7_ModuleManager_Type* module, u8 chn, u16 sample_offset)
         u8 panning = CalculateFinalPanning(module, chn, module->CurrentSamplePanning[chn], module->CurrentSamplePanningEnvelope[chn]);
     
         // ***************************** READY TO PLAY SAMPLE !!! *******************************************
-    
+
         // check if the sample has a loop or not
         if ( (sample_ptr->Flags & 0x01) == 0) 
         {
             // no loop
-            XM7_lowlevel_startSound(freq,sample_ptr->SampleData,sample_ptr->Length,chn,volume,panning,(sample_ptr->Flags >> 4),sample_offset);
+            XM7_lowlevel_startSound(freq,sample_ptr->SampleData,sample_ptr->Length,pbChn,volume,panning,(sample_ptr->Flags >> 4),sample_offset);
         } 
         else 
         {
             // has a loop
-            XM7_lowlevel_startSoundwLoop(freq,sample_ptr->SampleData,sample_ptr->LoopLength,sample_ptr->LoopStart,chn,volume,panning,(sample_ptr->Flags >> 4),sample_offset);
+            XM7_lowlevel_startSoundwLoop(freq,sample_ptr->SampleData,sample_ptr->LoopLength,sample_ptr->LoopStart,pbChn,volume,panning,(sample_ptr->Flags >> 4),sample_offset);
         }
     }
     else 
     {
         // it's NULL: play nothing! (stop this channel)
-        XM7_lowlevel_startSound(0,NULL,0,chn,0,0,0,0);
+        XM7_lowlevel_startSound(0, NULL, 0, pbChn, 0, 0, 0, 0);
     }
 }
 
-void ChangeSample (XM7_ModuleManager_Type* module, u8 chn) 
+void ChangeSample (XM7_ModuleManager_Type* module, u8 chn)
 {
-
     u8 note = module->CurrentChannelLastNote[chn]-1;
     u8 instrument = module->CurrentChannelLastInstrument[chn];
     XM7_Sample_Type* sample_ptr = GetSamplePointer(module, note, instrument);
     
+    // Playback channel for low level playing must be selected based on the module slot
+    // since, when having multiple modules playing, there might be no direct correspondence
+    // between playback channel and the current module channel
+
+    // E.g. if there are 2 modules playing (SlotA, SlotB), then:
+    // First module has channels 0... 7 and should playback in channels 15 ... 8
+    // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
+    u8 pbChn = chn + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
+
     if (sample_ptr!=NULL)
-        XM7_lowlevel_changeSample(sample_ptr->SampleData,sample_ptr->LoopLength,sample_ptr->LoopStart,chn,(sample_ptr->Flags >> 4));
+        XM7_lowlevel_changeSample(sample_ptr->SampleData,sample_ptr->LoopLength,sample_ptr->LoopStart,pbChn,(sample_ptr->Flags >> 4));
     else    // should 'play silence'
-        XM7_lowlevel_changeSample(&module->Silence,4,0,chn,0);
+        XM7_lowlevel_changeSample(&module->Silence,4,0,pbChn,0);
 }
 
 void Timer1Handler (void) 
@@ -1929,7 +1964,10 @@ void Timer1Handler (void)
     {
 
         XM7_ModuleManager_Type* module = XM7_Modules[mm];
-        
+
+        if (module == NULL)
+            continue;
+
         // For every channel...
         for (chn=0;chn<(module->NumberofChannels);chn++)
         {
