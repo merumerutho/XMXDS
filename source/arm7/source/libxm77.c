@@ -2459,7 +2459,7 @@ void Timer1Handler (void)
 }
 
 
-void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position, bool sync) {
+void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position, u8 sync) {
  
     // Prepare for playback, set everything to default values ...
 
@@ -2479,8 +2479,8 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position, bool sy
     module->CurrentDelayTick = 0;
     module->CurrentAdditionalTick = 0;
 
-    u8 i;
-    for (i=0;i<LIBXM7_MAX_CHANNELS_PER_MODULE;i++)
+
+    for (u8 i=0;i<LIBXM7_MAX_CHANNELS_PER_MODULE;i++)
     {
         // re-set the channels
         module->CurrentChannelLastNote[i]       = 0;                             // empty
@@ -2551,7 +2551,6 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position, bool sy
     // Start IRQ only if no other module was playing before
     if (modulePlaying == -1)
     {
-        fifoSendValue32(FIFO_USER_07, (u32) 127);
         irqSet(IRQ_TIMER1, Timer1Handler);
         irqEnable(IRQ_TIMER1);
 
@@ -2563,13 +2562,14 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position, bool sy
         sync = FALSE;
     }
 
-    // if need to sync, wait for start of next pattern
-    while(sync && XM7_Modules[modulePlaying]->CurrentLine != 0);
+    // based on the sync type, wait
+    while(sync == XM7_SYNC_BY_PATTERN && XM7_Modules[modulePlaying]->CurrentLine != 0);
+    while(sync == XM7_SYNC_BY_LINE && XM7_Modules[modulePlaying]->CurrentTick != 0);
     module->State = XM7_STATE_PLAYING;
 }
 
 
-void XM7_PlayModule (XM7_ModuleManager_Type* module, bool sync)
+void XM7_PlayModule (XM7_ModuleManager_Type* module, u8 sync)
 {
     XM7_PlayModuleFromPos (module, 0, sync);
 }
@@ -2603,7 +2603,6 @@ void XM7_StopModule(XM7_ModuleManager_Type* module)
     }
     if (isStopped)
     {
-        fifoSendValue32(FIFO_USER_07, (u32) 63);
         TIMER1_CR = 0;
         irqDisable(IRQ_TIMER1);
     }

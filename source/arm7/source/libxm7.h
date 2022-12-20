@@ -1,6 +1,9 @@
 #define LIBXM7_ALLOWED_MODULES                  2
 #define LIBXM7_MAX_CHANNELS_PER_MODULE          (16 / LIBXM7_ALLOWED_MODULES)
 
+#define XM7_SYNC_BY_PATTERN                     0x01
+#define XM7_SYNC_BY_LINE                        0x02
+
 // Error defines:
 #define XM7_ERR_NOT_A_VALID_MODULE              0x01
 #define XM7_ERR_UNKNOWN_MODULE_VERSION          0x02
@@ -386,8 +389,8 @@ extern XM7_ModuleManager_Type* XM7_Modules[LIBXM7_ALLOWED_MODULES];
 
 // ARM7 functions
 void XM7_Initialize              (void);
-void XM7_PlayModule              (XM7_ModuleManager_Type* module, bool sync);
-void XM7_PlayModuleFromPos       (XM7_ModuleManager_Type* module, u8 position, bool sync);
+void XM7_PlayModule              (XM7_ModuleManager_Type* module, u8 sync);
+void XM7_PlayModuleFromPos       (XM7_ModuleManager_Type* module, u8 position, u8 sync);
 void XM7_StopModule              (XM7_ModuleManager_Type* module);
 
 void SetTimerSpeedBPM (u8 BPM);
