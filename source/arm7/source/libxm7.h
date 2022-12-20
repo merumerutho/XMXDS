@@ -386,8 +386,8 @@ extern XM7_ModuleManager_Type* XM7_Modules[LIBXM7_ALLOWED_MODULES];
 
 // ARM7 functions
 void XM7_Initialize              (void);
-void XM7_PlayModule              (XM7_ModuleManager_Type* module);
-void XM7_PlayModuleFromPos       (XM7_ModuleManager_Type* module, u8 position);
+void XM7_PlayModule              (XM7_ModuleManager_Type* module, bool sync);
+void XM7_PlayModuleFromPos       (XM7_ModuleManager_Type* module, u8 position, bool sync);
 void XM7_StopModule              (XM7_ModuleManager_Type* module);
 
 void SetTimerSpeedBPM (u8 BPM);

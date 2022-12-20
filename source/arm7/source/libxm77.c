@@ -2459,7 +2459,7 @@ void Timer1Handler (void)
 }
 
 
-void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position) {
+void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position, bool sync) {
  
     // Prepare for playback, set everything to default values ...
 
@@ -2482,7 +2482,6 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position) {
     u8 i;
     for (i=0;i<LIBXM7_MAX_CHANNELS_PER_MODULE;i++)
     {
-    
         // re-set the channels
         module->CurrentChannelLastNote[i]       = 0;                             // empty
         module->CurrentChannelLastInstrument[i] = 0;                             // empty
@@ -2540,35 +2539,39 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position) {
     // the silence sample
     module->Silence = 0x00000000;
     
-    // ... START
-    
-    // 1st: set up the IRQ handler for the timer1 and enable the IRQ.
-    // do it only if no module is already playing. In that case, start the IRQ
-    bool isStopped = TRUE;
+    // Check if any module was playing before
+    int modulePlaying = -1; // by default, no module is playing
     for(u8 mm=0; mm < LIBXM7_ALLOWED_MODULES; mm++)
     {
         if (XM7_Modules[mm]->State == XM7_STATE_PLAYING)
-            isStopped = FALSE;
+        {
+            modulePlaying = (int)mm;
+        }
     }
-    if (isStopped)
+    // Start IRQ only if no other module was playing before
+    if (modulePlaying == -1)
     {
         fifoSendValue32(FIFO_USER_07, (u32) 127);
         irqSet(IRQ_TIMER1, Timer1Handler);
         irqEnable(IRQ_TIMER1);
+
+        // then set the timer and BPM
+        TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
+        SetTimerSpeedBPM (globalBpm);
+
+        // If no module was playing before, makes no sense to sync
+        sync = FALSE;
     }
 
-    // then set the timer and make it start!
-    TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-    SetTimerSpeedBPM (globalBpm);
-
-    // set engine state
+    // if need to sync, wait for start of next pattern
+    while(sync && XM7_Modules[modulePlaying]->CurrentLine != 0);
     module->State = XM7_STATE_PLAYING;
 }
 
 
-void XM7_PlayModule (XM7_ModuleManager_Type* module) 
+void XM7_PlayModule (XM7_ModuleManager_Type* module, bool sync)
 {
-    XM7_PlayModuleFromPos (module, 0);
+    XM7_PlayModuleFromPos (module, 0, sync);
 }
 
 

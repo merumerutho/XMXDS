@@ -10,8 +10,8 @@
 // FIFO 07 for libxm7
 #define FIFO_XM7    (FIFO_USER_07)
 
-#define MOD_TO_PLAY_A "data/mods/demo_C.xm"
-#define MOD_TO_PLAY_B "data/mods/demo_D.xm"
+#define MOD_TO_PLAY_A "data/mods/demo_D.xm"
+#define MOD_TO_PLAY_B "data/mods/demo_E.xm"
 
 u8 arm9_globalBpm = 125;
 u8 arm9_globalTempo = 6;
