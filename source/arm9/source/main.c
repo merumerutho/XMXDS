@@ -1,11 +1,12 @@
 #include <nds.h>
 #include <stdio.h>
 #include <filesystem.h>
-#include <dirent.h>
+
 
 // ARMv7 INCLUDES
 #include "../../arm7/source/libxm7.h"
 #include "../../arm7/source/tempo.h"
+#include "../../arm7/source/arm7_fifo.h"
 
 // FIFO 07 for libxm7
 #define FIFO_XM7    (FIFO_USER_07)
@@ -46,6 +47,11 @@ void play_stop(XM7_ModuleManager_Type* module)
     playingB = (module->moduleIndex == 1) ? !playingB : playingB;
 }
 
+void IpcSend(IPC_FIFO_packet* pkt, u8 fifo)
+{
+    fifoSendValue32(fifo, (u32) pkt);
+}
+
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
@@ -58,6 +64,8 @@ int main(int argc, char **argv)
     FILE* modB_file;
 
     long fszA = 0, fszB = 0;
+
+    IPC_FIFO_packet* ipc_packet = malloc(sizeof(IPC_FIFO_packet));
 
 	if(!nitroFSInit(NULL))  // load nitro FileSystem
         iprintf("Could not load nitroFS!\n");
@@ -105,13 +113,11 @@ int main(int argc, char **argv)
     // Install the FIFO handler for libXM7 "fifo channel"
     fifoSetValue32Handler(FIFO_XM7, XM7_arm9_Value32Handler, NULL);
 
-    u32 word;
-    // Set global bpm
-    word = (FIFO_TARGET_BPM << 8) | arm9_globalBpm;
-    fifoSendValue32(FIFO_TEMPO, word);
-    // Set global tempo
-    word = (FIFO_TARGET_TEMPO << 8) | arm9_globalTempo;
-    fifoSendValue32(FIFO_TEMPO, word);
+    // Send BPM to ARMv7
+    ipc_packet->data[0] = arm9_globalBpm;
+    ipc_packet->data[1] = arm9_globalTempo;
+    ipc_packet->command = CMD_SET_BPM_TEMPO;
+    IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
 
     while(1)
     {
@@ -126,34 +132,21 @@ int main(int argc, char **argv)
 
         if (keysDown() & KEY_UP)
         {
-            word = (FIFO_TARGET_BPM << 8) | ((arm9_globalBpm == 255) ? 255 : ++arm9_globalBpm);
-            iprintf("BPM:%d - ", arm9_globalBpm);
-            if (!fifoSendValue32(FIFO_TEMPO, word))
-                iprintf("Could not send...\n");
+            ipc_packet->data[0] = ++arm9_globalBpm;
+            ipc_packet->data[1] = arm9_globalTempo;
+            ipc_packet->command = CMD_SET_BPM_TEMPO;
+            IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
         }
 
         if (keysDown() & KEY_DOWN)
         {
-            word = (FIFO_TARGET_BPM << 8) | ((arm9_globalBpm == 0) ? 0 : --arm9_globalBpm);
-            iprintf("BPM:%d - ", arm9_globalBpm);
-            if (!fifoSendValue32(FIFO_TEMPO, word))
-                iprintf("Could not send...\n");
+            ipc_packet->data[0] = --arm9_globalBpm;
+            ipc_packet->data[1] = arm9_globalTempo;
+            ipc_packet->command = CMD_SET_BPM_TEMPO;
+            IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
         }
         // Wait for VBlank
         swiWaitForVBlank();
     };
-    
-    /*
-	while(1) {
-
-		touchRead(&touch);
-		iprintf("\x1b[10;0HTouch x = %04i, %04i\n", touch.rawx, touch.px);
-		iprintf("Touch y = %04i, %04i\n", touch.rawy, touch.py);
-
-		swiWaitForVBlank();
-		scanKeys();
-		if (keysDown()&KEY_START) break;
-	}
-    */
 	return 0;
 }

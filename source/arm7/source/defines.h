@@ -1,0 +1,8 @@
+#ifndef ARM7_SOURCE_DEFINES_H_
+#define ARM7_SOURCE_DEFINES_H_
+
+#include <nds.h>
+
+#define FIFO_GLOBAL_SETTINGS (FIFO_USER_01)
+
+#endif /* ARM7_SOURCE_DEFINES_H_ */

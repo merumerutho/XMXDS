@@ -1,7 +1,8 @@
 #include <nds.h>
 
 #include "libxm7.h"
-#include "tempo.h"
+#include "defines.h"
+#include "arm7_fifo.h"
 
 // "reserve" FIFO Channel "FIFO_USER_07"
 #define FIFO_XM7    (FIFO_USER_07)
@@ -28,18 +29,18 @@ void powerButtonCB() {
 }
 
 //---------------------------------------------------------------------------------
-void XM7_arm7_Value32Handler (u32 command, void* userdata)
+void XM7_arm7_Value32Handler (u32 p, void* userdata)
 {
-    if (command!=0)
+    if (p != 0)
     {
         // received a pointer to a module that should start now
-        XM7_ModuleManager_Type* module = (XM7_ModuleManager_Type*) command;
+        XM7_ModuleManager_Type* module = (XM7_ModuleManager_Type*) p;
         XM7_Modules[module->moduleIndex] = module;
 
         if (module->State == XM7_STATE_PLAYING)
             XM7_StopModule(XM7_Modules[module->moduleIndex]);
         else
-            XM7_PlayModule(XM7_Modules[module->moduleIndex], XM7_SYNC_BY_LINE);
+            XM7_PlayModule(XM7_Modules[module->moduleIndex], XM7_SYNC_BY_PATTERN);
     }
 }
 
@@ -70,7 +71,7 @@ int main() {
     fifoSetValue32Handler(FIFO_XM7, XM7_arm7_Value32Handler, 0);
 
     // Handler for BPM / Tempo
-    fifoSetValue32Handler(FIFO_TEMPO, arm7_TempoFIFOHandler, 0);
+    fifoSetValue32Handler(FIFO_GLOBAL_SETTINGS, arm7_GlobalSettingsFIFOHandler, 0);
 
     installSystemFIFO();
 
