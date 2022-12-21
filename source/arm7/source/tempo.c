@@ -4,7 +4,9 @@
 #include "tempo.h"
 #include "arm7_fifo.h"
 
-// Default starting values for BPM and tempo are 0. They must be sent by ARMv9
+// Default starting values for BPM and tempo are 0.
+// They must be communicated by ARMv9
+
 u8 globalBpm = 0;
 u8 globalTempo = 0;
 

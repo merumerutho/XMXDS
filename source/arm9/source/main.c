@@ -2,31 +2,33 @@
 #include <stdio.h>
 #include <filesystem.h>
 
+// ARMv9 INCLUDES
+#include "arm9_defines.h"
+#include "nitroFSmenu.h"
 
 // ARMv7 INCLUDES
 #include "../../arm7/source/libxm7.h"
 #include "../../arm7/source/tempo.h"
 #include "../../arm7/source/arm7_fifo.h"
 
-// FIFO 07 for libxm7
-#define FIFO_XM7    (FIFO_USER_07)
-
 #define MOD_TO_PLAY_A "data/mods/demo_D.xm"
 #define MOD_TO_PLAY_B "data/mods/demo_E.xm"
 
-u8 arm9_globalBpm = 125;
-u8 arm9_globalTempo = 6;
+
+u8 arm9_globalBpm = DEFAULT_BPM;
+u8 arm9_globalTempo = DEFAULT_TEMPO;
 
 bool playingA;
 bool playingB;
 
 //---------------------------------------------------------------------------------
-void XM7_arm9_Value32Handler (u32 command, void* userdata)
+void arm9_DebugFIFOHandler (u32 p, void* userdata)
 {
-    if (command)
-        // received a pointer to a module that should start now
-        iprintf("%ld\n", command);
-    return;
+    for(u8 i=0; i<16; i++)
+    {
+        iprintf("%c", (char)((IPC_FIFO_packet*)(p))->data[0] );
+    }
+    iprintf("\n");
 }
 
 void displayIntro()
@@ -52,6 +54,14 @@ void IpcSend(IPC_FIFO_packet* pkt, u8 fifo)
     fifoSendValue32(fifo, (u32) pkt);
 }
 
+void sendBpmTempo(IPC_FIFO_packet* ipc_packet, u8 bpm, u8 tempo)
+{
+    ipc_packet->data[0] = bpm;
+    ipc_packet->data[1] = tempo;
+    ipc_packet->command = CMD_SET_BPM_TEMPO;
+    IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+}
+
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
@@ -67,8 +77,12 @@ int main(int argc, char **argv)
 
     IPC_FIFO_packet* ipc_packet = malloc(sizeof(IPC_FIFO_packet));
 
-	if(!nitroFSInit(NULL))  // load nitro FileSystem
+    // Load nitroFS file system
+	if(!nitroFSInit(NULL))
         iprintf("Could not load nitroFS!\n");
+
+	// Install the debugging (for now, only way to print stuff from ARMv7)
+    fifoSetValue32Handler(FIFO_USER_08, arm9_DebugFIFOHandler, NULL);
 
 	displayIntro();
 
@@ -110,18 +124,11 @@ int main(int argc, char **argv)
     // turn on master sound
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);
 
-    // Install the FIFO handler for libXM7 "fifo channel"
-    fifoSetValue32Handler(FIFO_XM7, XM7_arm9_Value32Handler, NULL);
-
-    // Send BPM to ARMv7
-    ipc_packet->data[0] = arm9_globalBpm;
-    ipc_packet->data[1] = arm9_globalTempo;
-    ipc_packet->command = CMD_SET_BPM_TEMPO;
-    IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+    // Send BPM/TEMPO to ARMv7
+    sendBpmTempo(ipc_packet, arm9_globalBpm, arm9_globalTempo);
 
     while(1)
     {
-        // read keys
         scanKeys();
 
         if (keysUp() & KEY_A)
@@ -136,6 +143,7 @@ int main(int argc, char **argv)
             ipc_packet->data[1] = arm9_globalTempo;
             ipc_packet->command = CMD_SET_BPM_TEMPO;
             IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+            iprintf("bpm: %d - ", arm9_globalBpm);
         }
 
         if (keysDown() & KEY_DOWN)
@@ -144,6 +152,7 @@ int main(int argc, char **argv)
             ipc_packet->data[1] = arm9_globalTempo;
             ipc_packet->command = CMD_SET_BPM_TEMPO;
             IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+            iprintf("bpm: %d - ", arm9_globalBpm);
         }
         // Wait for VBlank
         swiWaitForVBlank();

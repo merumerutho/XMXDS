@@ -1,6 +1,6 @@
 #include "arm7_fifo.h"
 
-#include "defines.h"
+#include "arm7_defines.h"
 #include "tempo.h"
 
 void arm7_GlobalSettingsFIFOHandler(u32 p, void* userdata)

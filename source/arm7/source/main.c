@@ -1,7 +1,7 @@
 #include <nds.h>
 
+#include "arm7_defines.h"
 #include "libxm7.h"
-#include "defines.h"
 #include "arm7_fifo.h"
 
 // "reserve" FIFO Channel "FIFO_USER_07"

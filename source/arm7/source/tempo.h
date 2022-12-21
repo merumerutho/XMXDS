@@ -1,7 +1,7 @@
 #include <nds.h>
 #include <stdio.h>
 
-#include "defines.h"
+#include "arm7_defines.h"
 
 #define CMD_SET_BPM_TEMPO   0
 
