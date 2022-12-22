@@ -1,6 +1,5 @@
 #include <nds.h>
 #include <stdio.h>
-#include <filesystem.h>
 
 // ARMv9 INCLUDES
 #include "arm9_defines.h"

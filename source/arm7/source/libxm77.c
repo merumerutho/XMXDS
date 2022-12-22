@@ -1958,6 +1958,9 @@ void Timer1Handler (void)
     u8 RequestedLoops = 0;
     u8 CurrentLoopEffChannel = 0;
     
+    // flag for queued patterns
+    bool startQueuedPatterns = FALSE;
+
     // For every module...
     for (mm=0;mm<LIBXM7_ALLOWED_MODULES;mm++)
     {
@@ -2433,6 +2436,8 @@ void Timer1Handler (void)
                     if ( BreakThisPattern || ((module->CurrentLine) >= (module->PatternLength[module->CurrentPatternNumber])) ) 
                     {
                         // next pattern!
+                        // Set new pattern flag to TRUE.
+                        startQueuedPatterns = TRUE;
                         module->CurrentLine=NextPatternStartLine;    // should be 0 when not using Dxx
                          
                         // NextPatternPosition comes from Bxx
@@ -2451,15 +2456,26 @@ void Timer1Handler (void)
                         // reset the loopbegin[], we are in a new pattern!
                         for (chn=0;chn<LIBXM7_MAX_CHANNELS_PER_MODULE;chn++)
                             module->CurrentLoopBegin[chn]=0;
+
                     }
                 }
             }
         }
     }
+
+    // Check if any module shall start playing at beginning of new pattern
+    if(startQueuedPatterns)
+    {
+        for(u8 mmm = 0; mmm < LIBXM7_ALLOWED_MODULES; mmm++)
+        {
+            if (XM7_Modules[mmm]->State == XM7_STATE_QUEUED)
+                XM7_Modules[mmm]->State = XM7_STATE_PLAYING;
+        }
+    }
 }
 
 
-void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position, u8 sync) {
+void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position) {
  
     // Prepare for playback, set everything to default values ...
 
@@ -2538,40 +2554,39 @@ void XM7_PlayModuleFromPos (XM7_ModuleManager_Type* module, u8 position, u8 sync
     
     // the silence sample
     module->Silence = 0x00000000;
+    // By default, put the module in a queued state
+    // IT will start playing when the end of a pattern is reached
+    // (at the end of Timer1Handler)
+    module->State = XM7_STATE_QUEUED;
     
-    // Check if any module was playing before
+    // Check if any other module is playing already
     int modulePlaying = -1; // by default, no module is playing
     for(u8 mm=0; mm < LIBXM7_ALLOWED_MODULES; mm++)
     {
         if (XM7_Modules[mm]->State == XM7_STATE_PLAYING)
-        {
             modulePlaying = (int)mm;
-        }
     }
-    // Start IRQ only if no other module was playing before
+
+    // If no other module is already playing...
     if (modulePlaying == -1)
     {
+        // Set IRQ for Timer1
         irqSet(IRQ_TIMER1, Timer1Handler);
         irqEnable(IRQ_TIMER1);
 
-        // then set the timer and BPM
+        // Set Timer divider and BPM
         TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
         SetTimerSpeedBPM (globalBpm);
 
-        // If no module was playing before, makes no sense to sync
-        sync = FALSE;
+        // Module has to start playing already
+        module->State = XM7_STATE_PLAYING;
     }
-
-    // based on the sync type, wait
-    while(sync == XM7_SYNC_BY_PATTERN && XM7_Modules[modulePlaying]->CurrentLine != 0);
-    while(sync == XM7_SYNC_BY_LINE && XM7_Modules[modulePlaying]->CurrentTick != 0);
-    module->State = XM7_STATE_PLAYING;
 }
 
 
-void XM7_PlayModule (XM7_ModuleManager_Type* module, u8 sync)
+void XM7_PlayModule (XM7_ModuleManager_Type* module)
 {
-    XM7_PlayModuleFromPos (module, 0, sync);
+    XM7_PlayModuleFromPos (module, 0);
 }
 
 

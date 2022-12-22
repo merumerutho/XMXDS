@@ -40,7 +40,7 @@ void XM7_arm7_Value32Handler (u32 p, void* userdata)
         if (module->State == XM7_STATE_PLAYING)
             XM7_StopModule(XM7_Modules[module->moduleIndex]);
         else
-            XM7_PlayModule(XM7_Modules[module->moduleIndex], XM7_SYNC_BY_PATTERN);
+            XM7_PlayModule(XM7_Modules[module->moduleIndex]);
     }
 }
 
