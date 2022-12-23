@@ -10,8 +10,8 @@
 #include "../../arm7/source/tempo.h"
 #include "../../arm7/source/arm7_fifo.h"
 
-#define MOD_TO_PLAY_A "data/mods/demo_D.xm"
-#define MOD_TO_PLAY_B "data/mods/demo_E.xm"
+#define MOD_TO_PLAY_A "data/mods/myFolder/demo_D.xm"
+#define MOD_TO_PLAY_B "data/mods/myFolder/demo_E.xm"
 
 
 u8 arm9_globalBpm = DEFAULT_BPM;
@@ -74,6 +74,8 @@ int main(int argc, char **argv)
 
     long fszA = 0, fszB = 0;
 
+    char folderPath[255] = "data/mods/";
+
     IPC_FIFO_packet* ipc_packet = malloc(sizeof(IPC_FIFO_packet));
 
     // Load nitroFS file system
@@ -125,6 +127,8 @@ int main(int argc, char **argv)
 
     // Send BPM/TEMPO to ARMv7
     sendBpmTempo(ipc_packet, arm9_globalBpm, arm9_globalTempo);
+
+    XM7_FS_selectModule((char *) folderPath);
 
     while(1)
     {
