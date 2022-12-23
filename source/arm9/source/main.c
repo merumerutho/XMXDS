@@ -4,6 +4,8 @@
 // ARMv9 INCLUDES
 #include "arm9_defines.h"
 #include "nitroFSmenu.h"
+#include "play.h"
+#include "libXMX.h"
 
 // ARMv7 INCLUDES
 #include "../../arm7/source/libxm7.h"
@@ -14,9 +16,6 @@
 
 u8 arm9_globalBpm = DEFAULT_BPM;
 u8 arm9_globalTempo = DEFAULT_TEMPO;
-
-bool playingA;
-bool playingB;
 
 //---------------------------------------------------------------------------------
 void arm9_DebugFIFOHandler (u32 p, void* userdata)
@@ -30,20 +29,19 @@ void arm9_DebugFIFOHandler (u32 p, void* userdata)
 
 void displayIntro()
 {
-    iprintf(" \t\t.oO:Oo. XMXDS .oO:Oo.\n\n");
-    iprintf(" 2-decks module player for NDS!\n");
-    iprintf(" credits: @merumerutho\n");
-    iprintf(" based on libxm7 (@sverx)\n\n");
-}
+    consoleClear();
+    iprintf("\x1b[0;0H-------------------------------");
+    for (u8 i=0;i<24;i++)
+    {
+        iprintf("\x1b[%d;0H-",i);
+        iprintf("\x1b[%d;31H-",i);
+    }
+    iprintf("\x1b[23;0H-------------------------------");
 
-void play_stop(XM7_ModuleManager_Type* module)
-{
-    // sending pointer to the libxm7 engine on ARM7
-    if (!fifoSendValue32(FIFO_XM7, (u32) module))
-        iprintf("Could not send data correctly...\n");
-
-    playingA = (module->moduleIndex == 0) ? !playingA : playingA;
-    playingB = (module->moduleIndex == 1) ? !playingB : playingB;
+    iprintf("\x1b[2;6H.oO:Oo. XMXDS .oO:Oo.\n\n");
+    iprintf("\x1b[3;1H2-decks module player for NDS!\n");
+    iprintf("\x1b[4;4Hcredits: @merumerutho\n");
+    iprintf("\x1b[5;4Hbased on libxm7 (@sverx)\n\n");
 }
 
 void IpcSend(IPC_FIFO_packet* pkt, u8 fifo)
@@ -65,10 +63,6 @@ int main(int argc, char **argv)
     consoleDemoInit();
     IPC_FIFO_packet* ipc_packet = malloc(sizeof(IPC_FIFO_packet));
 
-    XM7_ModuleManager_Type* modules[LIBXM7_ALLOWED_MODULES];
-    for (u8 i=0; i < LIBXM7_ALLOWED_MODULES; i++)
-        modules[i] = malloc(sizeof(XM7_ModuleManager_Type));
-
     char folderPath[255] = DEFAULT_ROOT_PATH;
 
 	// Install the debugging (for now, only way to print stuff from ARMv7)
@@ -85,11 +79,15 @@ int main(int argc, char **argv)
     {
         scanKeys();
 
-        if (keysUp() & KEY_A)
-            play_stop(modules[0]);
+        if ((keysHeld() & KEY_L) && (keysUp() & KEY_A))
+        {
+            if(loadedModulesInfo[0].modManager != NULL)
+                play_stop(&loadedModulesInfo[0]);
+        }
 
-        if (keysUp() & KEY_B)
-            play_stop(modules[1]);
+        if ((keysHeld() & KEY_R) && (keysUp() & KEY_A))
+            if(loadedModulesInfo[1].modManager != NULL)
+                play_stop(&loadedModulesInfo[1]);
 
         if (keysDown() & KEY_UP)
         {
@@ -111,11 +109,8 @@ int main(int argc, char **argv)
 
         if (keysDown() & KEY_SELECT)
         {
-            u8 idx = XM7_FS_selectModule((char *) folderPath, modules);
+            XM7_FS_selectModule((char *) folderPath);
             displayIntro();
-            if(idx!=0xFF)
-                iprintf("Loaded %s on slot %c\n", modules[idx]->ModuleName, idx?'B':'A');
-
         }
 
         // Wait for VBlank

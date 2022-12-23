@@ -5,7 +5,7 @@
 #include <dirent.h>
 #include <filesystem.h>
 
-
+#include "libXMX.h"
 
 #include "../../arm7/source/libxm7.h"
 
@@ -18,7 +18,7 @@
 #define TYPE_FILE           8
 
 bool XM7_FS_init();
-u8 XM7_FS_selectModule(char* folderPath, XM7_ModuleManager_Type** modules);
-void XM7_FS_loadModule(XM7_ModuleManager_Type* pMod, char* filepath, u8 type, u8 slot);
+void XM7_FS_selectModule(char* folderPath);
+XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type* pMod, char* filepath, u8 type, u8 slot);
 
 #endif /* ARM9_SOURCE_NITROFSMENU_H_ */

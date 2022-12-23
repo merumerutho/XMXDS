@@ -22,13 +22,14 @@ u16 SampleFrequency [12] = { 33452, 35441, 37549, 39781,
 
 // finetunes with x.10 fixed point precision
 // 2^((i*8)/(12*128)) << 10
+/*
 #define FINETUNEPRECISION 10
 u16 FineTunes [17] = { 1024, 1028, 1031, 1035,
                        1039, 1043, 1046, 1050,
                        1054, 1058, 1062, 1065,
                        1069, 1073, 1077, 1081, 1085 };
+*/
 
-/*
 // these are finetunes with x.14    fixed point precision
 // 2^(i/(12*16)) << 14
 #define FINETUNEPRECISION 14
@@ -36,7 +37,6 @@ int FineTunes [17] = { 16384, 16443, 16503, 16562,
                        16622, 16682, 16743, 16803,
                        16864, 16925, 16986, 17048,
                        17109, 17171, 17233, 17296, 17358 };
-*/
 
 // NTSC Amiga timer 7159090,5
 #define AMIGAMAGICNUMBER 3579545

@@ -2,7 +2,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <fat.h>
+
+#include "play.h"
+#include "libXMX.h"
 
 //#include "../../arm7/source/libxm7.h"
 
@@ -27,38 +29,35 @@ u16 getFileCount(DIR* folder)
     return counter;
 }
 
-void strcpy_cut20(char* dest, char* src, bool fillWSpace)
+void strcpy_cut(char* dest, char* src, u8 len, bool fillWSpace)
 {
     u8 c;
-    for(c=0; c<20; c++)
+    for(c=0; c<len; c++)
     {
         if (src[c] == '\0')
             break;
         dest[c] = src[c];
     }
     // If file was too long
-    if (c == 20)
+    if (c == len)
     {
-        dest[18] = '~';  // Ugliest fuckery ever made to show file has a long name
-        dest[19] = '\0';
+        dest[len-2] = '~';  // Ugliest fuckery ever made to show file has a long name
+        dest[len-1] = '\0';
     }
+
     // Otherwise fill gaps with empty spaces
     if (fillWSpace)
     {
-        for(;c<20;c++)
+        for(;c<len;c++)
         {
-            if(c==19)
-            {
+            if(c==len-1)
                 dest[c] = '\0';
-            }
             else
                 dest[c] = ' ';
         }
     }
     else
-    {
         dest[c] = '\0';
-    }
 }
 
 void listFolderOnPosition(DIR* folder, u16 pPosition, u16 fileCount)
@@ -68,6 +67,9 @@ void listFolderOnPosition(DIR* folder, u16 pPosition, u16 fileCount)
     char pc = '>';
     char dir[4] = "dir";
 
+    if(pPosition>255)
+        iprintf("ERROR\nNot supported!\n");
+
     seekdir(folder, (u32) (pPosition & ENTRIES_PER_SCREEN));
     dirContent = readdir(folder);
     char filename[20] = "";
@@ -76,7 +78,7 @@ void listFolderOnPosition(DIR* folder, u16 pPosition, u16 fileCount)
     {
         char p = (ff == (pPosition % ENTRIES_PER_SCREEN)) ? pc : ' ';
         char* d = (dirContent->d_type == TYPE_FOLDER) ? dir : "   ";
-        strcpy_cut20(filename, dirContent->d_name, TRUE);
+        strcpy_cut(filename, dirContent->d_name, 20, TRUE);
         iprintf("\x1b[%d;%dH%c %s %s \n", ff+4, 0, p, d, filename);
         dirContent = readdir(folder);
         ff++;
@@ -99,7 +101,7 @@ struct dirent* getSelection(DIR* folder, u32 position)
     return readdir(folder);
 }
 
-void insertSlashIfNeeded(char* path)
+void insertSlashAtEnd(char* path)
 {
     for(u8 i=1;i<254;i++)
     {
@@ -115,7 +117,7 @@ void insertSlashIfNeeded(char* path)
 void navigateToFolder(DIR* folder, char* path, char* folderName)
 {
     // Add slash if needed
-    insertSlashIfNeeded(path);
+    insertSlashAtEnd(path);
     strcat(path, folderName);
     closedir(folder);
     folder = opendir(path);
@@ -183,12 +185,12 @@ bool isMOD(char* filename)
 void composeFileName(char* filepath, char* folder, char* filename)
 {
     strcpy(filepath, folder);
-    insertSlashIfNeeded(filepath);
+    insertSlashAtEnd(filepath);
     strcat(filepath, filename);
     iprintf("%s\n", filepath);
 }
 
-u8 XM7_FS_selectModule(char* folderPath, XM7_ModuleManager_Type** modules)
+void XM7_FS_selectModule(char* folderPath)
 {
     DIR* folder = opendir(folderPath);
     u16 fileCount;
@@ -200,16 +202,19 @@ u8 XM7_FS_selectModule(char* folderPath, XM7_ModuleManager_Type** modules)
 
     fileCount = getFileCount(folder);
     listFolderOnPosition(folder, pPosition, fileCount);
+    keysSetRepeat( 20 , 4 );
     while(bSelectingModule)
     {
         scanKeys();
-        if (keysDown() & KEY_UP)
+        u32 kdr = keysDownRepeat();
+
+        if (kdr & KEY_UP)
         {
             pPosition = (pPosition==0) ? pPosition : pPosition - 1;
             listFolderOnPosition(folder, pPosition, fileCount);
         }
 
-        if (keysDown() & KEY_DOWN)
+        if (kdr & KEY_DOWN)
         {
             pPosition = (pPosition == fileCount-1) ? pPosition : pPosition + 1;
             listFolderOnPosition(folder, pPosition, fileCount);
@@ -229,7 +234,7 @@ u8 XM7_FS_selectModule(char* folderPath, XM7_ModuleManager_Type** modules)
 
         if (keysDown() & (KEY_B))
         {
-            return 0xFF;
+            return;
         }
 
         if (keysDown() & (KEY_A | KEY_L | KEY_R))
@@ -269,20 +274,29 @@ u8 XM7_FS_selectModule(char* folderPath, XM7_ModuleManager_Type** modules)
             {
                 if(isXM(selection->d_name))
                 {
+                    u8 idx = ((keysDown() & KEY_L)==0);
                     composeFileName((char *)&filepath, folderPath, selection->d_name);
                     consoleClear();
-                    XM7_ModuleManager_Type* pMod = modules[((keysDown() & KEY_L)==0)];
-                    XM7_FS_loadModule(pMod, filepath, FS_TYPE_XM, ((keysDown() & KEY_L)==0));
-                    strcpy_cut20(((XM7_ModuleManager_Type*) pMod)->ModuleName, selection->d_name, FALSE);
-                    return ((XM7_ModuleManager_Type*) pMod)->moduleIndex;
+                    if(loadedModulesInfo[idx].modManager!=NULL)
+                    {
+                        if(loadedModulesInfo[idx].modManager->State == XM7_STATE_PLAYING)
+                            play_stop(&loadedModulesInfo[idx]);
+                        XMX_UnloadXM(idx);
+                    }
+                    loadedModulesInfo[idx].modManager = malloc(sizeof(XM7_ModuleManager_Type));
+                    loadedModulesInfo[idx].moduleIndex = idx;
+                    loadedModulesInfo[idx].modData = XM7_FS_loadModule(loadedModulesInfo[idx].modManager, filepath, FS_TYPE_XM, idx);
+                    strcpy_cut(loadedModulesInfo[idx].modManager->ModuleName, selection->d_name, 16, FALSE);
+                    return;
                 }
             }
         }
+        swiWaitForVBlank();
     }
-    return 0xFF;
+    return;
 }
 
-void XM7_FS_loadModule(XM7_ModuleManager_Type* pMod, char* filepath, u8 type, u8 slot)
+XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type* pMod, char* filepath, u8 type, u8 slot)
 {
     FILE* modFile = fopen(filepath, "rb");
     u32 size;
@@ -292,25 +306,25 @@ void XM7_FS_loadModule(XM7_ModuleManager_Type* pMod, char* filepath, u8 type, u8
     rewind(modFile);
 
     // Data destination
-    void* modRawData = malloc(sizeof(u8) * (size));
+    void* modHeader = malloc(sizeof(u8) * (size));
 
     // Read data from file pointer
-   if(fread(modRawData, sizeof(u8), size, modFile) != size)
+   if(fread(modHeader, sizeof(u8), size, modFile) != size)
        printf("\tCould not read module correctly!\n");
 
    if (size > 0)
    {
        if (type == FS_TYPE_XM)
-           XM7_LoadXM(pMod, (XM7_XMModuleHeader_Type*) modRawData, slot);
+           XM7_LoadXM(pMod, (XM7_XMModuleHeader_Type*) modHeader, slot);
 
        // Ensure data gets written to main RAM (leave no data in cache)
        DC_FlushAll();
    }
+   return modHeader;
 }
 
 bool XM7_FS_init()
 {
     // Load nitroFS file system
-    fatInitDefault();
     return nitroFSInit(NULL);
 }
