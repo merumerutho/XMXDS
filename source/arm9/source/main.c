@@ -78,14 +78,12 @@ int main(int argc, char **argv)
 
     IPC_FIFO_packet* ipc_packet = malloc(sizeof(IPC_FIFO_packet));
 
-    // Load nitroFS file system
-	if(!nitroFSInit(NULL))
-        iprintf("Could not load nitroFS!\n");
-
 	// Install the debugging (for now, only way to print stuff from ARMv7)
     fifoSetValue32Handler(FIFO_USER_08, arm9_DebugFIFOHandler, NULL);
 
 	displayIntro();
+
+	XM7_FS_init();
 
     // File reading check
     modA_file = fopen(MOD_TO_PLAY_A, "rb");
@@ -114,9 +112,10 @@ int main(int argc, char **argv)
         // allocate memory for the module
         module_A = malloc(sizeof(XM7_ModuleManager_Type));
         module_B = malloc(sizeof(XM7_ModuleManager_Type));
+
         // Load XM
-        XM7_LoadXM(module_A, (XM7_XMModuleHeader_Type*) modA_data, 0);
-        XM7_LoadXM(module_B, (XM7_XMModuleHeader_Type*) modB_data, 1);
+        //XM7_LoadXM(module_A, (XM7_XMModuleHeader_Type*) modA_data, 0);
+        //XM7_LoadXM(module_B, (XM7_XMModuleHeader_Type*) modB_data, 1);
 
         // ensure data gets written to main RAM
         DC_FlushAll();
@@ -127,8 +126,6 @@ int main(int argc, char **argv)
 
     // Send BPM/TEMPO to ARMv7
     sendBpmTempo(ipc_packet, arm9_globalBpm, arm9_globalTempo);
-
-    XM7_FS_selectModule((char *) folderPath);
 
     while(1)
     {
@@ -157,6 +154,12 @@ int main(int argc, char **argv)
             IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
             iprintf("bpm: %d - ", arm9_globalBpm);
         }
+
+        if (keysDown() & KEY_SELECT)
+        {
+            module_A = (XM7_ModuleManager_Type*) XM7_FS_selectModule((char *) folderPath);
+        }
+
         // Wait for VBlank
         swiWaitForVBlank();
     };
