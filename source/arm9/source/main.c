@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 
     long fszA = 0, fszB = 0;
 
-    char folderPath[255] = "data/mods/";
+    char folderPath[255] = "./data/mods/";
 
     IPC_FIFO_packet* ipc_packet = malloc(sizeof(IPC_FIFO_packet));
 

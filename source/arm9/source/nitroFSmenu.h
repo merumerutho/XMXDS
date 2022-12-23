@@ -7,7 +7,7 @@
 
 // #include "../../arm7/source/libxm7.h"
 
-#define ENTRIES_PER_SCREEN  20
+#define ENTRIES_PER_SCREEN  16
 
 #define FS_TYPE_XM          0
 #define FS_TYPE_MOD         1
