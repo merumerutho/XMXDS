@@ -10,9 +10,7 @@
 #include "../../arm7/source/tempo.h"
 #include "../../arm7/source/arm7_fifo.h"
 
-#define MOD_TO_PLAY_A "data/mods/myFolder/demo_D.xm"
-#define MOD_TO_PLAY_B "data/mods/myFolder/demo_E.xm"
-
+#define DEFAULT_ROOT_PATH "./"
 
 u8 arm9_globalBpm = DEFAULT_BPM;
 u8 arm9_globalTempo = DEFAULT_TEMPO;
@@ -65,77 +63,33 @@ void sendBpmTempo(IPC_FIFO_packet* ipc_packet, u8 bpm, u8 tempo)
 int main(int argc, char **argv)
 {
     consoleDemoInit();
-
-    XM7_ModuleManager_Type* module_A = NULL;
-    XM7_ModuleManager_Type* module_B = NULL;
-
-    FILE* modA_file;
-    FILE* modB_file;
-
-    long fszA = 0, fszB = 0;
-
-    char folderPath[255] = "./data/mods/";
-
     IPC_FIFO_packet* ipc_packet = malloc(sizeof(IPC_FIFO_packet));
+
+    XM7_ModuleManager_Type* modules[LIBXM7_ALLOWED_MODULES];
+    for (u8 i=0; i < LIBXM7_ALLOWED_MODULES; i++)
+        modules[i] = malloc(sizeof(XM7_ModuleManager_Type));
+
+    char folderPath[255] = DEFAULT_ROOT_PATH;
 
 	// Install the debugging (for now, only way to print stuff from ARMv7)
     fifoSetValue32Handler(FIFO_USER_08, arm9_DebugFIFOHandler, NULL);
-
-	displayIntro();
-
-	XM7_FS_init();
-
-    // File reading check
-    modA_file = fopen(MOD_TO_PLAY_A, "rb");
-    fseek(modA_file, 0L, SEEK_END);
-    fszA = ftell(modA_file);
-    rewind(modA_file);
-
-    modB_file = fopen(MOD_TO_PLAY_B, "rb");
-    fseek(modB_file, 0L, SEEK_END);
-    fszB = ftell(modB_file);
-    rewind(modB_file);
-
-    // Prepare destination pointer
-    u8* modA_data = malloc(sizeof(u8) * (fszA));
-    u8* modB_data = malloc(sizeof(u8) * (fszB));
-
-    // Read XM data from file pointer
-    if(fread(modA_data, sizeof(u8), fszA, modA_file) != fszA)
-        printf("\tCould not read module A correctly!\n");
-
-    if(fread(modB_data, sizeof(u8), fszB, modB_file) != fszB)
-            printf("\tCould not read module B correctly!\n");
-
-    if (fszA > 0 && fszB > 0)
-    {
-        // allocate memory for the module
-        module_A = malloc(sizeof(XM7_ModuleManager_Type));
-        module_B = malloc(sizeof(XM7_ModuleManager_Type));
-
-        // Load XM
-        //XM7_LoadXM(module_A, (XM7_XMModuleHeader_Type*) modA_data, 0);
-        //XM7_LoadXM(module_B, (XM7_XMModuleHeader_Type*) modB_data, 1);
-
-        // ensure data gets written to main RAM
-        DC_FlushAll();
-    }
-
     // turn on master sound
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);
-
     // Send BPM/TEMPO to ARMv7
     sendBpmTempo(ipc_packet, arm9_globalBpm, arm9_globalTempo);
+
+    XM7_FS_init();
+	displayIntro();
 
     while(1)
     {
         scanKeys();
 
         if (keysUp() & KEY_A)
-            play_stop(module_A);
+            play_stop(modules[0]);
 
         if (keysUp() & KEY_B)
-            play_stop(module_B);
+            play_stop(modules[1]);
 
         if (keysDown() & KEY_UP)
         {
@@ -157,7 +111,11 @@ int main(int argc, char **argv)
 
         if (keysDown() & KEY_SELECT)
         {
-            module_A = (XM7_ModuleManager_Type*) XM7_FS_selectModule((char *) folderPath);
+            u8 idx = XM7_FS_selectModule((char *) folderPath, modules);
+            displayIntro();
+            if(idx!=0xFF)
+                iprintf("Loaded %s on slot %c\n", modules[idx]->ModuleName, idx?'B':'A');
+
         }
 
         // Wait for VBlank

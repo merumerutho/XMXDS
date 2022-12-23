@@ -16,7 +16,7 @@ export TOPDIR	:=	$(CURDIR)
 
 # specify a directory which contains the nitro filesystem
 # this is relative to the Makefile
-NITRO_FILES	:= .
+NITRO_FILES	:= ./data
 
 
 

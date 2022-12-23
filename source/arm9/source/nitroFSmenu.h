@@ -5,7 +5,9 @@
 #include <dirent.h>
 #include <filesystem.h>
 
-// #include "../../arm7/source/libxm7.h"
+
+
+#include "../../arm7/source/libxm7.h"
 
 #define ENTRIES_PER_SCREEN  16
 
@@ -16,7 +18,7 @@
 #define TYPE_FILE           8
 
 bool XM7_FS_init();
-u32 XM7_FS_selectModule(char* folder);
-u32 XM7_FS_loadModule(char* filepath, u8 type, u8 slot);
+u8 XM7_FS_selectModule(char* folderPath, XM7_ModuleManager_Type** modules);
+void XM7_FS_loadModule(XM7_ModuleManager_Type* pMod, char* filepath, u8 type, u8 slot);
 
 #endif /* ARM9_SOURCE_NITROFSMENU_H_ */

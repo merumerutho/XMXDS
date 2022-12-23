@@ -1,3 +1,6 @@
+#ifndef LIBXM7_INCLUDED
+#define LIBXM7_INCLUDED
+
 #define LIBXM7_ALLOWED_MODULES                  2
 #define LIBXM7_MAX_CHANNELS_PER_MODULE          (16 / LIBXM7_ALLOWED_MODULES)
 
@@ -406,3 +409,5 @@ void XM7_UnloadMOD (XM7_ModuleManager_Type*);
 
 void XM7_SetReplayStyle  (XM7_ModuleManager_Type* Module, u8 style);
 void XM7_SetPanningStyle (XM7_ModuleManager_Type* Module, u8 style, u8 displacement);
+
+#endif
