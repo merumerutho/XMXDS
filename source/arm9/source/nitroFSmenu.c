@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <fat.h>
 
 #include "../../arm7/source/libxm7.h"
 
@@ -9,7 +10,7 @@ void XM7_FS_displayHeader()
 {
     consoleClear();
     iprintf("-------------------------------\n");
-    iprintf("File Select\n");
+    iprintf("L/R browse/load on slot A/B \n");
     iprintf("-------------------------------\n");
 }
 
@@ -49,6 +50,7 @@ void listFolderOnPosition(DIR* folder, u16 pPosition, u16 fileCount)
     struct dirent* dirContent;
     u8 ff = 0;
     char pc = '>';
+    char dir[4] = "dir";
 
     seekdir(folder, (u32) (pPosition & ENTRIES_PER_SCREEN));
     dirContent = readdir(folder);
@@ -57,8 +59,9 @@ void listFolderOnPosition(DIR* folder, u16 pPosition, u16 fileCount)
     while (dirContent && ff < ENTRIES_PER_SCREEN )
     {
         char p = (ff == (pPosition % ENTRIES_PER_SCREEN)) ? pc : ' ';
+        char* d = (dirContent->d_type == TYPE_FOLDER) ? dir : "   ";
         strcpy_cut32_fillWSpace(filename, dirContent->d_name);
-        iprintf("\x1b[%d;%dH%c %s \n", ff+4, 0, p, filename);
+        iprintf("\x1b[%d;%dH%c %s %s \n", ff+4, 0, p, d, filename);
         dirContent = readdir(folder);
         ff++;
     }
@@ -69,9 +72,9 @@ void listFolderOnPosition(DIR* folder, u16 pPosition, u16 fileCount)
     }
 
     rewinddir(folder);
-    iprintf("\x1b[21;0H----------------------------");
+    iprintf("\x1b[21;0H-------------------------------");
     iprintf("\x1b[22;0H%03d/%03d", pPosition+1, fileCount);
-    iprintf("\x1b[23;0H----------------------------");
+    iprintf("\x1b[23;0H-------------------------------");
 }
 
 struct dirent* getSelection(DIR* folder, u32 position)
@@ -208,23 +211,7 @@ u32 XM7_FS_selectModule(char* folderPath)
             listFolderOnPosition(folder, pPosition, fileCount);
         }
 
-        if (keysDown() & (KEY_L | KEY_R))
-        {
-            seekdir(folder, pPosition);
-            struct dirent* selection = getSelection(folder, pPosition);
-
-            if (selection->d_type == TYPE_FILE)
-            {
-                if(isXM(selection->d_name))
-                {
-                    composeFileName((char *)&filepath, folderPath, selection->d_name);
-                    consoleClear();
-                    return XM7_FS_loadModule(filepath, FS_TYPE_XM, ((keysDown() & KEY_L)==0));
-                }
-            }
-        }
-
-        if (keysDown() & (KEY_A))
+        if (keysDown() & (KEY_A | KEY_L | KEY_R))
         {
             seekdir(folder, pPosition);
             struct dirent* selection = getSelection(folder, pPosition);
@@ -249,6 +236,21 @@ u32 XM7_FS_selectModule(char* folderPath)
                     XM7_FS_displayHeader();
                     fileCount = getFileCount(folder);
                     listFolderOnPosition(folder, pPosition, fileCount);
+                }
+            }
+        }
+
+        if (keysDown() & (KEY_L | KEY_R))
+        {
+            struct dirent* selection = getSelection(folder, pPosition);
+
+            if (selection->d_type == TYPE_FILE)
+            {
+                if(isXM(selection->d_name))
+                {
+                    composeFileName((char *)&filepath, folderPath, selection->d_name);
+                    consoleClear();
+                    return XM7_FS_loadModule(filepath, FS_TYPE_XM, ((keysDown() & KEY_L)==0));
                 }
             }
         }
@@ -289,5 +291,6 @@ u32 XM7_FS_loadModule(char* filepath, u8 type, u8 slot)
 bool XM7_FS_init()
 {
     // Load nitroFS file system
+    fatInitDefault();
     return nitroFSInit(NULL);
 }
