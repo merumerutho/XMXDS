@@ -110,6 +110,7 @@ int main(int argc, char **argv)
         if (keysDown() & KEY_SELECT)
         {
             XM7_FS_selectModule((char *) folderPath);
+            IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
             displayIntro();
         }
 

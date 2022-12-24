@@ -44,9 +44,7 @@ void strcpy_cut(char* dest, char* src, u8 len, bool fillWSpace)
         dest[len-2] = '~';  // Ugliest fuckery ever made to show file has a long name
         dest[len-1] = '\0';
     }
-
-    // Otherwise fill gaps with empty spaces
-    if (fillWSpace)
+    else if (fillWSpace)
     {
         for(;c<len;c++)
         {
