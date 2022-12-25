@@ -1,8 +1,6 @@
-# libxm7
+# XMXDS
 
-A C library to play XM (and MOD) modules on Nintendo DS using only ARM7 resources
+Module mixing tool for DJing on Nintendo DS.
+Built on top of [libxm7](https://github.com/sverx/libxm7), with some adaptations to allow double module playback, etc.
 
-More details at: http://wcms.teleion.it/users/cgq/nds/libxm7/
-
-This is released as-is. MIT license.
-
+MIT license.
