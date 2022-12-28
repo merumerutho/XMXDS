@@ -457,8 +457,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
         if (XMInstrument1Header->NumberofSamples > 0)
         {
             // get the 2nd part of the header
-            XM7_XMInstrument2ndHeader_Type *XMInstrument2Header =
-                    (XM7_XMInstrument2ndHeader_Type*) &(XMInstrument1Header->NextHeaderPart[0]);
+            XM7_XMInstrument2ndHeader_Type *XMInstrument2Header = (XM7_XMInstrument2ndHeader_Type*) &(XMInstrument1Header->NextHeaderPart[0]);
 
             // 2009! HNY!
             // check the length of the instrument header before proceed!
@@ -521,8 +520,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
             }
 
             // InstrumentHeader (2nd part) is finished!
-            XM7_XMSampleHeader_Type *XMSampleHeader = (XM7_XMSampleHeader_Type*) ((u8*) &XMInstrument1Header->InstrumentHeaderLength
-                    + XMInstrument1Header->InstrumentHeaderLength);
+            XM7_XMSampleHeader_Type *XMSampleHeader = (XM7_XMSampleHeader_Type*) ((u8*) &XMInstrument1Header->InstrumentHeaderLength + XMInstrument1Header->InstrumentHeaderLength);
 
             u8 CurrentSample;
 
@@ -531,8 +529,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
             {
 
                 // allocate the new Sample
-                CurrentInstrumentPtr->Sample[CurrentSample] = PrepareNewSample(XMSampleHeader->Length, XMSampleHeader->LoopLength,
-                                                                               XMSampleHeader->Type);
+                CurrentInstrumentPtr->Sample[CurrentSample] = PrepareNewSample(XMSampleHeader->Length, XMSampleHeader->LoopLength, XMSampleHeader->Type);
                 if (CurrentInstrumentPtr->Sample[CurrentSample] == NULL)
                 {
                     Module->NumberofInstruments = CurrentInstrument + 1;
@@ -557,8 +554,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
                 memcpy(CurrentSamplePtr->Name, XMSampleHeader->Name, 22);        // char[22]
 
                 // Warn about potential issues with sample tuning (if too short)
-                if (CurrentSamplePtr->Flags > 0 && CurrentSamplePtr->Length < 64)
-                    iprintf("ins %d, smpl %d too short\n", CurrentInstrument + 1, CurrentSample + 1);
+                if (CurrentSamplePtr->Flags > 0 && CurrentSamplePtr->Length < 64) iprintf("ins %d, smpl %d too short\n", CurrentInstrument + 1, CurrentSample + 1);
 
                 // point to the next sample header (or the 1st byte after all the headers...)
                 XMSampleHeader = (XM7_XMSampleHeader_Type*) &(XMSampleHeader->NextHeader[0]);
@@ -604,8 +600,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
                          */
 
                         for (j = 0; j < CurrentSamplePtr->LoopLength; j++)
-                            CurrentSampleDataPtr->Data[CurrentSamplePtr->Length + j] = CurrentSampleDataPtr->Data[CurrentSamplePtr->Length
-                                    - j];
+                            CurrentSampleDataPtr->Data[CurrentSamplePtr->Length + j] = CurrentSampleDataPtr->Data[CurrentSamplePtr->Length - j];
 
                         // and change it to a 'normal' loop (preserving 16 bit flag)
                         CurrentSamplePtr->Flags = (CurrentSamplePtr->Flags & 0xF0) | 0x01;
@@ -646,8 +641,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
                          */
 
                         for (j = 0; j < (CurrentSamplePtr->LoopLength >> 1); j++)
-                            CurrentSampleData16Ptr->Data[(CurrentSamplePtr->Length >> 1) + j] =
-                                    CurrentSampleData16Ptr->Data[(CurrentSamplePtr->Length >> 1) - j];
+                            CurrentSampleData16Ptr->Data[(CurrentSamplePtr->Length >> 1) + j] = CurrentSampleData16Ptr->Data[(CurrentSamplePtr->Length >> 1) - j];
 
                         // and change it to a 'normal' loop (preserving 16 bit flag)
                         CurrentSamplePtr->Flags = (CurrentSamplePtr->Flags & 0xF0) | 0x01;
@@ -689,9 +683,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
              */
 
             XMInstrument1Header =
-                    (XM7_XMInstrument1stHeader_Type*) &(XMInstrument1Header->NextHeaderPart[(XMInstrument1Header->InstrumentHeaderLength)
-                            - (sizeof(XM7_XMInstrument1stHeader_Type))
-                                                                                            + 1]);
+                    (XM7_XMInstrument1stHeader_Type*) &(XMInstrument1Header->NextHeaderPart[(XMInstrument1Header->InstrumentHeaderLength) - (sizeof(XM7_XMInstrument1stHeader_Type)) + 1]);
 
         }
     }    // end "for Instruments"
@@ -727,8 +719,7 @@ u16 XM7_LoadMOD(XM7_ModuleManager_Type *Module, XM7_MODModuleHeader_Type *MODMod
     int FLT8Flag;
 
     // file format ID check
-    Module->NumberofChannels = IdentifyMOD(MODModule->FileFormat[0], MODModule->FileFormat[1], MODModule->FileFormat[2],
-                                           MODModule->FileFormat[3]);
+    Module->NumberofChannels = IdentifyMOD(MODModule->FileFormat[0], MODModule->FileFormat[1], MODModule->FileFormat[2], MODModule->FileFormat[3]);
 
     FLT8Flag = (Module->NumberofChannels >> 7);
     Module->NumberofChannels &= 0x3f;
@@ -824,8 +815,7 @@ u16 XM7_LoadMOD(XM7_ModuleManager_Type *Module, XM7_MODModuleHeader_Type *MODMod
             CurrentInstrumentPtr->VolumeFadeout = 0;
 
             // allocate space for the (only) sample
-            CurrentInstrumentPtr->Sample[0] = PrepareNewSample(SwapBytes(MODModule->Instrument[CurrentInstrument].Length) * 2,
-                                                               SwapBytes(MODModule->Instrument[CurrentInstrument].LoopLength) * 2, 0);
+            CurrentInstrumentPtr->Sample[0] = PrepareNewSample(SwapBytes(MODModule->Instrument[CurrentInstrument].Length) * 2, SwapBytes(MODModule->Instrument[CurrentInstrument].LoopLength) * 2, 0);
 
             if (CurrentInstrumentPtr->Sample[0] == NULL)
             {
@@ -904,8 +894,7 @@ u16 XM7_LoadMOD(XM7_ModuleManager_Type *Module, XM7_MODModuleHeader_Type *MODMod
 
                 period = MODPattern->SingleNote[curs].PeriodL + ((MODPattern->SingleNote[curs].PeriodH & 0x0F) * 256);
                 thispattern->Noteblock[curr].Note = (period != 0) ? 1 + FindClosestNoteToAmigaPeriod(period) : 0;
-                thispattern->Noteblock[curr].Instrument = (MODPattern->SingleNote[curs].Instr_EffType >> 4)
-                        | (MODPattern->SingleNote[curs].PeriodH & 0x10);
+                thispattern->Noteblock[curr].Instrument = (MODPattern->SingleNote[curs].Instr_EffType >> 4) | (MODPattern->SingleNote[curs].PeriodH & 0x10);
                 thispattern->Noteblock[curr].Volume = 0;     // there's no such info here
                 thispattern->Noteblock[curr].EffectType = (MODPattern->SingleNote[curs].Instr_EffType & 0x0F);
                 thispattern->Noteblock[curr].EffectParam = MODPattern->SingleNote[curs].EffParam;

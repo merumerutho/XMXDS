@@ -32,8 +32,7 @@ u16 SampleFrequency[12] = { 33452, 35441, 37549, 39781, 42147, 44653, 47308, 501
 // these are finetunes with x.14    fixed point precision
 // 2^(i/(12*16)) << 14
 #define FINETUNEPRECISION 14
-int FineTunes[17] =
-        { 16384, 16443, 16503, 16562, 16622, 16682, 16743, 16803, 16864, 16925, 16986, 17048, 17109, 17171, 17233, 17296, 17358 };
+int FineTunes[17] = { 16384, 16443, 16503, 16562, 16622, 16682, 16743, 16803, 16864, 16925, 16986, 17048, 17109, 17171, 17233, 17296, 17358 };
 
 // NTSC Amiga timer 7159090,5
 #define AMIGAMAGICNUMBER 3579545
@@ -187,8 +186,7 @@ void XM7_lowlevel_startSound(int sampleRate, const void *data, u32 length, u8 ch
         SCHANNEL_SOURCE(channel) = ((u32) data) + offset;
         SCHANNEL_REPEAT_POINT(channel) = 0;
         SCHANNEL_LENGTH(channel) = (length - offset) >> 2;
-        SCHANNEL_CR(channel) = SCHANNEL_ENABLE | SOUND_ONE_SHOT | SOUND_VOL(vol) | SOUND_PAN(pan)
-                               | (format == 0 ? SOUND_FORMAT_8BIT : SOUND_FORMAT_16BIT);
+        SCHANNEL_CR(channel) = SCHANNEL_ENABLE | SOUND_ONE_SHOT | SOUND_VOL(vol) | SOUND_PAN(pan) | (format == 0 ? SOUND_FORMAT_8BIT : SOUND_FORMAT_16BIT);
     }
 }
 
@@ -211,8 +209,7 @@ void XM7_lowlevel_startSoundwLoop(int sampleRate, const void *data, u32 loopleng
         SCHANNEL_SOURCE(channel) = ((u32) data) + offset;
         SCHANNEL_REPEAT_POINT(channel) = (loopstart - offset) >> 2;
         SCHANNEL_LENGTH(channel) = looplength >> 2;
-        SCHANNEL_CR(channel) = SCHANNEL_ENABLE | SOUND_REPEAT | SOUND_VOL(vol) | SOUND_PAN(pan)
-                               | (format ? SOUND_FORMAT_16BIT : SOUND_FORMAT_8BIT);
+        SCHANNEL_CR(channel) = SCHANNEL_ENABLE | SOUND_REPEAT | SOUND_VOL(vol) | SOUND_PAN(pan) | (format ? SOUND_FORMAT_16BIT : SOUND_FORMAT_8BIT);
     }
 }
 
@@ -539,9 +536,8 @@ void StartEnvelope(XM7_ModuleManager_Type *module, u8 chn, u8 startpoint)
     {
         u16 tmp;
         // volume envelope is ACTIVE: set the variables
-        tmp = module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VolumeEnvelopePoint[(module->Instrument[module->CurrentChannelLastInstrument[chn]
-                - 1]->NumberofVolumeEnvelopePoints)
-                                                                                                     - 1].x;
+        tmp = module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VolumeEnvelopePoint[(module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->NumberofVolumeEnvelopePoints)
+                - 1].x;
         if (startpoint > tmp) startpoint = tmp;
         module->CurrentSampleVolumeEnvelopePoint[chn] = startpoint;
         module->CurrentSampleVolumeEnvelopeState[chn] = ENVELOPE_ATTACK;
@@ -813,9 +809,7 @@ u16 DecodeVolumeColumn(XM7_ModuleManager_Type *module, u8 chn, u8 volcmd, u8 cur
             }
             else
             {
-                module->CurrentVibratoValue[chn] = CalculateVibratoValue(module->CurrentVibratoType[chn] & 0x03,
-                                                                         module->CurrentVibratoPoint[chn],
-                                                                         module->Effect4xxMemory[chn] & 0x0F);
+                module->CurrentVibratoValue[chn] = CalculateVibratoValue(module->CurrentVibratoType[chn] & 0x03, module->CurrentVibratoPoint[chn], module->Effect4xxMemory[chn] & 0x0F);
                 module->CurrentVibratoPoint[chn] = (module->CurrentVibratoPoint[chn] + (module->Effect4xxMemory[chn] >> 4)) & 0x03f; // mod 64
                 resvalue = 0x0002;
             }
@@ -833,9 +827,7 @@ u16 DecodeVolumeColumn(XM7_ModuleManager_Type *module, u8 chn, u8 volcmd, u8 cur
             }
             else
             {
-                module->CurrentVibratoValue[chn] = CalculateVibratoValue(module->CurrentVibratoType[chn] & 0x03,
-                                                                         module->CurrentVibratoPoint[chn],
-                                                                         module->Effect4xxMemory[chn] & 0x0F);
+                module->CurrentVibratoValue[chn] = CalculateVibratoValue(module->CurrentVibratoType[chn] & 0x03, module->CurrentVibratoPoint[chn], module->Effect4xxMemory[chn] & 0x0F);
                 module->CurrentVibratoPoint[chn] = (module->CurrentVibratoPoint[chn] + (module->Effect4xxMemory[chn] >> 4)) & 0x03f; // mod 64
                 resvalue = 0x0002;
             }
@@ -1120,9 +1112,7 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
             }
             else
             {
-                module->CurrentVibratoValue[chn] = CalculateVibratoValue(module->CurrentVibratoType[chn] & 0x03,
-                                                                         module->CurrentVibratoPoint[chn],
-                                                                         module->Effect4xxMemory[chn] & 0x0F);
+                module->CurrentVibratoValue[chn] = CalculateVibratoValue(module->CurrentVibratoType[chn] & 0x03, module->CurrentVibratoPoint[chn], module->Effect4xxMemory[chn] & 0x0F);
                 module->CurrentVibratoPoint[chn] = (module->CurrentVibratoPoint[chn] + (module->Effect4xxMemory[chn] >> 4)) & 0x03f; // mod 64
                 // needs this to trigger pitching
                 resvalue = 0x0100;
@@ -1141,8 +1131,7 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
             else
             {
                 effpar = module->Effect7xxMemory[chn];
-                module->CurrentTremoloVolume[chn] = CalculateTremoloValue(module->CurrentTremoloType[chn] & 0x03,
-                                                                          module->CurrentTremoloPoint[chn], (effpar & 0x0f));
+                module->CurrentTremoloVolume[chn] = CalculateTremoloValue(module->CurrentTremoloType[chn] & 0x03, module->CurrentTremoloPoint[chn], (effpar & 0x0f));
                 module->CurrentTremoloPoint[chn] = (module->CurrentTremoloPoint[chn] + (effpar >> 4)) & 0x03f; // mod 64
             }
             break;
@@ -1199,9 +1188,7 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
             // while sliding volume similarly to Axy volume slide.
             if (effcmd == 0x6)
             {
-                module->CurrentVibratoValue[chn] = CalculateVibratoValue(module->CurrentVibratoType[chn] & 0x03,
-                                                                         module->CurrentVibratoPoint[chn],
-                                                                         module->Effect4xxMemory[chn] & 0x0F);
+                module->CurrentVibratoValue[chn] = CalculateVibratoValue(module->CurrentVibratoType[chn] & 0x03, module->CurrentVibratoPoint[chn], module->Effect4xxMemory[chn] & 0x0F);
                 module->CurrentVibratoPoint[chn] = (module->CurrentVibratoPoint[chn] + (module->Effect4xxMemory[chn] >> 4)) & 0x03f; // mod 64
                 // needs this to trigger pitching & volume change
                 resvalue = 0x0500;
@@ -1464,9 +1451,8 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
                 {
                     u16 tmp;
                     // check IF we aren't running out of envelope...
-                    tmp = module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VolumeEnvelopePoint[(module->Instrument[module->CurrentChannelLastInstrument[chn]
-                            - 1]->NumberofVolumeEnvelopePoints)
-                                                                                                                 - 1].x;
+                    tmp = module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VolumeEnvelopePoint[(module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->NumberofVolumeEnvelopePoints)
+                            - 1].x;
                     if (effpar > tmp) effpar = tmp;
 
                     // jump to this envelope point
@@ -1802,8 +1788,8 @@ void PitchNote(XM7_ModuleManager_Type *module, u8 chn, u8 pitch, s32 porta, s8 v
         s8 finetune = (module->CurrentFinetuneOverrideOn[chn]) ? module->CurrentFinetuneOverride[chn] : (sample_ptr->FineTune & 0xF8);
         // finetune = (finetune)?finetune:sample_ptr->FineTune; ????
         s8 autovibra =
-                ((instrument != 0) && (module->Instrument[instrument - 1]->VibratoDepth != 0)
-                 && (module->Instrument[instrument - 1]->VibratoRate != 0)) ? CalculateAutoVibrato(module, chn, instrument) : 0;
+                ((instrument != 0) && (module->Instrument[instrument - 1]->VibratoDepth != 0) && (module->Instrument[instrument - 1]->VibratoRate != 0)) ?
+                        CalculateAutoVibrato(module, chn, instrument) : 0;
         int freq = CalculateFreq(module->FreqTable, (note + pitch), sample_ptr->RelativeNote, finetune, porta, vibra, autovibra, glis);
         XM7_lowlevel_pitchSound(freq, pbChn);
     }
@@ -1831,8 +1817,8 @@ void PlayNote(XM7_ModuleManager_Type *module, u8 chn, u16 sample_offset)
     {
         s8 finetune = (module->CurrentFinetuneOverrideOn[chn]) ? module->CurrentFinetuneOverride[chn] : (sample_ptr->FineTune & 0xF8);
         s8 autovibra =
-                ((instrument != 0) && (module->Instrument[instrument - 1]->VibratoDepth != 0)
-                 && (module->Instrument[instrument - 1]->VibratoRate != 0)) ? CalculateAutoVibrato(module, chn, instrument) : 0;
+                ((instrument != 0) && (module->Instrument[instrument - 1]->VibratoDepth != 0) && (module->Instrument[instrument - 1]->VibratoRate != 0)) ?
+                        CalculateAutoVibrato(module, chn, instrument) : 0;
         int freq = CalculateFreq(module->FreqTable, note, sample_ptr->RelativeNote, finetune, 0, vibra, autovibra, glis);
 
         u8 volume = module->CurrentSampleVolume[chn];
@@ -1865,15 +1851,13 @@ void PlayNote(XM7_ModuleManager_Type *module, u8 chn, u16 sample_offset)
             if ((sample_ptr->Flags & 0x01) == 0)
             {
                 // no loop
-                XM7_lowlevel_startSound(freq, sample_ptr->SampleData, sample_ptr->Length, pbChn, volume, panning, (sample_ptr->Flags >> 4),
-                                        sample_offset);
+                XM7_lowlevel_startSound(freq, sample_ptr->SampleData, sample_ptr->Length, pbChn, volume, panning, (sample_ptr->Flags >> 4), sample_offset);
             }
             else
             {
                 //fifoSendValue32(FIFO_USER_08, sample_ptr->LoopLength);
                 // has a loop
-                XM7_lowlevel_startSoundwLoop(freq, sample_ptr->SampleData, sample_ptr->LoopLength, sample_ptr->LoopStart, pbChn, volume,
-                                             panning, (sample_ptr->Flags >> 4), sample_offset);
+                XM7_lowlevel_startSoundwLoop(freq, sample_ptr->SampleData, sample_ptr->LoopLength, sample_ptr->LoopStart, pbChn, volume, panning, (sample_ptr->Flags >> 4), sample_offset);
             }
         }
     }
@@ -1954,7 +1938,6 @@ void Timer1Handler(void)
     // For every module...
     for (mm = 0; mm < LIBXM7_ALLOWED_MODULES; mm++)
     {
-
         XM7_ModuleManager_Type *module = XM7_Modules[mm];
 
         if (module == NULL || module->State != XM7_STATE_PLAYING) continue;
@@ -1981,8 +1964,7 @@ void Timer1Handler(void)
             ArpeggioValue = 0;
 
             // read the line and do what's written
-            CurrNoteLine = (XM7_SingleNoteArray_Type*) &(module->Pattern[module->CurrentPatternNumber]->Noteblock[module->CurrentLine
-                    * (module->NumberofChannels)]);
+            CurrNoteLine = (XM7_SingleNoteArray_Type*) &(module->Pattern[module->CurrentPatternNumber]->Noteblock[module->CurrentLine * (module->NumberofChannels)]);
             CurrNote = &(CurrNoteLine->Noteblock[chn]);
 
             // decode effects that could apply NOW!
@@ -2077,9 +2059,7 @@ void Timer1Handler(void)
                         module->CurrentSamplePortaDest[chn] = (module->CurrentChannelLastNote[chn] - CurrNote->Note) * (4 * 16);
                     else
                         // AMIGA FREQ TABLE (periods*4)
-                        module->CurrentSamplePortaDest[chn] = (GetAmigaPeriod(CurrNote->Note - 1)
-                                - GetAmigaPeriod(module->CurrentChannelLastNote[chn] - 1))
-                                                              * 4;
+                        module->CurrentSamplePortaDest[chn] = (GetAmigaPeriod(CurrNote->Note - 1) - GetAmigaPeriod(module->CurrentChannelLastNote[chn] - 1)) * 4;
                 }
             }
 
@@ -2119,13 +2099,12 @@ void Timer1Handler(void)
 
                 //  **** BETA: ProTracker on-the-fly sample change emulation    ******************
                 if (module->ReplayStyle & XM7_REPLAY_ONTHEFLYSAMPLECHANGE_FLAG)
-                    if (module->CurrentTick == EDxInAction)
-                        if (module->CurrentChannelLastInstrument[chn] != CurrNote->Instrument && module->CurrentChannelLastNote[chn] != 0)
-                        {
-                            // save the new instrument number and trigger instrument change
-                            module->CurrentChannelLastInstrument[chn] = CurrNote->Instrument;
-                            ShouldChangeInstrument = YES;
-                        }
+                    if (module->CurrentTick == EDxInAction) if (module->CurrentChannelLastInstrument[chn] != CurrNote->Instrument && module->CurrentChannelLastNote[chn] != 0)
+                    {
+                        // save the new instrument number and trigger instrument change
+                        module->CurrentChannelLastInstrument[chn] = CurrNote->Instrument;
+                        ShouldChangeInstrument = YES;
+                    }
                 //  ************************************************************************ END ****
 
                 //  ... and check if there's a last note! otherwise simply ignore it!
@@ -2134,8 +2113,7 @@ void Timer1Handler(void)
                     // reset volume & panning
                     if (module->CurrentTick == EDxInAction)
                     {
-                        XM7_Sample_Type *sample_ptr = GetSamplePointer(module, (module->CurrentChannelLastNote[chn] - 1),
-                                                                       module->CurrentChannelLastInstrument[chn]);
+                        XM7_Sample_Type *sample_ptr = GetSamplePointer(module, (module->CurrentChannelLastNote[chn] - 1), module->CurrentChannelLastInstrument[chn]);
                         if (sample_ptr != NULL)
                         {
                             module->CurrentSampleVolume[chn] = sample_ptr->Volume;
@@ -2204,13 +2182,10 @@ void Timer1Handler(void)
                 // check if this instrument exists before accessing its data!!!
                 if (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1] != NULL)
                 {
-                    if ((module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoDepth != 0) && (module->Instrument[module->CurrentChannelLastInstrument[chn]
-                            - 1]->VibratoRate
-                                                                                                                   != 0))
+                    if ((module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoDepth != 0) && (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate != 0))
                     {
                         // instrument autovibrato sweep
-                        module->CurrentAutoVibratoSweep[chn] +=
-                                module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoSweep;
+                        module->CurrentAutoVibratoSweep[chn] += module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoSweep;
                         if (module->CurrentAutoVibratoSweep[chn] > 0x10000) module->CurrentAutoVibratoSweep[chn] = 0x10000;
 
                         ShouldPitchNote = YES;
@@ -2229,8 +2204,7 @@ void Timer1Handler(void)
             // is there an EFFECT?
             if ((CurrNote->EffectType != 0x00) || (CurrNote->EffectParam != 0x00))
             {
-                effres = DecodeEffectsColumn(module, chn, CurrNote->EffectType, CurrNote->EffectParam, module->CurrentTick,
-                                             module->CurrentAdditionalTick);
+                effres = DecodeEffectsColumn(module, chn, CurrNote->EffectType, CurrNote->EffectParam, module->CurrentTick, module->CurrentAdditionalTick);
 
                 switch (effres >> 8)
                 {
@@ -2284,8 +2258,7 @@ void Timer1Handler(void)
 
                             // if there's a volume specified (xx), we should reset before retrigger!
                             // ... I know it's strange, but FT2 works that way...
-                            if ((CurrNote->Volume >= 0x10) && (CurrNote->Volume <= 0x40))
-                                effres = DecodeVolumeColumn(module, chn, CurrNote->Volume, 0, 0);
+                            if ((CurrNote->Volume >= 0x10) && (CurrNote->Volume <= 0x40)) effres = DecodeVolumeColumn(module, chn, CurrNote->Volume, 0, 0);
                         }
 
                         // if it's not the 1st tick you should change volume
@@ -2323,8 +2296,7 @@ void Timer1Handler(void)
             else
             {
                 // check if we need to go on with an envelope
-                if ((module->CurrentSampleVolumeEnvelopeState[chn] != ENVELOPE_NONE) || (module->CurrentSamplePanningEnvelopeState[chn]
-                        != ENVELOPE_NONE))
+                if ((module->CurrentSampleVolumeEnvelopeState[chn] != ENVELOPE_NONE) || (module->CurrentSamplePanningEnvelopeState[chn] != ENVELOPE_NONE))
                 {
                     // there's an envelope to follow...
                     ElaborateEnvelope(module, chn, module->CurrentChannelLastInstrument[chn]);
@@ -2347,8 +2319,7 @@ void Timer1Handler(void)
                 if (ShouldChangeInstrument) ChangeSample(module, chn);
                 // ****************************************************************************
                 if (ShouldChangeVolume) ApplyVolumeandPanning(module, chn);
-                if (ShouldPitchNote)
-                    PitchNote(module, chn, ArpeggioValue, module->CurrentSamplePortamento[chn], module->CurrentVibratoValue[chn]);
+                if (ShouldPitchNote) PitchNote(module, chn, ArpeggioValue, module->CurrentSamplePortamento[chn], module->CurrentVibratoValue[chn]);
             }
 
             // last thing to do
@@ -2358,13 +2329,10 @@ void Timer1Handler(void)
                 // check if this instrument exists before accessing its data!!!
                 if (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1] != NULL)
                 {
-                    if ((module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoDepth != 0) && (module->Instrument[module->CurrentChannelLastInstrument[chn]
-                            - 1]->VibratoRate
-                                                                                                                   != 0))
+                    if ((module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoDepth != 0) && (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate != 0))
                     {
                         // move point forward, for next
-                        module->CurrentAutoVibratoPoint[chn] +=
-                                module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate;
+                        module->CurrentAutoVibratoPoint[chn] += module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate;
                     }
                 }
             }
@@ -2410,8 +2378,7 @@ void Timer1Handler(void)
                     module->CurrentLine++;
 
                     // if loopend passed, reset the loop counter
-                    if (module->CurrentLine > module->CurrentLoopEnd[CurrentLoopEffChannel])
-                        module->CurrentLoopCounter[CurrentLoopEffChannel] = 0;
+                    if (module->CurrentLine > module->CurrentLoopEnd[CurrentLoopEffChannel]) module->CurrentLoopCounter[CurrentLoopEffChannel] = 0;
 
                     // now check if pattern is over (or should be breaked!)
                     if (BreakThisPattern || ((module->CurrentLine) >= (module->PatternLength[module->CurrentPatternNumber])))
