@@ -1,5 +1,6 @@
 #include <nds.h>
 #include <stdio.h>
+#include <math.h>
 
 // ARMv9 INCLUDES
 #include "arm9_defines.h"
@@ -17,6 +18,15 @@
 u8 arm9_globalBpm = DEFAULT_BPM;
 u8 arm9_globalTempo = DEFAULT_TEMPO;
 
+//
+
+void arm9_DebugFIFOHandler(u32 p, void *userdata);
+void drawIntro();
+void drawVolumeFader();
+void evaluateVolumeFadersAndCrossFader(touchPosition touchPos);
+void IpcSend(IPC_FIFO_packet *pkt, u8 fifo);
+void sendBpmTempo(IPC_FIFO_packet *ipc_packet, u8 bpm, u8 tempo);
+
 //---------------------------------------------------------------------------------
 void arm9_DebugFIFOHandler(u32 p, void *userdata)
 {
@@ -24,11 +34,10 @@ void arm9_DebugFIFOHandler(u32 p, void *userdata)
      {
      iprintf("%d", ((IPC_FIFO_packet*) (p))->data[i]);
      }*/
-    iprintf("%ld", p);
-    iprintf("\n");
+    iprintf("%ld\n", p);
 }
 
-void displayIntro()
+void drawIntro()
 {
     consoleClear();
     iprintf("\x1b[0;0H-------------------------------");
@@ -43,6 +52,40 @@ void displayIntro()
     iprintf("\x1b[3;1H2-decks module player for NDS!\n");
     iprintf("\x1b[4;4Hcredits: @merumerutho\n");
     iprintf("\x1b[5;4Hbased on libxm7 (@sverx)\n\n");
+    drawVolumeFader();
+}
+
+void drawVolumeFader()
+{
+    // Draw position of volume bar on screen
+    for (u8 i=0; i < 13; i++)
+    {
+        if (i==loadedModulesInfo[0].modManager->CurrentGlobalVolume/10)
+            iprintf("\x1b[%d;2H*", 20 - i);
+        else
+            iprintf("\x1b[%d;2H|", 20 - i);
+        if (i==loadedModulesInfo[1].modManager->CurrentGlobalVolume/10)
+            iprintf("\x1b[%d;28H*", 20 - i);
+        else
+            iprintf("\x1b[%d;28H|", 20 - i);
+    }
+    iprintf("\x1b[21;1H%3d", loadedModulesInfo[0].modManager->CurrentGlobalVolume);
+    iprintf("\x1b[21;27H%3d", loadedModulesInfo[1].modManager->CurrentGlobalVolume);
+}
+
+void evaluateVolumeFadersAndCrossFader(touchPosition touchPos)
+{
+    u8 targetModule = 0xFF;
+    u16 px = ((touchPos.rawx - 320) * SCREEN_WIDTH) / 3488;
+    u16 py = SCREEN_HEIGHT - ((touchPos.rawy - 224) * SCREEN_HEIGHT) / 3680;
+
+    if (abs(px - 20) < 10) targetModule = 0;
+    if (abs(px - (SCREEN_WIDTH - 20)) < 10) targetModule = 1;
+
+    u16 value = (u16) (MIN(MAX(0, (py-30)*1.7), 170) * 127 / 170);
+    if(targetModule < 2)
+        loadedModulesInfo[targetModule].modManager->CurrentGlobalVolume = value;
+
 }
 
 void IpcSend(IPC_FIFO_packet *pkt, u8 fifo)
@@ -62,6 +105,8 @@ void sendBpmTempo(IPC_FIFO_packet *ipc_packet, u8 bpm, u8 tempo)
 int main(int argc, char **argv)
 {
     consoleDemoInit();
+
+    touchPosition touchPos;
     IPC_FIFO_packet *ipc_packet = malloc(sizeof(IPC_FIFO_packet));
 
     char folderPath[255] = DEFAULT_ROOT_PATH;
@@ -74,11 +119,17 @@ int main(int argc, char **argv)
     sendBpmTempo(ipc_packet, arm9_globalBpm, arm9_globalTempo);
 
     XM7_FS_init();
-    displayIntro();
+    drawIntro();
 
     while (1)
     {
         scanKeys();
+        if(keysHeld() & KEY_TOUCH)
+        {
+            touchRead(&touchPos);
+            evaluateVolumeFadersAndCrossFader(touchPos);
+            drawVolumeFader();
+        }
 
         if ((keysHeld() & KEY_L) && (keysUp() & KEY_A))
         {
@@ -112,7 +163,7 @@ int main(int argc, char **argv)
         {
             XM7_FS_selectModule((char*) folderPath);
             IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
-            displayIntro();
+            drawIntro();
         }
 
         // Wait for VBlank

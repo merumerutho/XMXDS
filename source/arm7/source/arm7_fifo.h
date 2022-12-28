@@ -7,7 +7,7 @@
 typedef struct
 {
     u8 command;
-    u8 data[16];
+    u32 data[16];
 } __attribute__ ((packed)) IPC_FIFO_packet;
 
 void arm7_GlobalSettingsFIFOHandler(u32 command, void *userdata);

@@ -59,6 +59,7 @@ u16 VeryFineTunes[129];
 #define ENVELOPE_SUSTAIN        2
 #define ENVELOPE_RELEASE        3
 
+
 void CalculateVeryFineTunes()
 {
     u8 i, j;
@@ -213,13 +214,24 @@ void XM7_lowlevel_startSoundwLoop(int sampleRate, const void *data, u32 loopleng
     }
 }
 
-void XM7_lowlevel_setVolumeandPanning(u8 channel, u8 vol, u8 pan)
+void XM7_lowlevel_setVolume(u8 channel, u8 vol)
 {
     // use channels starting from last!
     channel = 15 - channel;
-
     SCHANNEL_VOL (channel) = (vol & 0x7f);
+}
+
+void XM7_lowlevel_setPanning(u8 channel, u8 pan)
+{
+    // use channels starting from last!
+    channel = 15 - channel;
     SCHANNEL_PAN (channel) = (pan & 0x7f);
+}
+
+void XM7_lowlevel_setVolumeandPanning(u8 channel, u8 vol, u8 pan)
+{
+    XM7_lowlevel_setVolume(channel, vol);
+    XM7_lowlevel_setPanning(channel, pan);
 }
 
 void XM7_lowlevel_pitchSound(int sampleRate, u8 channel)
@@ -267,7 +279,7 @@ u8 CalculateFinalVolume(XM7_ModuleManager_Type *module, u8 samplevol, u8 envelop
     // gives back [0x00-0x7f]
     // FinalVol=(FadeOutVol/32768)*(EnvelopeVol/64)*(GlobalVol/64)*(Vol/64)*Scale;
     // scale is 0x80
-    u8 tmpvol = ((fadeoutvol >> 3) * envelopevol * module->CurrentGlobalVolume * samplevol) >> 23;
+    u8 tmpvol = ((fadeoutvol >> 3) * envelopevol * (module->CurrentGlobalVolume / 4) * samplevol) >> 23;
 
     // clip volume value
     if (tmpvol > 0x7f)
@@ -2428,7 +2440,6 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
     // re-set the Module tempo & bpm & global volume
     module->CurrentBPM = globalBpm;
     module->CurrentTempo = globalTempo;
-    module->CurrentGlobalVolume = 0x40;
 
     // re-set the Module position
     module->CurrentSongPosition = (position < module->ModuleLength) ? position : 0;

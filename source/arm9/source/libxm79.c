@@ -692,6 +692,9 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     Module->AmigaPanningEmulation = XM7_PANNING_TYPE_NORMAL;
     Module->AmigaPanningDisplacement = 0x00;
 
+    // Set volume
+    Module->CurrentGlobalVolume = 0x40;
+
     // Replay style FT2 for XM
     Module->ReplayStyle = XM7_REPLAY_STYLE_FT2;
 
