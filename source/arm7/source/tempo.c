@@ -14,14 +14,14 @@ void setGlobalBpm(u8 value)
 {
     globalBpm = value;
     // Update value to modules
-    SetTimerSpeedBPM (globalBpm);
+    SetTimerSpeedBPM(globalBpm);
 }
 
 void setGlobalTempo(u8 value)
 {
     globalTempo = value;
     // Update value to modules
-    for (u8 mm=0; mm < LIBXM7_ALLOWED_MODULES; mm++)
+    for (u8 mm = 0; mm < LIBXM7_ALLOWED_MODULES; mm++)
     {
         XM7_Modules[mm]->CurrentTempo = globalTempo;
     }

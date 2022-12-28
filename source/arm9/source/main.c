@@ -18,12 +18,13 @@ u8 arm9_globalBpm = DEFAULT_BPM;
 u8 arm9_globalTempo = DEFAULT_TEMPO;
 
 //---------------------------------------------------------------------------------
-void arm9_DebugFIFOHandler (u32 p, void* userdata)
+void arm9_DebugFIFOHandler(u32 p, void *userdata)
 {
-    for(u8 i=0; i<16; i++)
-    {
-        iprintf("%c", (char)((IPC_FIFO_packet*)(p))->data[0] );
-    }
+    /*for (u8 i = 0; i < 16; i++)
+     {
+     iprintf("%d", ((IPC_FIFO_packet*) (p))->data[i]);
+     }*/
+    iprintf("%ld", p);
     iprintf("\n");
 }
 
@@ -31,10 +32,10 @@ void displayIntro()
 {
     consoleClear();
     iprintf("\x1b[0;0H-------------------------------");
-    for (u8 i=0;i<24;i++)
+    for (u8 i = 0; i < 24; i++)
     {
-        iprintf("\x1b[%d;0H-",i);
-        iprintf("\x1b[%d;31H-",i);
+        iprintf("\x1b[%d;0H-", i);
+        iprintf("\x1b[%d;31H-", i);
     }
     iprintf("\x1b[23;0H-------------------------------");
 
@@ -44,12 +45,12 @@ void displayIntro()
     iprintf("\x1b[5;4Hbased on libxm7 (@sverx)\n\n");
 }
 
-void IpcSend(IPC_FIFO_packet* pkt, u8 fifo)
+void IpcSend(IPC_FIFO_packet *pkt, u8 fifo)
 {
     fifoSendValue32(fifo, (u32) pkt);
 }
 
-void sendBpmTempo(IPC_FIFO_packet* ipc_packet, u8 bpm, u8 tempo)
+void sendBpmTempo(IPC_FIFO_packet *ipc_packet, u8 bpm, u8 tempo)
 {
     ipc_packet->data[0] = bpm;
     ipc_packet->data[1] = tempo;
@@ -61,11 +62,11 @@ void sendBpmTempo(IPC_FIFO_packet* ipc_packet, u8 bpm, u8 tempo)
 int main(int argc, char **argv)
 {
     consoleDemoInit();
-    IPC_FIFO_packet* ipc_packet = malloc(sizeof(IPC_FIFO_packet));
+    IPC_FIFO_packet *ipc_packet = malloc(sizeof(IPC_FIFO_packet));
 
     char folderPath[255] = DEFAULT_ROOT_PATH;
 
-	// Install the debugging (for now, only way to print stuff from ARMv7)
+    // Install the debugging (for now, only way to print stuff from ARMv7)
     fifoSetValue32Handler(FIFO_USER_08, arm9_DebugFIFOHandler, NULL);
     // turn on master sound
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);
@@ -73,21 +74,21 @@ int main(int argc, char **argv)
     sendBpmTempo(ipc_packet, arm9_globalBpm, arm9_globalTempo);
 
     XM7_FS_init();
-	displayIntro();
+    displayIntro();
 
-    while(1)
+    while (1)
     {
         scanKeys();
 
         if ((keysHeld() & KEY_L) && (keysUp() & KEY_A))
         {
-            if(loadedModulesInfo[0].modManager != NULL)
-                play_stop(&loadedModulesInfo[0]);
+            if (loadedModulesInfo[0].modManager != NULL) play_stop(&loadedModulesInfo[0]);
         }
 
         if ((keysHeld() & KEY_R) && (keysUp() & KEY_A))
-            if(loadedModulesInfo[1].modManager != NULL)
-                play_stop(&loadedModulesInfo[1]);
+        {
+            if (loadedModulesInfo[1].modManager != NULL) play_stop(&loadedModulesInfo[1]);
+        }
 
         if (keysDown() & KEY_UP)
         {
@@ -109,7 +110,7 @@ int main(int argc, char **argv)
 
         if (keysDown() & KEY_SELECT)
         {
-            XM7_FS_selectModule((char *) folderPath);
+            XM7_FS_selectModule((char*) folderPath);
             IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
             displayIntro();
         }
@@ -117,5 +118,5 @@ int main(int argc, char **argv)
         // Wait for VBlank
         swiWaitForVBlank();
     };
-	return 0;
+    return 0;
 }

@@ -8,6 +8,6 @@
 
 // ---
 
-void play_stop(XMX_ModuleInfo* module);
+void play_stop(XMX_ModuleInfo *module);
 
 #endif /* ARM9_SOURCE_PLAY_H_ */

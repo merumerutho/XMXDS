@@ -3,7 +3,7 @@
 #include "arm7_defines.h"
 #include "tempo.h"
 
-void arm7_GlobalSettingsFIFOHandler(u32 p, void* userdata)
+void arm7_GlobalSettingsFIFOHandler(u32 p, void *userdata)
 {
     // Extract data from IPC packet
     u8 command = ((IPC_FIFO_packet*) (p))->command;

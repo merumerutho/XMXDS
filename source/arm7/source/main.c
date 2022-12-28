@@ -8,33 +8,35 @@
 #define FIFO_XM7    (FIFO_USER_07)
 
 //---------------------------------------------------------------------------------
-void VblankHandler(void) {
+void VblankHandler(void)
+{
 //---------------------------------------------------------------------------------
-	//Wifi_Update();
+    //Wifi_Update();
 }
 
-
 //---------------------------------------------------------------------------------
-void VcountHandler() {
+void VcountHandler()
+{
 //---------------------------------------------------------------------------------
-	inputGetAndSend();
+    inputGetAndSend();
 }
 
 volatile bool exitflag = false;
 
 //---------------------------------------------------------------------------------
-void powerButtonCB() {
+void powerButtonCB()
+{
 //---------------------------------------------------------------------------------
-	exitflag = true;
+    exitflag = true;
 }
 
 //---------------------------------------------------------------------------------
-void XM7_arm7_Value32Handler (u32 p, void* userdata)
+void XM7_arm7_Value32Handler(u32 p, void *userdata)
 {
     if (p != 0)
     {
         // received a pointer to a module that should start now
-        XM7_ModuleManager_Type* module = (XM7_ModuleManager_Type*) p;
+        XM7_ModuleManager_Type *module = (XM7_ModuleManager_Type*) p;
         XM7_Modules[module->moduleIndex] = module;
 
         if (module->State == XM7_STATE_PLAYING)
@@ -45,10 +47,11 @@ void XM7_arm7_Value32Handler (u32 p, void* userdata)
 }
 
 //---------------------------------------------------------------------------------
-int main() {
+int main()
+{
 //---------------------------------------------------------------------------------
-	// clear sound registers
-	dmaFillWords(0, (void*)0x04000400, 0x100);
+    // clear sound registers
+    dmaFillWords(0, (void*) 0x04000400, 0x100);
 
     irqInit();
     fifoInit();
@@ -75,19 +78,21 @@ int main() {
 
     installSystemFIFO();
 
-	irqSet(IRQ_VCOUNT, VcountHandler);
-	irqSet(IRQ_VBLANK, VblankHandler);
+    irqSet(IRQ_VCOUNT, VcountHandler);
+    irqSet(IRQ_VBLANK, VblankHandler);
 
-	irqEnable( IRQ_VBLANK | IRQ_VCOUNT | IRQ_NETWORK);
+    irqEnable(IRQ_VBLANK | IRQ_VCOUNT | IRQ_NETWORK);
 
-	setPowerButtonCB(powerButtonCB);
+    setPowerButtonCB(powerButtonCB);
 
-	// Keep the ARM7 mostly idle
-	while (!exitflag) {
-		if ( 0 == (REG_KEYINPUT & (KEY_SELECT | KEY_START | KEY_L | KEY_R))) {
-			exitflag = true;
-		}
-		swiWaitForVBlank();
-	}
-	return 0;
+    // Keep the ARM7 mostly idle
+    while (!exitflag)
+    {
+        if (0 == (REG_KEYINPUT & (KEY_SELECT | KEY_START | KEY_L | KEY_R)))
+        {
+            exitflag = true;
+        }
+        swiWaitForVBlank();
+    }
+    return 0;
 }
