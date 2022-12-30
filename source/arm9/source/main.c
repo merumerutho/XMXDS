@@ -54,8 +54,6 @@ void drawIntro()
     drawCrossFader();
 }
 
-
-
 void IpcSend(IPC_FIFO_packet *pkt, u8 fifo)
 {
     fifoSendValue32(fifo, (u32) pkt);
@@ -92,7 +90,7 @@ int main(int argc, char **argv)
     while (1)
     {
         scanKeys();
-        if(keysHeld() & KEY_TOUCH)
+        if (keysHeld() & KEY_TOUCH)
         {
             touchRead(&touchPos);
             evaluateFaders(touchPos);

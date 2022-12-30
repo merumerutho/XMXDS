@@ -39,7 +39,7 @@ void drawCrossFader()
 {
     for (u8 i = 0; i < 20; i++)
     {
-        if (i == (u8)(deckInfo[1].crossFaderVolume * 19))
+        if (i == (u8) (deckInfo[1].crossFaderVolume * 19))
             iprintf("\x1b[20;%dH*", 6 + i);
         else
             iprintf("\x1b[20;%dH-", 6 + i);
@@ -61,7 +61,7 @@ void evaluateCrossFader(u16 px, u16 py)
     px = MIN(MAX(0,(px - 40)*1.1), (SCREEN_WIDTH-80));
     float value = (float) px / (SCREEN_WIDTH - 80);
     // Fix this
-    if (abs(py - 25)<10 && abs(px - (SCREEN_WIDTH/2)) < (SCREEN_WIDTH - 80))
+    if (abs(py - 25) < 10 && abs(px - (SCREEN_WIDTH / 2)) < (SCREEN_WIDTH - 80))
     {
         SetCrossFader(0, 1. - value);
         SetCrossFader(1, value);
