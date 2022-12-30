@@ -258,17 +258,17 @@ void XM7_FS_selectModule(char *folderPath)
                     u8 idx = ((keysDown() & KEY_L) == 0);
                     composeFileName((char*) &filepath, folderPath, selection->d_name);
                     consoleClear();
-                    if (loadedModulesInfo[idx].modManager != NULL)
+                    if (deckInfo[idx].modManager != NULL)
                     {
-                        if (loadedModulesInfo[idx].modManager->State == XM7_STATE_PLAYING) play_stop(&loadedModulesInfo[idx]);
+                        if (deckInfo[idx].modManager->State == XM7_STATE_PLAYING) play_stop(&deckInfo[idx]);
                         XMX_UnloadXM(idx);
                     }
-                    loadedModulesInfo[idx].modManager = malloc(sizeof(XM7_ModuleManager_Type));
-                    loadedModulesInfo[idx].moduleIndex = idx;
-                    loadedModulesInfo[idx].modData = XM7_FS_loadModule(loadedModulesInfo[idx].modManager, filepath,
+                    deckInfo[idx].modManager = malloc(sizeof(XM7_ModuleManager_Type));
+                    deckInfo[idx].moduleIndex = idx;
+                    deckInfo[idx].modData = XM7_FS_loadModule(deckInfo[idx].modManager, filepath,
                     FS_TYPE_XM,
                                                                        idx);
-                    strcpy_cut(loadedModulesInfo[idx].modManager->ModuleName, selection->d_name, 16, FALSE);
+                    strcpy_cut(deckInfo[idx].modManager->ModuleName, selection->d_name, 16, FALSE);
                     return;
                 }
             }

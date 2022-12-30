@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #include <stdio.h>
+#include "libXMX.h"
 
 #include "../../arm7/source/libxm7.h"
 
@@ -694,6 +695,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
 
     // Set volume
     Module->CurrentGlobalVolume = 0x40;
+    Module->CrossFaderVolume = deckInfo[Module->moduleIndex].crossFaderVolume;
 
     // Replay style FT2 for XM
     Module->ReplayStyle = XM7_REPLAY_STYLE_FT2;

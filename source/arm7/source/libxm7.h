@@ -174,6 +174,7 @@ typedef struct
     u8 CurrentTempo;                // copy of DefaultTempo (at startup)
     u8 CurrentBPM;                  // copy of DefaultBPM       (at startup)
     u8 CurrentGlobalVolume; // 0x40                                 (at startup)
+    float CrossFaderVolume; // 0 to 1
 
     u8 CurrentSongPosition; //  the pattern in playback now (position in the PatternOrder array)
     u8 CurrentPatternNumber;       //  the pattern in playback now (its number!)

@@ -10,12 +10,15 @@ typedef struct
     XM7_ModuleManager_Type *modManager;
     u8 moduleIndex;
 
+    float crossFaderVolume;
+
 } __attribute__ ((packed)) XMX_ModuleInfo;
 
 // ...
 
-extern XMX_ModuleInfo loadedModulesInfo[LIBXM7_ALLOWED_MODULES];
+extern XMX_ModuleInfo deckInfo[LIBXM7_ALLOWED_MODULES];
 
 void XMX_UnloadXM(u8 idx);
+void SetCrossFader(u8 idx, float value);
 
 #endif /* ARM9_SOURCE_LIBXMX_H_ */

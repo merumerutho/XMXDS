@@ -4,7 +4,8 @@
 #include <nds.h>
 #include <stdio.h>
 
-void drawVolumeFader();
-void evaluateVolumeFadersAndCrossFader(touchPosition touchPos);
+void drawVolumeFaders();
+void drawCrossFader();
+void evaluateFaders(touchPosition touchPos);
 
 #endif /* ARM9_SOURCE_FADERS_H_ */

@@ -59,7 +59,6 @@ u16 VeryFineTunes[129];
 #define ENVELOPE_SUSTAIN        2
 #define ENVELOPE_RELEASE        3
 
-
 void CalculateVeryFineTunes()
 {
     u8 i, j;
@@ -279,7 +278,7 @@ u8 CalculateFinalVolume(XM7_ModuleManager_Type *module, u8 samplevol, u8 envelop
     // gives back [0x00-0x7f]
     // FinalVol=(FadeOutVol/32768)*(EnvelopeVol/64)*(GlobalVol/64)*(Vol/64)*Scale;
     // scale is 0x80
-    u8 tmpvol = ((fadeoutvol >> 3) * envelopevol * (module->CurrentGlobalVolume / 4) * samplevol) >> 23;
+    u8 tmpvol = (u32) ((fadeoutvol >> 3) * envelopevol * (module->CurrentGlobalVolume / 2) * samplevol * (module->CrossFaderVolume)) >> 23;
 
     // clip volume value
     if (tmpvol > 0x7f)

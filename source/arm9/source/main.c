@@ -50,7 +50,8 @@ void drawIntro()
     iprintf("\x1b[3;1H2-decks module player for NDS!\n");
     iprintf("\x1b[4;4Hcredits: @merumerutho\n");
     iprintf("\x1b[5;4Hbased on libxm7 (@sverx)\n\n");
-    drawVolumeFader();
+    drawVolumeFaders();
+    drawCrossFader();
 }
 
 
@@ -94,18 +95,19 @@ int main(int argc, char **argv)
         if(keysHeld() & KEY_TOUCH)
         {
             touchRead(&touchPos);
-            evaluateVolumeFadersAndCrossFader(touchPos);
-            drawVolumeFader();
+            evaluateFaders(touchPos);
+            drawVolumeFaders();
+            drawCrossFader();
         }
 
         if ((keysHeld() & KEY_L) && (keysUp() & KEY_A))
         {
-            if (loadedModulesInfo[0].modManager != NULL) play_stop(&loadedModulesInfo[0]);
+            if (deckInfo[0].modManager != NULL) play_stop(&deckInfo[0]);
         }
 
         if ((keysHeld() & KEY_R) && (keysUp() & KEY_A))
         {
-            if (loadedModulesInfo[1].modManager != NULL) play_stop(&loadedModulesInfo[1]);
+            if (deckInfo[1].modManager != NULL) play_stop(&deckInfo[1]);
         }
 
         if (keysDown() & KEY_UP)
