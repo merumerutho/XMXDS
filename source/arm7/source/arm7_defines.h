@@ -4,5 +4,6 @@
 #include <nds.h>
 
 #define FIFO_GLOBAL_SETTINGS (FIFO_USER_01)
+#define FIFO_XM7    (FIFO_USER_07)
 
 #endif /* ARM7_SOURCE_ARM7_DEFINES_H_ */

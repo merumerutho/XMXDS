@@ -1866,7 +1866,6 @@ void PlayNote(XM7_ModuleManager_Type *module, u8 chn, u16 sample_offset)
             }
             else
             {
-                //fifoSendValue32(FIFO_USER_08, sample_ptr->LoopLength);
                 // has a loop
                 XM7_lowlevel_startSoundwLoop(freq, sample_ptr->SampleData, sample_ptr->LoopLength, sample_ptr->LoopStart, pbChn, volume, panning, (sample_ptr->Flags >> 4), sample_offset);
             }

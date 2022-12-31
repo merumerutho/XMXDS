@@ -693,8 +693,9 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     Module->AmigaPanningEmulation = XM7_PANNING_TYPE_NORMAL;
     Module->AmigaPanningDisplacement = 0x00;
 
-    // Set volume
+    // Set volume to default level
     Module->CurrentGlobalVolume = 0x40;
+    // Apply the crossfader level that was applied previously on the corresponding deck
     Module->CrossFaderVolume = deckInfo[Module->moduleIndex].crossFaderVolume;
 
     // Replay style FT2 for XM
@@ -749,16 +750,16 @@ u16 XM7_LoadMOD(XM7_ModuleManager_Type *Module, XM7_MODModuleHeader_Type *MODMod
 
     // set these values, constants in a MOD file
     Module->NumberofInstruments = 31;                                                           // 31 instrums, default
-    Module->FreqTable = 0;                                                               // AMIGA Freq. Table ( ==0 !)
+    Module->FreqTable = 0;                                                                      // AMIGA Freq. Table ( ==0 !)
     Module->DefaultTempo = 6;                                                                   // Spd=6, default
-    Module->DefaultBPM = 125;                                                                 // BPM=125, default
-    memcpy(Module->TrackerName, "**** MOD Module ****", 20);                                     // char[20]
+    Module->DefaultBPM = 125;                                                                   // BPM=125, default
+    strcpy(Module->TrackerName, "*** MOD Module ***", 20);                                      // char[20]
 
     // load all the needed info from the header
     Module->ModuleLength = MODModule->SongLength;
     Module->RestartPoint = (MODModule->RestartPosition >= 127) ? 0 : MODModule->RestartPosition;
-    memcpy(Module->PatternOrder, MODModule->PatternOrder, 128);     // u8[128]
-    memcpy(Module->ModuleName, MODModule->MODModuleName, 20);            // char[20]
+    memcpy(Module->PatternOrder, MODModule->PatternOrder, 128);             // u8[128]
+    strcpy(Module->ModuleName, MODModule->MODModuleName, 20);               // char[20]
 
     // calculate how many patterns are there in the module (in a safe way)
     Module->NumberofPatterns = 0;

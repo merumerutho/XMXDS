@@ -22,8 +22,8 @@ u8 arm9_globalTempo = DEFAULT_TEMPO;
 
 void arm9_DebugFIFOHandler(u32 p, void *userdata);
 void drawIntro();
-void IpcSend(IPC_FIFO_packet *pkt, u8 fifo);
-void sendBpmTempo(IPC_FIFO_packet *ipc_packet, u8 bpm, u8 tempo);
+void IpcSend(FifoMsg *pkt, u8 fifo);
+void sendBpmTempo(FifoMsg *ipc_packet, u8 bpm, u8 tempo);
 
 //---------------------------------------------------------------------------------
 void arm9_DebugFIFOHandler(u32 p, void *userdata)
@@ -54,12 +54,12 @@ void drawIntro()
     drawCrossFader();
 }
 
-void IpcSend(IPC_FIFO_packet *pkt, u8 fifo)
+void IpcSend(FifoMsg *pkt, u8 fifo)
 {
-    fifoSendValue32(fifo, (u32) pkt);
+    fifoSendAddress(fifo, pkt);
 }
 
-void sendBpmTempo(IPC_FIFO_packet *ipc_packet, u8 bpm, u8 tempo)
+void sendBpmTempo(FifoMsg *ipc_packet, u8 bpm, u8 tempo)
 {
     ipc_packet->data[0] = bpm;
     ipc_packet->data[1] = tempo;
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     consoleDemoInit();
 
     touchPosition touchPos;
-    IPC_FIFO_packet *ipc_packet = malloc(sizeof(IPC_FIFO_packet));
+    FifoMsg *fifo_msg = malloc(sizeof(FifoMsg));
 
     char folderPath[255] = DEFAULT_ROOT_PATH;
 
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     // turn on master sound
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);
     // Send BPM/TEMPO to ARMv7
-    sendBpmTempo(ipc_packet, arm9_globalBpm, arm9_globalTempo);
+    sendBpmTempo(fifo_msg, arm9_globalBpm, arm9_globalTempo);
 
     XM7_FS_init();
     drawIntro();
@@ -110,26 +110,26 @@ int main(int argc, char **argv)
 
         if (keysDown() & KEY_UP)
         {
-            ipc_packet->data[0] = ++arm9_globalBpm;
-            ipc_packet->data[1] = arm9_globalTempo;
-            ipc_packet->command = CMD_SET_BPM_TEMPO;
-            IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+            fifo_msg->data[0] = ++arm9_globalBpm;
+            fifo_msg->data[1] = arm9_globalTempo;
+            fifo_msg->command = CMD_SET_BPM_TEMPO;
+            IpcSend(fifo_msg, FIFO_GLOBAL_SETTINGS);
             iprintf("bpm: %d - ", arm9_globalBpm);
         }
 
         if (keysDown() & KEY_DOWN)
         {
-            ipc_packet->data[0] = --arm9_globalBpm;
-            ipc_packet->data[1] = arm9_globalTempo;
-            ipc_packet->command = CMD_SET_BPM_TEMPO;
-            IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+            fifo_msg->data[0] = --arm9_globalBpm;
+            fifo_msg->data[1] = arm9_globalTempo;
+            fifo_msg->command = CMD_SET_BPM_TEMPO;
+            IpcSend(fifo_msg, FIFO_GLOBAL_SETTINGS);
             iprintf("bpm: %d - ", arm9_globalBpm);
         }
 
         if (keysDown() & KEY_SELECT)
         {
             XM7_FS_selectModule((char*) folderPath);
-            IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+            IpcSend(fifo_msg, FIFO_GLOBAL_SETTINGS);
             drawIntro();
         }
 
