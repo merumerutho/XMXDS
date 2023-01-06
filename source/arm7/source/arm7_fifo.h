@@ -10,6 +10,6 @@ typedef struct
     u32 data[16];
 } __attribute__ ((packed)) FifoMsg;
 
-void arm7_GlobalSettingsFIFOHandler(u32 command, void *userdata);
+void arm7_GlobalSettingsFIFOHandler(u32 p, void *userdata);
 
 #endif /* ARM7_SOURCE_ARM7_FIFO_H_ */
