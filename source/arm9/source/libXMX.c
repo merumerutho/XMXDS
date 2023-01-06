@@ -26,8 +26,6 @@ void XMX_UnloadXM(u8 idx)
 
 void SetCrossFader(u8 idx, float value)
 {
-    // Set both the module info and the deck info
-    // Value is read from module, but deck info must persist when switching modules
     deckInfo[idx].crossFaderVolume = value;
     deckInfo[idx].modManager->CrossFaderVolume = value;
 }

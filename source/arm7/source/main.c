@@ -4,25 +4,34 @@
 #include "libxm7.h"
 #include "arm7_fifo.h"
 
+// "reserve" FIFO Channel "FIFO_USER_07"
+#define FIFO_XM7    (FIFO_USER_07)
+
 //---------------------------------------------------------------------------------
 void VblankHandler(void)
 {
+//---------------------------------------------------------------------------------
     //Wifi_Update();
 }
 
+//---------------------------------------------------------------------------------
 void VcountHandler()
 {
+//---------------------------------------------------------------------------------
     inputGetAndSend();
 }
 
 volatile bool exitflag = false;
 
+//---------------------------------------------------------------------------------
 void powerButtonCB()
 {
+//---------------------------------------------------------------------------------
     exitflag = true;
 }
 
-void XM7_arm7_Value32Handler(void* p, void *userdata)
+//---------------------------------------------------------------------------------
+void XM7_arm7_Value32Handler(u32 p, void *userdata)
 {
     if (p != 0)
     {
@@ -48,24 +57,24 @@ int main()
     fifoInit();
 
     // read User Settings from firmware
-    //readUserSettings();
+    readUserSettings();
 
     // Start the RTC tracking IRQ
-    //initClockIRQ();
+    initClockIRQ();
 
     SetYtrigger(80);
 
     //installWifiFIFO();
-    //installSoundFIFO();
+    installSoundFIFO();
 
     // Initialize XM7
     XM7_Initialize();
 
     // Install the FIFO handler for libXM7 "fifo channel"
-    fifoSetAddressHandler(FIFO_XM7, XM7_arm7_Value32Handler, 0);
+    fifoSetValue32Handler(FIFO_XM7, XM7_arm7_Value32Handler, 0);
 
     // Handler for BPM / Tempo
-    fifoSetAddressHandler(FIFO_GLOBAL_SETTINGS, arm7_GlobalSettingsFIFOHandler, 0);
+    fifoSetValue32Handler(FIFO_GLOBAL_SETTINGS, arm7_GlobalSettingsFIFOHandler, 0);
 
     installSystemFIFO();
 
