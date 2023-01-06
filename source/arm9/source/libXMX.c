@@ -1,6 +1,6 @@
 #include "libXMX.h"
 
-XMX_ModuleInfo deckInfo[LIBXM7_ALLOWED_MODULES] = {
+XMX_DeckInfo deckInfo[LIBXM7_ALLOWED_MODULES] = {
         {
             .modData = NULL,
             .modManager = NULL,

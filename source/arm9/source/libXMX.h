@@ -12,11 +12,11 @@ typedef struct
 
     float crossFaderVolume;
 
-} __attribute__ ((packed)) XMX_ModuleInfo;
+} __attribute__ ((packed)) XMX_DeckInfo;
 
 // ...
 
-extern XMX_ModuleInfo deckInfo[LIBXM7_ALLOWED_MODULES];
+extern XMX_DeckInfo deckInfo[LIBXM7_ALLOWED_MODULES];
 
 void XMX_UnloadXM(u8 idx);
 void SetCrossFader(u8 idx, float value);

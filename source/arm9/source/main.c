@@ -22,8 +22,8 @@ u8 arm9_globalTempo = DEFAULT_TEMPO;
 
 void arm9_DebugFIFOHandler(u32 p, void *userdata);
 void drawIntro();
-void IpcSend(IPC_FIFO_packet *pkt, u8 fifo);
-void sendBpmTempo(IPC_FIFO_packet *ipc_packet, u8 bpm, u8 tempo);
+void IpcSend(FifoMsg *pkt, u8 fifo);
+void sendBpmTempo(FifoMsg *ipc_packet, u8 bpm, u8 tempo);
 
 //---------------------------------------------------------------------------------
 void arm9_DebugFIFOHandler(u32 p, void *userdata)
@@ -54,12 +54,12 @@ void drawIntro()
     drawCrossFader();
 }
 
-void IpcSend(IPC_FIFO_packet *pkt, u8 fifo)
+void IpcSend(FifoMsg *pkt, u8 fifo)
 {
     fifoSendValue32(fifo, (u32) pkt);
 }
 
-void sendBpmTempo(IPC_FIFO_packet *ipc_packet, u8 bpm, u8 tempo)
+void sendBpmTempo(FifoMsg *ipc_packet, u8 bpm, u8 tempo)
 {
     ipc_packet->data[0] = bpm;
     ipc_packet->data[1] = tempo;
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     consoleDemoInit();
 
     touchPosition touchPos;
-    IPC_FIFO_packet *ipc_packet = malloc(sizeof(IPC_FIFO_packet));
+    FifoMsg *ipc_packet = malloc(sizeof(FifoMsg));
 
     char folderPath[255] = DEFAULT_ROOT_PATH;
 
