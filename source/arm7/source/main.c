@@ -10,14 +10,12 @@
 //---------------------------------------------------------------------------------
 void VblankHandler(void)
 {
-//---------------------------------------------------------------------------------
     //Wifi_Update();
 }
 
 //---------------------------------------------------------------------------------
 void VcountHandler()
 {
-//---------------------------------------------------------------------------------
     inputGetAndSend();
 }
 
@@ -26,7 +24,6 @@ volatile bool exitflag = false;
 //---------------------------------------------------------------------------------
 void powerButtonCB()
 {
-//---------------------------------------------------------------------------------
     exitflag = true;
 }
 
@@ -49,22 +46,14 @@ void XM7_arm7_Value32Handler(u32 p, void *userdata)
 //---------------------------------------------------------------------------------
 int main()
 {
-//---------------------------------------------------------------------------------
     // clear sound registers
     dmaFillWords(0, (void*) 0x04000400, 0x100);
 
     irqInit();
     fifoInit();
 
-    // read User Settings from firmware
-    readUserSettings();
-
-    // Start the RTC tracking IRQ
-    initClockIRQ();
-
     SetYtrigger(80);
 
-    //installWifiFIFO();
     installSoundFIFO();
 
     // Initialize XM7
@@ -81,7 +70,7 @@ int main()
     irqSet(IRQ_VCOUNT, VcountHandler);
     irqSet(IRQ_VBLANK, VblankHandler);
 
-    irqEnable(IRQ_VBLANK | IRQ_VCOUNT | IRQ_NETWORK);
+    irqEnable(IRQ_VBLANK | IRQ_VCOUNT);
 
     setPowerButtonCB(powerButtonCB);
 

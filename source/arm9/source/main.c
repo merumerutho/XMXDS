@@ -35,6 +35,11 @@ void arm9_DebugFIFOHandler(u32 p, void *userdata)
     iprintf("%ld\n", p);
 }
 
+void arm9_VBlankHandler()
+{
+
+}
+
 void drawIntro()
 {
     consoleClear();
@@ -73,7 +78,7 @@ int main(int argc, char **argv)
     consoleDemoInit();
 
     touchPosition touchPos;
-    FifoMsg *ipc_packet = malloc(sizeof(FifoMsg));
+    FifoMsg *fifo_msg = malloc(sizeof(FifoMsg));
 
     char folderPath[255] = DEFAULT_ROOT_PATH;
 
@@ -82,14 +87,17 @@ int main(int argc, char **argv)
     // turn on master sound
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);
     // Send BPM/TEMPO to ARMv7
-    sendBpmTempo(ipc_packet, arm9_globalBpm, arm9_globalTempo);
+    sendBpmTempo(fifo_msg, arm9_globalBpm, arm9_globalTempo);
 
     XM7_FS_init();
     drawIntro();
 
+    irqSet(IRQ_VBLANK, arm9_VBlankHandler);
+
     while (1)
     {
         scanKeys();
+
         if (keysHeld() & KEY_TOUCH)
         {
             touchRead(&touchPos);
@@ -110,26 +118,26 @@ int main(int argc, char **argv)
 
         if (keysDown() & KEY_UP)
         {
-            ipc_packet->data[0] = ++arm9_globalBpm;
-            ipc_packet->data[1] = arm9_globalTempo;
-            ipc_packet->command = CMD_SET_BPM_TEMPO;
-            IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+            fifo_msg->data[0] = ++arm9_globalBpm;
+            fifo_msg->data[1] = arm9_globalTempo;
+            fifo_msg->command = CMD_SET_BPM_TEMPO;
+            IpcSend(fifo_msg, FIFO_GLOBAL_SETTINGS);
             iprintf("bpm: %d - ", arm9_globalBpm);
         }
 
         if (keysDown() & KEY_DOWN)
         {
-            ipc_packet->data[0] = --arm9_globalBpm;
-            ipc_packet->data[1] = arm9_globalTempo;
-            ipc_packet->command = CMD_SET_BPM_TEMPO;
-            IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+            fifo_msg->data[0] = --arm9_globalBpm;
+            fifo_msg->data[1] = arm9_globalTempo;
+            fifo_msg->command = CMD_SET_BPM_TEMPO;
+            IpcSend(fifo_msg, FIFO_GLOBAL_SETTINGS);
             iprintf("bpm: %d - ", arm9_globalBpm);
         }
 
         if (keysDown() & KEY_SELECT)
         {
             XM7_FS_selectModule((char*) folderPath);
-            IpcSend(ipc_packet, FIFO_GLOBAL_SETTINGS);
+            IpcSend(fifo_msg, FIFO_GLOBAL_SETTINGS);
             drawIntro();
         }
 
