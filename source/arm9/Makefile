@@ -17,7 +17,7 @@ include $(DEVKITARM)/ds_rules
 BUILD		:=	build
 SOURCES		:=	source  
 INCLUDES	:=	include
-
+SPRITES		:=  assets
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -58,12 +58,14 @@ export ARM9ELF	:=	$(CURDIR)/$(TARGET).elf
 export DEPSDIR := $(CURDIR)/$(BUILD)
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+					$(foreach dir,$(DATA),$(CURDIR)/$(dir)) \
+                    $(foreach dir,$(SPRITES),$(CURDIR)/$(dir))
 
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+CFILES		    :=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+CPPFILES	    :=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
+SFILES		    :=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+BINFILES	    :=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+SPRITE_FILES    :=  $(foreach dir, $(SPRITES),$(notdir $(wildcard $(dir)/*.png)))
  
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -79,7 +81,8 @@ else
 endif
 #---------------------------------------------------------------------------------
 
-export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
+export OFILES	:=	$(SPRITE_FILES:.png=.o) \
+                    $(addsuffix .o,$(BINFILES)) \
 					$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
  
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
@@ -99,8 +102,6 @@ $(BUILD):
 clean:
 	@echo clean ...
 	@rm -fr $(BUILD) *.elf *.nds* *.bin 
- 
- 
 #---------------------------------------------------------------------------------
 else
  
@@ -110,6 +111,13 @@ else
 $(ARM9ELF)	:	$(OFILES)
 	@echo linking $(notdir $@)
 	@$(LD)  $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) -o $@
+    
+#---------------------------------------------------------------------------------
+# GRIT rule to import pictures
+#---------------------------------------------------------------------------------
+%.s %.h : %.png
+	grit $< -ff./assets/sprite.grit -o$*
+#---------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data 
@@ -117,7 +125,7 @@ $(ARM9ELF)	:	$(OFILES)
 %.bin.o	:	%.bin
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
-	@$(bin2o)
+	$(bin2o)
 
 -include $(DEPSDIR)/*.d
  
