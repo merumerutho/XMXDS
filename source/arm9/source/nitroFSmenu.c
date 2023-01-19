@@ -5,14 +5,16 @@
 
 #include "play.h"
 #include "libXMX.h"
+#include "screens.h"
 
 //#include "../../arm7/source/libxm7.h"
 
 void XM7_FS_displayHeader()
 {
+    consoleSelect(&bottom);
     consoleClear();
     iprintf("-------------------------------\n");
-    iprintf("A/L/R browse/load on slot A/B \n");
+    iprintf(" XMXDS - File browser\n");
     iprintf("-------------------------------\n");
 }
 
@@ -247,7 +249,7 @@ void XM7_FS_selectModule(char *folderPath)
             }
         }
 
-        if (keysDown() & (KEY_L | KEY_R))
+        if (keysDown() & KEY_A)
         {
             struct dirent *selection = getSelection(folder, pPosition);
 
@@ -255,20 +257,21 @@ void XM7_FS_selectModule(char *folderPath)
             {
                 if (isXM(selection->d_name))
                 {
-                    u8 idx = ((keysDown() & KEY_L) == 0);
                     composeFileName((char*) &filepath, folderPath, selection->d_name);
                     consoleClear();
-                    if (deckInfo[idx].modManager != NULL)
+                    // Stop module if playing, unload module if present
+                    if (deckInfo[0].modManager != NULL)
                     {
-                        if (deckInfo[idx].modManager->State == XM7_STATE_PLAYING) play_stop(&deckInfo[idx]);
-                        XMX_UnloadXM(idx);
+                        if (deckInfo[0].modManager->State == XM7_STATE_PLAYING) play_stop(&deckInfo[0]);
+                        XMX_UnloadXM(0);
                     }
-                    deckInfo[idx].modManager = malloc(sizeof(XM7_ModuleManager_Type));
-                    deckInfo[idx].moduleIndex = idx;
-                    deckInfo[idx].modData = XM7_FS_loadModule(deckInfo[idx].modManager, filepath,
-                    FS_TYPE_XM,
-                                                                       idx);
-                    strcpy_cut(deckInfo[idx].modManager->ModuleName, selection->d_name, 16, FALSE);
+                    deckInfo[0].modManager = malloc(sizeof(XM7_ModuleManager_Type));
+                    deckInfo[0].moduleIndex = 0;
+                    // Load module
+                    deckInfo[0].modData = XM7_FS_loadModule(deckInfo[0].modManager, filepath,
+                                                            FS_TYPE_XM,
+                                                            0);
+                    strcpy_cut(deckInfo[0].modManager->ModuleName, selection->d_name, 16, FALSE);
                     return;
                 }
             }

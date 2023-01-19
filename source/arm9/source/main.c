@@ -6,7 +6,7 @@
 #include "nitroFSmenu.h"
 #include "play.h"
 #include "libXMX.h"
-#include "faders.h"
+#include "screens.h"
 
 // ARMv7 INCLUDES
 #include "../../arm7/source/libxm7.h"
@@ -42,6 +42,10 @@ void arm9_VBlankHandler()
 
 void drawIntro()
 {
+    consoleSelect(&top);
+    consoleClear();
+    iprintf("XMXDS!");
+    consoleSelect(&bottom);
     consoleClear();
     iprintf("\x1b[0;0H-------------------------------");
     for (u8 i = 0; i < 24; i++)
@@ -50,13 +54,6 @@ void drawIntro()
         iprintf("\x1b[%d;31H-", i);
     }
     iprintf("\x1b[23;0H-------------------------------");
-
-    iprintf("\x1b[2;6H.oO:Oo. XMXDS .oO:Oo.\n\n");
-    iprintf("\x1b[3;1H2-decks module player for NDS!\n");
-    iprintf("\x1b[4;4Hcredits: @merumerutho\n");
-    iprintf("\x1b[5;4Hbased on libxm7 (@sverx)\n\n");
-    drawVolumeFaders();
-    drawCrossFader();
 }
 
 void IpcSend(FifoMsg *pkt, u8 fifo)
@@ -75,7 +72,11 @@ void sendBpmTempo(FifoMsg *ipc_packet, u8 bpm, u8 tempo)
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-    consoleDemoInit();
+    videoSetMode(MODE_0_2D);
+    videoSetModeSub(MODE_0_2D);
+
+    consoleInit(&top, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, true, true);
+    consoleInit(&bottom, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, false, true);
 
     touchPosition touchPos;
     FifoMsg *fifo_msg = malloc(sizeof(FifoMsg));
@@ -101,20 +102,14 @@ int main(int argc, char **argv)
         if (keysHeld() & KEY_TOUCH)
         {
             touchRead(&touchPos);
-            evaluateFaders(touchPos);
-            drawVolumeFaders();
-            drawCrossFader();
+            // Do nothing for now
         }
 
-        if ((keysHeld() & KEY_L) && (keysUp() & KEY_A))
+        if (keysDown() & KEY_A)
         {
             if (deckInfo[0].modManager != NULL) play_stop(&deckInfo[0]);
         }
 
-        if ((keysHeld() & KEY_R) && (keysUp() & KEY_A))
-        {
-            if (deckInfo[1].modManager != NULL) play_stop(&deckInfo[1]);
-        }
 
         if (keysDown() & KEY_UP)
         {

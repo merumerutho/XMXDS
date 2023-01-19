@@ -1,7 +1,7 @@
 #ifndef LIBXM7_INCLUDED
 #define LIBXM7_INCLUDED
 
-#define LIBXM7_ALLOWED_MODULES                  2
+#define LIBXM7_ALLOWED_MODULES                  1
 #define LIBXM7_MAX_CHANNELS_PER_MODULE          (16 / LIBXM7_ALLOWED_MODULES)
 
 //#define XM7_SYNC_BY_PATTERN                     0x01
