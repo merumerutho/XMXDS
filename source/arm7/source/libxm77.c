@@ -2408,7 +2408,9 @@ void Timer1Handler(void)
 
                         // NextPatternPosition comes from Bxx
                         if ((NextPatternPosition >= 0) && (NextPatternPosition < module->ModuleLength))
+                        {
                             module->CurrentSongPosition = NextPatternPosition;
+                        }
                         else
                             module->CurrentSongPosition++;
 

@@ -177,7 +177,7 @@ typedef struct
 
     u8 CurrentSongPosition; //  the pattern in playback now (position in the PatternOrder array)
     u8 CurrentPatternNumber;       //  the pattern in playback now (its number!)
-    u8 CurrentLine;      //  the line in playback now (0..length of the pattern)
+    u16 CurrentLine;      //  the line in playback now (0..length of the pattern)
     u8 CurrentTick;                         //  the tick in playback now (0..31)
 
     u8 CurrentDelayLines;  //  the lines to "delay" after this line (effect EEx)

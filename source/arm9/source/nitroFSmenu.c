@@ -271,7 +271,10 @@ void XM7_FS_selectModule(char *folderPath)
                     deckInfo[0].modData = XM7_FS_loadModule(deckInfo[0].modManager, filepath,
                                                             FS_TYPE_XM,
                                                             0);
-                    strcpy_cut(deckInfo[0].modManager->ModuleName, selection->d_name, 16, FALSE);
+                    if (deckInfo[0].modData != NULL)
+                        strcpy_cut(deckInfo[0].modManager->ModuleName, selection->d_name, 16, FALSE);
+                    else
+                        iprintf("Could not load module!");
                     return;
                 }
             }
@@ -285,6 +288,7 @@ XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *f
 {
     FILE *modFile = fopen(filepath, "rb");
     u32 size;
+    u16 ret;
 
     fseek(modFile, 0L, SEEK_END);
     size = ftell(modFile);
@@ -298,8 +302,12 @@ XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *f
 
     if (size > 0)
     {
-        if (type == FS_TYPE_XM) XM7_LoadXM(pMod, (XM7_XMModuleHeader_Type*) modHeader, slot);
-
+        if (type == FS_TYPE_XM)
+        {
+            ret = XM7_LoadXM(pMod, (XM7_XMModuleHeader_Type*) modHeader, slot);
+            if (ret>0)
+                return NULL;
+        }
         // Ensure data gets written to main RAM (leave no data in cache)
         DC_FlushAll();
     }
