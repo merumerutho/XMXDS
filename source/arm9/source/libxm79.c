@@ -7,6 +7,7 @@
 #include "libXMX.h"
 
 #include "../../arm7/source/libxm7.h"
+#include "arm9_fifo.h"
 
 // MOD octave 0 difference
 #define AMIGABASEOCTAVE 2
@@ -268,6 +269,12 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     Module->FreqTable = XMModule->XMModuleFlags;
     Module->DefaultTempo = XMModule->DefaultTempo;
     Module->DefaultBPM = XMModule->DefaultBPM;
+
+    // By default un-mute all channels
+    for (u8 i=0; i<Module->NumberofChannels; i++)
+        Module->ChannelMute[i] = 0;
+    for (u8 i=Module->NumberofChannels; i<16; i++)
+        Module->ChannelMute[i] = 1;
 
     memcpy(Module->ModuleName, XMModule->XMModuleName, 20);  // char[20]
     memcpy(Module->TrackerName, XMModule->TrackerName, 20);  // char[20]
@@ -695,13 +702,16 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
 
     // Set volume
     Module->CurrentGlobalVolume = 0x40;
-    Module->CrossFaderVolume = deckInfo[Module->moduleIndex].crossFaderVolume;
 
     // Replay style FT2 for XM
     Module->ReplayStyle = XM7_REPLAY_STYLE_FT2;
 
     // set State
     Module->State = XM7_STATE_READY;
+
+    // Set current bpm/tempo ?
+    arm9_globalBpm = Module->DefaultBPM;
+    arm9_globalTempo = Module->DefaultTempo;
 
     iprintf("Done.");
     while (1)

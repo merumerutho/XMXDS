@@ -3,6 +3,9 @@
 
 #include <nds.h>
 
+#define CMD_SET_BPM_TEMPO   0
+#define CMD_MUTE_CHANNEL    1
+
 // Inter-processor communication packet (address sent via FIFO queue)
 typedef struct
 {

@@ -278,8 +278,7 @@ u8 CalculateFinalVolume(XM7_ModuleManager_Type *module, u8 samplevol, u8 envelop
     // gives back [0x00-0x7f]
     // FinalVol=(FadeOutVol/32768)*(EnvelopeVol/64)*(GlobalVol/64)*(Vol/64)*Scale;
     // scale is 0x80
-    u8 tmpvol = (u32) ((fadeoutvol >> 3) * envelopevol * (module->CurrentGlobalVolume / 2) * samplevol * (module->CrossFaderVolume)) >> 23;
-
+    u8 tmpvol = (u32) ((fadeoutvol >> 3) * envelopevol * (module->CurrentGlobalVolume / 2) * samplevol) >> 23;
     // clip volume value
     if (tmpvol > 0x7f)
     {
@@ -1404,8 +1403,10 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
                 else if ((effpar != 0x00) && (effpar >= 0x20))
                 {
                     // values 20 – FF    :set the BPM
+#ifdef ALLOW_BPM_FX
                     module->CurrentBPM = effpar;
                     SetTimerSpeedBPM(effpar);
+#endif
                 }
             }
             break;
@@ -1956,6 +1957,12 @@ void Timer1Handler(void)
         // For every channel...
         for (chn = 0; chn < (module->NumberofChannels); chn++)
         {
+            if (module->ChannelMute[chn])
+            {
+                XM7_lowlevel_setVolume(chn, 0);
+                continue;
+            }
+
             ShouldTriggerNote = NO;
             ShouldChangeVolume = NO;
             ShouldRestartEnvelope = NO;

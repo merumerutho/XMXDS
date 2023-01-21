@@ -2,6 +2,8 @@
 
 #include "arm7_defines.h"
 #include "tempo.h"
+#include "libxm7.h"
+#include "malloc.h"
 
 void arm7_GlobalSettingsFIFOHandler(u32 p, void *userdata)
 {
@@ -14,4 +16,5 @@ void arm7_GlobalSettingsFIFOHandler(u32 p, void *userdata)
         setGlobalBpm(((FifoMsg*) (p))->data[0]);
         setGlobalTempo(((FifoMsg*) (p))->data[1]);
     }
+
 }

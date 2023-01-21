@@ -154,15 +154,15 @@ typedef struct
     // -
 
     u8 NumberofChannels;            // 1..16 ok, > 16 NO!
-    u8 NumberofInstruments;     // 1..128
+    u8 NumberofInstruments;         // 1..128
     u8 FreqTable;                   // Frequency table  ( 0= Amiga , 1= linear )
-    u8 DefaultTempo;                   // 1..31    (ticks per 'line', default 6)
+    u8 DefaultTempo;                // 1..31    (ticks per 'line', default 6)
 
     // -
 
     u8 DefaultBPM;                  // 32..255 (BeatPerMinute)
 
-    u8 AmigaPanningEmulation; // should the panning be 'fixed' in the Amiga style?
+    u8 AmigaPanningEmulation;       // should the panning be 'fixed' in the Amiga style?
     u8 AmigaPanningDisplacement;        // amiga panning 'displacement'
                                         // will be added to 0x00 / subtracted to 0x7F
 
@@ -174,7 +174,6 @@ typedef struct
     u8 CurrentTempo;                // copy of DefaultTempo (at startup)
     u8 CurrentBPM;                  // copy of DefaultBPM       (at startup)
     u8 CurrentGlobalVolume; // 0x40                                 (at startup)
-    float CrossFaderVolume; // 0 to 1
 
     u8 CurrentSongPosition; //  the pattern in playback now (position in the PatternOrder array)
     u8 CurrentPatternNumber;       //  the pattern in playback now (its number!)
@@ -268,6 +267,8 @@ typedef struct
 
     char ModuleName[20];
     char TrackerName[20];
+
+    u8 ChannelMute[16];  // 1 = mute, 0 = un-mute
 
     u8 moduleIndex;
 
