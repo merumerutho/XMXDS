@@ -60,11 +60,12 @@ void drawTitle(u32 v)
     iprintf("\x1b[2;2H))  ( )    ( )  ( )(_) \\__ \\ \n");
     iprintf("\x1b[3;2H(_/\\_(_/\\/\\_(_/\\_(____/(___/\n");
 
-    iprintf("\x1b[5;1HBPM: %3d\t\t|\t\tTempo: %2d", arm9_globalBpm, arm9_globalTempo);
+
     iprintf("\x1b[6;0H--------------------------------");
 
     if (deckInfo[0].modManager != NULL)
     {
+        iprintf("\x1b[5;1HBPM: %3d\t\t|\t\tTempo: %2d", arm9_globalBpm, arm9_globalTempo);
         iprintf("\x1b[8;1HSong position:\t%03d/%03d", module->CurrentSongPosition+1, module->ModuleLength);
         iprintf("\x1b[9;1HPattern:\t\t\t%03d", module->CurrentPatternNumber);
         iprintf("\x1b[10;1HLoop:\t\t\t\t%s", module->LoopMode ? "YES" : "NO ");
@@ -110,122 +111,125 @@ int main(int argc, char **argv)
     {
         scanKeys();
 
-        if (keysHeld() & KEY_TOUCH)
+        // Commands to execute only if module is loaded
+        if (module != NULL)
         {
-            if (touchRelease)
+            if (keysHeld() & KEY_TOUCH)
             {
-                touchRead(&touchPos);
-                handleChannelMute(&touchPos);
-                touchRelease = false;
-                // leave this part here! mute won't update otherwise on real hw
+                if (touchRelease)
                 {
-                    fifoGlobalMsg->command = CMD_DUMMY;
-                    IpcSend(FIFO_GLOBAL_SETTINGS);
+                    touchRead(&touchPos);
+                    handleChannelMute(&touchPos);
+                    touchRelease = false;
+                    // leave this part here! mute won't update otherwise on real hw
+                    {
+                        fifoGlobalMsg->command = CMD_DUMMY;
+                        IpcSend(FIFO_GLOBAL_SETTINGS);
+                    }
                 }
             }
-        }
-        else
-            touchRelease = true;
+            else
+                touchRelease = true;
 
-        // CUE PLAY
-        if(keysDown() & KEY_A)
-        {
-            if (module != NULL)
+            // CUE PLAY
+            if(keysDown() & KEY_A)
             {
-                module->CurrentSongPosition = arm9_globalCuePosition;
-                // If playing, stop
+                if (module != NULL)
+                {
+                    module->CurrentSongPosition = arm9_globalCuePosition;
+                    // If playing, stop
+                    if (module->State == XM7_STATE_PLAYING)
+                        play_stop(&deckInfo[0]);
+                    // Then start
+                    play_stop(&deckInfo[0]);
+                }
+            }
+
+            // PAUSE
+            if(keysDown() & KEY_B)
                 if (module->State == XM7_STATE_PLAYING)
                     play_stop(&deckInfo[0]);
-                // Then start
-                play_stop(&deckInfo[0]);
-            }
-        }
 
-        // PAUSE
-        if(keysDown() & KEY_B)
-        {
-            if (module!=NULL)
-            {
-                if (module->State == XM7_STATE_PLAYING)
-                    play_stop(&deckInfo[0]);
-            }
-        }
 
-        if (keysDown() & KEY_L)
-        {
-            if (module != NULL)
+            // TRANSPOSE UP / DOWN
+
+            if (keysDown() & KEY_L)
             {
                 module->Transpose--;
                 drawTitle(0);
             }
-        }
 
-        if (keysDown() & KEY_R)
-        {
-            if (module != NULL)
+            if (keysDown() & KEY_R)
             {
                 module->Transpose++;
                 drawTitle(0);
             }
-        }
 
-        // CUE SET
-        if(keysDown() & KEY_X)
-        {
-            if (module != NULL)
+
+            // CUE SET
+            if(keysDown() & KEY_X)
             {
                 arm9_globalCuePosition = module->CurrentSongPosition;
                 drawTitle(0);
             }
-        }
 
-        // CUE MOVE
-        if (keysHeld() & KEY_X)
-        {
-            if (keysDown() & KEY_LEFT)
+            // CUE MOVE
+            if (keysHeld() & KEY_X)
             {
-                if (arm9_globalCuePosition > 0)
-                    arm9_globalCuePosition--;
-                drawTitle(0);
+                if (keysDown() & KEY_LEFT)
+                {
+                    if (arm9_globalCuePosition > 0)
+                        arm9_globalCuePosition--;
+                    drawTitle(0);
+                }
+                if (keysDown() & KEY_RIGHT)
+                {
+                    if (arm9_globalCuePosition < module->ModuleLength-1)
+                        arm9_globalCuePosition++;
+                    drawTitle(0);
+                }
             }
-            if (keysDown() & KEY_RIGHT)
-            {
-                if (arm9_globalCuePosition < module->ModuleLength-1)
-                    arm9_globalCuePosition++;
-                drawTitle(0);
-            }
-        }
 
-        // LOOP MODE
-        if (keysDown() & KEY_Y)
-        {
-            if (module!=NULL)
+
+            // LOOP MODE
+            if (keysDown() & KEY_Y)
             {
                 module->LoopMode = !(module->LoopMode);
                 drawTitle(0);
             }
-        }
 
-        // BPM INCREASE
-        if (keysDown() & KEY_UP)
-        {
-            fifoGlobalMsg->data[0] = ++arm9_globalBpm;
-            fifoGlobalMsg->data[1] = arm9_globalTempo;
-            fifoGlobalMsg->command = CMD_SET_BPM_TEMPO;
-            IpcSend(FIFO_GLOBAL_SETTINGS);
-            consoleSelect(&top);
-            iprintf("\x1b[5;1HBPM: %3d", arm9_globalBpm);
-        }
+            // BPM INCREASE
+            if (keysDown() & KEY_UP)
+            {
+                fifoGlobalMsg->data[0] = ++arm9_globalBpm;
+                fifoGlobalMsg->data[1] = arm9_globalTempo;
+                fifoGlobalMsg->command = CMD_SET_BPM_TEMPO;
+                IpcSend(FIFO_GLOBAL_SETTINGS);
+                consoleSelect(&top);
+                iprintf("\x1b[5;1HBPM: %3d", arm9_globalBpm);
+            }
 
-        // BPM DECREASE
-        if (keysDown() & KEY_DOWN)
-        {
-            fifoGlobalMsg->data[0] = --arm9_globalBpm;
-            fifoGlobalMsg->data[1] = arm9_globalTempo;
-            fifoGlobalMsg->command = CMD_SET_BPM_TEMPO;
-            IpcSend(FIFO_GLOBAL_SETTINGS);
-            consoleSelect(&top);
-            iprintf("\x1b[5;1HBPM: %3d", arm9_globalBpm);
+            // BPM DECREASE
+            if (keysDown() & KEY_DOWN)
+            {
+                fifoGlobalMsg->data[0] = --arm9_globalBpm;
+                fifoGlobalMsg->data[1] = arm9_globalTempo;
+                fifoGlobalMsg->command = CMD_SET_BPM_TEMPO;
+                IpcSend(FIFO_GLOBAL_SETTINGS);
+                consoleSelect(&top);
+                iprintf("\x1b[5;1HBPM: %3d", arm9_globalBpm);
+            }
+
+            // NUDGE FORWARD / BACKWARD
+            {
+                if ((keysDown() & KEY_RIGHT) && !(keysHeld() & KEY_X))
+                    if(module->CurrentTick < module->CurrentTempo)
+                        module->CurrentTick++;
+
+                if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_X))
+                    if(module->CurrentTick > 0)
+                        module->CurrentTick--;
+            }
         }
 
         // SELECT MODULE
@@ -239,19 +243,6 @@ int main(int argc, char **argv)
             IpcSend(FIFO_GLOBAL_SETTINGS);
             drawTitle(0);
             drawChannelMatrix();
-        }
-
-        // NUDGE FORWARD / BACKWARD
-        {
-            if ((keysDown() & KEY_RIGHT) && !(keysHeld() & KEY_X))
-                if (deckInfo[0].modManager!= NULL)
-                    if(module->CurrentTick < module->CurrentTempo)
-                        module->CurrentTick++;
-
-            if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_X))
-                if (module!= NULL)
-                    if(module->CurrentTick > 0)
-                        module->CurrentTick--;
         }
         // Wait for VBlank
         swiWaitForVBlank();
