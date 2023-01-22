@@ -5,6 +5,7 @@
 
 #define CMD_SET_BPM_TEMPO   0
 #define CMD_MUTE_CHANNEL    1
+#define CMD_DUMMY           2
 
 // Inter-processor communication packet (address sent via FIFO queue)
 typedef struct

@@ -34,12 +34,12 @@ void XM7_arm7_Value32Handler(u32 p, void *userdata)
     {
         // received a pointer to a module that should start now
         XM7_ModuleManager_Type *module = (XM7_ModuleManager_Type*) p;
-        XM7_Modules[module->moduleIndex] = module;
+        XM7_Modules[module->ModuleIndex] = module;
 
         if (module->State == XM7_STATE_PLAYING)
-            XM7_StopModule(XM7_Modules[module->moduleIndex]);
+            XM7_StopModule(XM7_Modules[module->ModuleIndex]);
         else
-            XM7_PlayModule(XM7_Modules[module->moduleIndex]);
+            XM7_PlayModule(XM7_Modules[module->ModuleIndex]);
     }
 }
 

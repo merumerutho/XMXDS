@@ -58,11 +58,12 @@ void strcpy_cut(char *dest, char *src, u8 len, bool fillWSpace)
 
 void listFolderOnPosition(DIR *folder, u16 pPosition, u16 fileCount)
 {
-    struct dirent *dirContent;
+    struct dirent * restrict dirContent;
     u8 ff = 0;
     char pc = '>';
     char dir[4] = "dir";
 
+    consoleSelect(&bottom);
     if (pPosition > 255) iprintf("ERROR\nNot supported!\n");
 
     seekdir(folder, (u32) (pPosition & ENTRIES_PER_SCREEN));
@@ -74,17 +75,20 @@ void listFolderOnPosition(DIR *folder, u16 pPosition, u16 fileCount)
         char p = (ff == (pPosition % ENTRIES_PER_SCREEN)) ? pc : ' ';
         char *d = (dirContent->d_type == TYPE_FOLDER) ? dir : "   ";
         strcpy_cut(filename, dirContent->d_name, 20, TRUE);
+        consoleSelect(&bottom);
         iprintf("\x1b[%d;%dH%c %s %s \n", ff + 4, 0, p, d, filename);
         dirContent = readdir(folder);
         ff++;
     }
     while (ff < ENTRIES_PER_SCREEN)
     {
+        consoleSelect(&bottom);
         iprintf("\x1b[%d;%dH  %s \n", ff + 4, 0, "                               ");
         ff++;
     }
 
     rewinddir(folder);
+    consoleSelect(&bottom);
     iprintf("\x1b[21;0H-------------------------------");
     iprintf("\x1b[22;0H%03d/%03d", pPosition + 1, fileCount);
     iprintf("\x1b[23;0H-------------------------------");
@@ -168,6 +172,7 @@ void composeFileName(char *filepath, char *folder, char *filename)
     strcpy(filepath, folder);
     insertSlashAtEnd(filepath);
     strcat(filepath, filename);
+    consoleSelect(&bottom);
     iprintf("%s\n", filepath);
 }
 
@@ -176,7 +181,7 @@ void composeFileName(char *filepath, char *folder, char *filename)
  */
 void XM7_FS_selectModule(char *folderPath)
 {
-    DIR *folder = opendir(folderPath);
+    DIR * restrict folder = opendir(folderPath);
     u16 fileCount;
     u32 pPosition = 0;
     bool bSelectingModule = TRUE;
@@ -274,7 +279,10 @@ void XM7_FS_selectModule(char *folderPath)
                     if (deckInfo[0].modData != NULL)
                         strcpy_cut(deckInfo[0].modManager->ModuleName, selection->d_name, 16, FALSE);
                     else
+                    {
+                        consoleSelect(&bottom);
                         iprintf("Could not load module!");
+                    }
                     return;
                 }
             }
@@ -286,7 +294,7 @@ void XM7_FS_selectModule(char *folderPath)
 
 XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type, u8 slot)
 {
-    FILE *modFile = fopen(filepath, "rb");
+    FILE * restrict modFile  = fopen(filepath, "rb");
     u32 size;
     u16 ret;
 
@@ -295,7 +303,7 @@ XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *f
     rewind(modFile);
 
     // Data destination
-    void *modHeader = malloc(sizeof(u8) * (size));
+    void * restrict modHeader  = malloc(sizeof(u8) * (size));
 
     // Read data from file pointer
     if (fread(modHeader, sizeof(u8), size, modFile) != size) printf("\tCould not read module correctly!\n");

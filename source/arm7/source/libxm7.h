@@ -270,7 +270,11 @@ typedef struct
 
     u8 ChannelMute[16];  // 1 = mute, 0 = un-mute
 
-    u8 moduleIndex;
+    u8 LoopMode; // 0 = no loop, 1 = pattern loop
+
+    int8 Transpose;
+
+    u8 ModuleIndex;
 
 } XM7_ModuleManager_Type;
 

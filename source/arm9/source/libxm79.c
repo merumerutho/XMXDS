@@ -233,7 +233,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     iprintf("Loading...\n");
 
     // Set module index
-    Module->moduleIndex = slot;
+    Module->ModuleIndex = slot;
 
     // reset these values
     Module->NumberofPatterns = 0;
@@ -709,7 +709,14 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     // set State
     Module->State = XM7_STATE_READY;
 
-    // Set current bpm/tempo ?
+    // reset Current Song Position and pattern number
+    Module->CurrentSongPosition = 0;
+    Module->CurrentPatternNumber = Module->PatternOrder[0];
+
+    // By default, no note transposing is applied
+    Module->Transpose = 0;
+
+    // Set current bpm/tempo
     arm9_globalBpm = Module->DefaultBPM;
     arm9_globalTempo = Module->DefaultTempo;
 
@@ -729,7 +736,7 @@ u16 XM7_LoadMOD(XM7_ModuleManager_Type *Module, XM7_MODModuleHeader_Type *MODMod
     // returns 0 if OK, an error otherwise
 
     // Set module index
-    Module->moduleIndex = slot;
+    Module->ModuleIndex = slot;
 
     int FLT8Flag;
 

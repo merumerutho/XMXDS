@@ -415,7 +415,7 @@ void ApplyVolumeandPanning(XM7_ModuleManager_Type *module, u8 chn)
     // E.g. if there are 2 modules playing (SlotA, SlotB), then:
     // First module has channels 0... 7 and should playback in channels 15 ... 8
     // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-    u8 pbChn = chn + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
+    u8 pbChn = chn + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
 
     if (tremormute)
     {
@@ -1793,7 +1793,7 @@ void PitchNote(XM7_ModuleManager_Type *module, u8 chn, u8 pitch, s32 porta, s8 v
     // E.g. if there are 2 modules playing (SlotA, SlotB), then:
     // First module has channels 0... 7 and should playback in channels 15 ... 8
     // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-    u8 pbChn = chn + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
+    u8 pbChn = chn + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
 
     if (sample_ptr != NULL)
     {
@@ -1802,7 +1802,7 @@ void PitchNote(XM7_ModuleManager_Type *module, u8 chn, u8 pitch, s32 porta, s8 v
         s8 autovibra =
                 ((instrument != 0) && (module->Instrument[instrument - 1]->VibratoDepth != 0) && (module->Instrument[instrument - 1]->VibratoRate != 0)) ?
                         CalculateAutoVibrato(module, chn, instrument) : 0;
-        int freq = CalculateFreq(module->FreqTable, (note + pitch), sample_ptr->RelativeNote, finetune, porta, vibra, autovibra, glis);
+        int freq = CalculateFreq(module->FreqTable, (note + pitch + module->Transpose), sample_ptr->RelativeNote, finetune, porta, vibra, autovibra, glis);
         XM7_lowlevel_pitchSound(freq, pbChn);
     }
 }
@@ -1823,7 +1823,7 @@ void PlayNote(XM7_ModuleManager_Type *module, u8 chn, u16 sample_offset)
     // E.g. if there are 2 modules playing (SlotA, SlotB), then:
     // First module has channels 0... 7 and should playback in channels 15 ... 8
     // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-    u8 pbChn = chn + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
+    u8 pbChn = chn + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
 
     if (sample_ptr != NULL)
     {
@@ -1867,7 +1867,6 @@ void PlayNote(XM7_ModuleManager_Type *module, u8 chn, u16 sample_offset)
             }
             else
             {
-                //fifoSendValue32(FIFO_USER_08, sample_ptr->LoopLength);
                 // has a loop
                 XM7_lowlevel_startSoundwLoop(freq, sample_ptr->SampleData, sample_ptr->LoopLength, sample_ptr->LoopStart, pbChn, volume, panning, (sample_ptr->Flags >> 4), sample_offset);
             }
@@ -1893,7 +1892,7 @@ void ChangeSample(XM7_ModuleManager_Type *module, u8 chn)
     // E.g. if there are 2 modules playing (SlotA, SlotB), then:
     // First module has channels 0... 7 and should playback in channels 15 ... 8
     // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-    u8 pbChn = chn + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
+    u8 pbChn = chn + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
 
     if (sample_ptr != NULL)
         XM7_lowlevel_changeSample(sample_ptr->SampleData, sample_ptr->LoopLength, sample_ptr->LoopStart, pbChn, (sample_ptr->Flags >> 4));
@@ -1945,7 +1944,7 @@ void Timer1Handler(void)
     u8 CurrentLoopEffChannel = 0;
 
     // flag for queued patterns
-    bool startQueuedPatterns = FALSE;
+    bool startQueuedModule = FALSE;
 
     // For every module...
     for (mm = 0; mm < LIBXM7_ALLOWED_MODULES; mm++)
@@ -1966,7 +1965,7 @@ void Timer1Handler(void)
             ShouldTriggerNote = NO;
             ShouldChangeVolume = NO;
             ShouldRestartEnvelope = NO;
-            ShouldPitchNote = NO;
+            ShouldPitchNote = (module->Transpose!=0) ? YES : NO;
             ShouldTriggerKeyOff = NO;
             ShouldChangeInstrument = NO;
 
@@ -2401,9 +2400,10 @@ void Timer1Handler(void)
                     // now check if pattern is over (or should be breaked!)
                     if (BreakThisPattern || ((module->CurrentLine) >= (module->PatternLength[module->CurrentPatternNumber])))
                     {
+                        fifoSendValue32(FIFO_USER_08, 0); // just to trigger callback
                         // next pattern!
                         // Set new pattern flag to TRUE.
-                        startQueuedPatterns = TRUE;
+                        startQueuedModule = TRUE;
                         module->CurrentLine = NextPatternStartLine; // should be 0 when not using Dxx
 
                         // NextPatternPosition comes from Bxx
@@ -2411,13 +2411,13 @@ void Timer1Handler(void)
                         {
                             module->CurrentSongPosition = NextPatternPosition;
                         }
-                        else
+                        else if (!module->LoopMode)
                             module->CurrentSongPosition++;
 
                         // check if song is finished... it is, we've got to restart!
                         if ((module->CurrentSongPosition) >= (module->ModuleLength)) module->CurrentSongPosition = module->RestartPoint;
 
-                        // set new currentpatternnumber!
+                        // set new current pattern number!
                         module->CurrentPatternNumber = module->PatternOrder[module->CurrentSongPosition];
 
                         // reset the loopbegin[], we are in a new pattern!
@@ -2431,7 +2431,7 @@ void Timer1Handler(void)
     }
 
     // Check if any module shall start playing at beginning of new pattern
-    if (startQueuedPatterns)
+    if (startQueuedModule)
     {
         for (u8 mmm = 0; mmm < LIBXM7_ALLOWED_MODULES; mmm++)
         {
@@ -2440,7 +2440,7 @@ void Timer1Handler(void)
     }
 }
 
-void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
+void XM7_PlayModuleFromPos(XM7_ModuleManager_Type * module, u8 position)
 {
 
     // Prepare for playback, set everything to default values ...
@@ -2518,20 +2518,7 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
 
     // the silence sample
     module->Silence = 0x00000000;
-    // By default, put the module in a queued state
-    // IT will start playing when the end of a pattern is reached
-    // (at the end of Timer1Handler)
-    module->State = XM7_STATE_QUEUED;
 
-    // Check if any other module is playing already
-    int modulePlaying = -1; // by default, no module is playing
-    for (u8 mm = 0; mm < LIBXM7_ALLOWED_MODULES; mm++)
-    {
-        if (XM7_Modules[mm]->State == XM7_STATE_PLAYING) modulePlaying = (int) mm;
-    }
-
-    // If no other module is already playing...
-    if (modulePlaying == -1)
     {
         // Set IRQ for Timer1
         irqSet(IRQ_TIMER1, Timer1Handler);
@@ -2544,11 +2531,13 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
         // Module has to start playing already
         module->State = XM7_STATE_PLAYING;
     }
+
+    fifoSendValue32(FIFO_USER_08, 0); // just to trigger callback
 }
 
 void XM7_PlayModule(XM7_ModuleManager_Type *module)
 {
-    XM7_PlayModuleFromPos(module, 0);
+    XM7_PlayModuleFromPos(module, module->CurrentSongPosition);
 }
 
 void XM7_StopModule(XM7_ModuleManager_Type *module)
@@ -2564,7 +2553,7 @@ void XM7_StopModule(XM7_ModuleManager_Type *module)
         // E.g. if there are 2 modules playing (SlotA, SlotB), then:
         // First module has channels 0... 7 and should playback in channels 15 ... 8
         // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-        u8 pbChn = i + (module->moduleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
+        u8 pbChn = i + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
         XM7_lowlevel_stopSound(pbChn);
     }
     // change the state

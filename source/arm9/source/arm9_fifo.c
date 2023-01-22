@@ -12,6 +12,7 @@ FifoMsg* fifoGlobalMsg = NULL;
 
 u8 arm9_globalBpm = DEFAULT_BPM;
 u8 arm9_globalTempo = DEFAULT_TEMPO;
+u8 arm9_globalCuePosition = DEFAULT_CUEPOS;
 
 void IpcInit()
 {
