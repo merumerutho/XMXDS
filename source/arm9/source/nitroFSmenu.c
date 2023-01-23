@@ -58,7 +58,7 @@ void strcpy_cut(char *dest, char *src, u8 len, bool fillWSpace)
 
 void listFolderOnPosition(DIR *folder, u16 pPosition, u16 fileCount)
 {
-    struct dirent * restrict dirContent;
+    struct dirent * dirContent;
     u8 ff = 0;
     char pc = '>';
     char dir[4] = "dir";
@@ -179,9 +179,15 @@ void composeFileName(char *filepath, char *folder, char *filename)
 /*
  *
  */
+
+void doNothing()
+{
+
+}
+
 void XM7_FS_selectModule(char *folderPath)
 {
-    DIR * restrict folder = opendir(folderPath);
+    DIR * folder = opendir(folderPath);
     u16 fileCount;
     u32 pPosition = 0;
     bool bSelectingModule = TRUE;
@@ -294,7 +300,7 @@ void XM7_FS_selectModule(char *folderPath)
 
 XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type, u8 slot)
 {
-    FILE * restrict modFile  = fopen(filepath, "rb");
+    FILE * modFile  = fopen(filepath, "rb");
     u32 size;
     u16 ret;
 
@@ -303,7 +309,7 @@ XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *f
     rewind(modFile);
 
     // Data destination
-    void * restrict modHeader  = malloc(sizeof(u8) * (size));
+    void * modHeader  = malloc(sizeof(u8) * (size));
 
     // Read data from file pointer
     if (fread(modHeader, sizeof(u8), size, modFile) != size) printf("\tCould not read module correctly!\n");

@@ -19,6 +19,7 @@
 
 bool XM7_FS_init();
 void XM7_FS_selectModule(char *folderPath);
+void doNothing();
 XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type, u8 slot);
 
 #endif /* ARM9_SOURCE_NITROFSMENU_H_ */

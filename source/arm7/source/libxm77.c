@@ -2559,17 +2559,9 @@ void XM7_StopModule(XM7_ModuleManager_Type *module)
     // change the state
     module->State = XM7_STATE_STOPPED;
 
-    // Now check if everything is stopped. In such case, disable the IRQ
-    bool isStopped = TRUE;
-    for (u8 mm = 0; mm < LIBXM7_ALLOWED_MODULES; mm++)
-    {
-        if (XM7_Modules[mm]->State == XM7_STATE_PLAYING) isStopped = FALSE;
-    }
-    if (isStopped)
-    {
-        TIMER1_CR = 0;
-        irqDisable(IRQ_TIMER1);
-    }
+    // disable IRQ
+    TIMER1_CR = 0;
+    irqDisable(IRQ_TIMER1);
 }
 
 void XM7_PauseModule(XM7_ModuleManager_Type *module)
