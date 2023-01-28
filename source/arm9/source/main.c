@@ -39,7 +39,7 @@ void updateArmV7()
     fifoGlobalMsg->data[1] = arm9_globalTempo;
     fifoGlobalMsg->command = CMD_SET_BPM_TEMPO;
     IpcSend(FIFO_GLOBAL_SETTINGS);
-    drawTitle(0);
+    //drawTitle(0);
 }
 
 void drawIntro()
@@ -79,7 +79,6 @@ void drawTitle(u32 v)
         iprintf("\x1b[12;1HCue position:\t\t%03d/%03d", arm9_globalCuePosition+1, module->ModuleLength);
         iprintf("\x1b[14;1HTransposition:\t%d  ", module->Transpose);
     }
-
     if (v!=0)
         iprintf("\x1b[23;1HDebug value: %ld", v);
 }
@@ -116,6 +115,7 @@ int main(int argc, char **argv)
     bool touchRelease = true;
     while (1)
     {
+        drawTitle(0);
         scanKeys();
 
         // Commands to execute only if module is loaded
@@ -152,6 +152,7 @@ int main(int argc, char **argv)
                 if (module->State == XM7_STATE_PLAYING)
                 {
                     play_stop(&deckInfo[0]);
+                    module->State = XM7_STATE_STOPPED;
                     updateArmV7();  // This can be used to 'notify' armv7 of changes
                 }
             }
@@ -229,10 +230,10 @@ int main(int argc, char **argv)
                 }
                 updateArmV7();
             }
-
             // NUDGE BACKWARD
             if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_Y))
             {
+
                 if(module->CurrentTick > 0)
                 {
                     module->CurrentTick--;

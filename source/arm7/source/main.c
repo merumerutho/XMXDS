@@ -62,9 +62,6 @@ int main()
     // Install the FIFO handler for libXM7 "fifo channel"
     fifoSetValue32Handler(FIFO_XM7, XM7_arm7_Value32Handler, 0);
 
-    // Handler for BPM / Tempo
-    fifoSetValue32Handler(FIFO_GLOBAL_SETTINGS, arm7_GlobalSettingsFIFOHandler, 0);
-
     installSystemFIFO();
 
     irqSet(IRQ_VCOUNT, VcountHandler);

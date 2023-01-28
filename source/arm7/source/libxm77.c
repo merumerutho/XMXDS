@@ -1,6 +1,7 @@
 #include <nds.h>
 #include <stdlib.h>
 #include <stddef.h>
+//#include <interrupts.h>
 
 #include "libxm7.h"
 
@@ -2438,6 +2439,9 @@ void Timer1Handler(void)
             if (XM7_Modules[mmm]->State == XM7_STATE_QUEUED) XM7_Modules[mmm]->State = XM7_STATE_PLAYING;
         }
     }
+
+    while (fifoCheckValue32(FIFO_GLOBAL_SETTINGS))
+        arm7_GlobalSettingsFIFOHandler(fifoGetValue32(FIFO_GLOBAL_SETTINGS), NULL);
 }
 
 void XM7_PlayModuleFromPos(XM7_ModuleManager_Type * module, u8 position)
