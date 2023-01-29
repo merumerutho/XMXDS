@@ -77,7 +77,7 @@ void drawTitle(u32 v)
         iprintf("\x1b[8;1HSong position:\t%03d/%03d", module->CurrentSongPosition + 1, module->ModuleLength);
         iprintf("\x1b[9;1HPattern:\t\t\t%03d", module->CurrentPatternNumber);
         iprintf("\x1b[10;1HLoop:\t\t\t\t%s", module->LoopMode ? "YES" : "NO ");
-        iprintf("\x1b[12;1HHot Cue position:\t%03d/%03d", arm9_globalHotCuePosition + 1, module->ModuleLength);
+        iprintf("\x1b[12;1HHot Cue position:%03d/%03d", arm9_globalHotCuePosition + 1, module->ModuleLength);
         iprintf("\x1b[14;1HTransposition:\t%d  ", module->Transpose);
     }
     if (v != 0) iprintf("\x1b[23;1HDebug value: %ld", v);
