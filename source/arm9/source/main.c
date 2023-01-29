@@ -120,7 +120,7 @@ int main(int argc, char **argv)
         scanKeys();
 
         // Commands to execute only if module is loaded
-        if (module != NULL)
+        if (THE_MODULE != NULL)
         {
             if (keysHeld() & KEY_TOUCH)
             {
