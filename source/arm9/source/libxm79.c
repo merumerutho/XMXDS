@@ -710,7 +710,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     // set State
     Module->State = XM7_STATE_READY;
 
-    // reset Current Song Position and pattern number
+    // Set Current Song Position and Pattern Number
     Module->CurrentSongPosition = 0;
     Module->CurrentPatternNumber = Module->PatternOrder[0];
 
@@ -719,15 +719,16 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     // By default, no loop
     Module->LoopMode = 0;
 
-    // Set current bpm/tempo
+    // Set current bpm/tempo and hot cue position
     arm9_globalBpm = Module->DefaultBPM;
     arm9_globalTempo = Module->DefaultTempo;
+    arm9_globalHotCuePosition = Module->CurrentSongPosition;
 
     iprintf("Done.");
     while (1)
     {
         scanKeys();
-        if (keysDown() & (KEY_A | KEY_B | KEY_X | KEY_Y | KEY_START | KEY_SELECT | KEY_L | KEY_R)) break;
+        if (keysDown()) break;
     }
 
     // end OK!
@@ -998,8 +999,10 @@ void XM7_UnloadXM(XM7_ModuleManager_Type *Module)
     for (i = (Module->NumberofPatterns - 1); i >= 0; i--)
         free(Module->Pattern[i]);
 
-    // set State
     Module->State = XM7_STATE_EMPTY;
+
+    // Reset hot cue position to 0
+    arm9_globalHotCuePosition = 0;
 }
 
 void XM7_UnloadMOD(XM7_ModuleManager_Type *Module)
