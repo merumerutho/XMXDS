@@ -715,6 +715,8 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
 
     // By default, no note transposing is applied
     Module->Transpose = 0;
+    // By default, no loop
+    Module->LoopMode = 0;
 
     // Set current bpm/tempo
     arm9_globalBpm = Module->DefaultBPM;

@@ -17,6 +17,8 @@
 
 #define DEFAULT_ROOT_PATH "./"
 
+#define THE_MODULE (deckInfo[0].modManager)
+
 //
 
 void arm9_DebugFIFOHandler(u32 p, void *userdata);
@@ -86,7 +88,6 @@ void drawTitle(u32 v)
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-    XM7_ModuleManager_Type * module = deckInfo[0].modManager;
     videoSetMode(MODE_0_2D);
     videoSetModeSub(MODE_0_2D);
 
@@ -137,9 +138,9 @@ int main(int argc, char **argv)
             // CUE PLAY
             if(keysDown() & KEY_A)
             {
-                module->CurrentSongPosition = arm9_globalCuePosition;
+                THE_MODULE->CurrentSongPosition = arm9_globalCuePosition;
                 // If playing, stop
-                if (module->State == XM7_STATE_PLAYING)
+                if (THE_MODULE->State == XM7_STATE_PLAYING)
                     play_stop(&deckInfo[0]);
                 // Then start
                 play_stop(&deckInfo[0]);
@@ -149,10 +150,10 @@ int main(int argc, char **argv)
             // PAUSE
             if(keysDown() & KEY_B)
             {
-                if (module->State == XM7_STATE_PLAYING)
+                if (THE_MODULE->State == XM7_STATE_PLAYING)
                 {
                     play_stop(&deckInfo[0]);
-                    module->State = XM7_STATE_STOPPED;
+                    THE_MODULE->State = XM7_STATE_STOPPED;
                     updateArmV7();  // This can be used to 'notify' armv7 of changes
                 }
             }
@@ -160,21 +161,21 @@ int main(int argc, char **argv)
             // TRANSPOSE DOWN
             if (keysDown() & KEY_L)
             {
-                module->Transpose--;
+                THE_MODULE->Transpose--;
                 updateArmV7();  // This can be used to 'notify' armv7 of changes
             }
 
             // TRANSPOSE UP
             if (keysDown() & KEY_R)
             {
-                module->Transpose++;
+                THE_MODULE->Transpose++;
                 updateArmV7();  // This can be used to 'notify' armv7 of changes
             }
 
             // CUE SET
             if(keysDown() & KEY_Y)
             {
-                arm9_globalCuePosition = module->CurrentSongPosition;
+                arm9_globalCuePosition = THE_MODULE->CurrentSongPosition;
                 updateArmV7();  // This can be used to 'notify' armv7 of changes
             }
 
@@ -189,7 +190,7 @@ int main(int argc, char **argv)
                 }
                 if (keysDown() & KEY_RIGHT)
                 {
-                    if (arm9_globalCuePosition < module->ModuleLength-1)
+                    if (arm9_globalCuePosition < THE_MODULE->ModuleLength-1)
                         arm9_globalCuePosition++;
                     updateArmV7();
                 }
@@ -198,7 +199,7 @@ int main(int argc, char **argv)
             // LOOP MODE
             if (keysDown() & KEY_X)
             {
-                module->LoopMode = !(module->LoopMode);
+                THE_MODULE->LoopMode = !(THE_MODULE->LoopMode);
                 updateArmV7();  // This can be used to update arm7 of some changes
             }
 
@@ -219,14 +220,14 @@ int main(int argc, char **argv)
             // NUDGE FORWARD
             if ((keysDown() & KEY_RIGHT) && !(keysHeld() & KEY_Y))
             {
-                if(module->CurrentTick < module->CurrentTempo)
+                if(THE_MODULE->CurrentTick < THE_MODULE->CurrentTempo)
                 {
-                    module->CurrentTick++;
+                    THE_MODULE->CurrentTick++;
                 }
-                else if (module->CurrentLine < module->PatternLength[module->CurrentPatternNumber])
+                else if (THE_MODULE->CurrentLine < THE_MODULE->PatternLength[THE_MODULE->CurrentPatternNumber])
                 {
-                    module->CurrentTick = 0;
-                    module->CurrentLine++;
+                    THE_MODULE->CurrentTick = 0;
+                    THE_MODULE->CurrentLine++;
                 }
                 updateArmV7();
             }
@@ -234,14 +235,14 @@ int main(int argc, char **argv)
             if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_Y))
             {
 
-                if(module->CurrentTick > 0)
+                if(THE_MODULE->CurrentTick > 0)
                 {
-                    module->CurrentTick--;
+                    THE_MODULE->CurrentTick--;
                 }
-                else if (module->CurrentLine > 0)
+                else if (THE_MODULE->CurrentLine > 0)
                 {
-                    module->CurrentTick = module->CurrentTempo-1;
-                    module->CurrentLine--;
+                    THE_MODULE->CurrentTick = THE_MODULE->CurrentTempo-1;
+                    THE_MODULE->CurrentLine--;
                 }
                 updateArmV7();
             }
@@ -251,7 +252,6 @@ int main(int argc, char **argv)
         if (keysDown() & KEY_SELECT)
         {
             XM7_FS_selectModule((char*) folderPath);
-            module = deckInfo[0].modManager;
             drawChannelMatrix();
             updateArmV7();
         }
