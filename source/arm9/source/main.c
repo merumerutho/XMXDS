@@ -53,17 +53,16 @@ void drawIntro()
     iprintf("\x1b[9;6H{.xm/.mod dj player}");
     iprintf("\x1b[12;10H@merumerutho");
     iprintf("\x1b[13;3Hbased on libxm7 by @sverx");
-    while(1)
+    while (1)
     {
         scanKeys();
-        if (keysDown())
-            break;
+        if (keysDown()) break;
     }
 }
 
 void drawTitle(u32 v)
 {
-    XM7_ModuleManager_Type* module = deckInfo[0].modManager;
+    XM7_ModuleManager_Type *module = deckInfo[0].modManager;
     consoleSelect(&top);
     consoleClear();
     iprintf("\x1b[0;2H _  _ __  __ _  _ ____  ___\n");
@@ -75,14 +74,13 @@ void drawTitle(u32 v)
     if (module != NULL)
     {
         iprintf("\x1b[5;1HBPM: %3d\t\t|\t\tTempo: %2d", arm9_globalBpm, arm9_globalTempo);
-        iprintf("\x1b[8;1HSong position:\t%03d/%03d", module->CurrentSongPosition+1, module->ModuleLength);
+        iprintf("\x1b[8;1HSong position:\t%03d/%03d", module->CurrentSongPosition + 1, module->ModuleLength);
         iprintf("\x1b[9;1HPattern:\t\t\t%03d", module->CurrentPatternNumber);
         iprintf("\x1b[10;1HLoop:\t\t\t\t%s", module->LoopMode ? "YES" : "NO ");
-        iprintf("\x1b[12;1HCue position:\t\t%03d/%03d", arm9_globalCuePosition+1, module->ModuleLength);
+        iprintf("\x1b[12;1HHot Cue position:\t%03d/%03d", arm9_globalHotCuePosition + 1, module->ModuleLength);
         iprintf("\x1b[14;1HTransposition:\t%d  ", module->Transpose);
     }
-    if (v!=0)
-        iprintf("\x1b[23;1HDebug value: %ld", v);
+    if (v != 0) iprintf("\x1b[23;1HDebug value: %ld", v);
 }
 
 //---------------------------------------------------------------------------------
@@ -136,19 +134,18 @@ int main(int argc, char **argv)
                 touchRelease = true;
 
             // CUE PLAY
-            if(keysDown() & KEY_A)
+            if (keysDown() & KEY_A)
             {
-                THE_MODULE->CurrentSongPosition = arm9_globalCuePosition;
+                THE_MODULE->CurrentSongPosition = arm9_globalHotCuePosition;
                 // If playing, stop
-                if (THE_MODULE->State == XM7_STATE_PLAYING)
-                    play_stop(&deckInfo[0]);
+                if (THE_MODULE->State == XM7_STATE_PLAYING) play_stop(&deckInfo[0]);
                 // Then start
                 play_stop(&deckInfo[0]);
                 updateArmV7();  // This can be used to 'notify' armv7 of changes
             }
 
             // PAUSE
-            if(keysDown() & KEY_B)
+            if (keysDown() & KEY_B)
             {
                 if (THE_MODULE->State == XM7_STATE_PLAYING)
                 {
@@ -172,10 +169,10 @@ int main(int argc, char **argv)
                 updateArmV7();  // This can be used to 'notify' armv7 of changes
             }
 
-            // CUE SET
-            if(keysDown() & KEY_Y)
+            // SET HOT CUE
+            if (keysDown() & KEY_Y)
             {
-                arm9_globalCuePosition = THE_MODULE->CurrentSongPosition;
+                arm9_globalHotCuePosition = THE_MODULE->CurrentSongPosition;
                 updateArmV7();  // This can be used to 'notify' armv7 of changes
             }
 
@@ -184,14 +181,12 @@ int main(int argc, char **argv)
             {
                 if (keysDown() & KEY_LEFT)
                 {
-                    if (arm9_globalCuePosition > 0)
-                        arm9_globalCuePosition--;
+                    if (arm9_globalHotCuePosition > 0) arm9_globalHotCuePosition--;
                     updateArmV7();
                 }
                 if (keysDown() & KEY_RIGHT)
                 {
-                    if (arm9_globalCuePosition < THE_MODULE->ModuleLength-1)
-                        arm9_globalCuePosition++;
+                    if (arm9_globalHotCuePosition < THE_MODULE->ModuleLength - 1) arm9_globalHotCuePosition++;
                     updateArmV7();
                 }
             }
@@ -220,7 +215,7 @@ int main(int argc, char **argv)
             // NUDGE FORWARD
             if ((keysDown() & KEY_RIGHT) && !(keysHeld() & KEY_Y))
             {
-                if(THE_MODULE->CurrentTick < THE_MODULE->CurrentTempo)
+                if (THE_MODULE->CurrentTick < THE_MODULE->CurrentTempo)
                 {
                     THE_MODULE->CurrentTick++;
                 }
@@ -234,14 +229,13 @@ int main(int argc, char **argv)
             // NUDGE BACKWARD
             if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_Y))
             {
-
-                if(THE_MODULE->CurrentTick > 0)
+                if (THE_MODULE->CurrentTick > 0)
                 {
                     THE_MODULE->CurrentTick--;
                 }
                 else if (THE_MODULE->CurrentLine > 0)
                 {
-                    THE_MODULE->CurrentTick = THE_MODULE->CurrentTempo-1;
+                    THE_MODULE->CurrentTick = THE_MODULE->CurrentTempo - 1;
                     THE_MODULE->CurrentLine--;
                 }
                 updateArmV7();
@@ -251,14 +245,18 @@ int main(int argc, char **argv)
         // SELECT MODULE
         if (keysDown() & KEY_SELECT)
         {
-            XM7_FS_selectModule((char*) folderPath);
+            if (XM7_FS_selectModule((char*) folderPath) == 0)
+            {
+                // Module loaded
+                arm9_globalHotCuePosition = 0;  // reset this value to 0
+            }
             drawChannelMatrix();
             updateArmV7();
         }
 
         // Idk why it seems to be needed
-        if(keysDown() & KEY_START)
-            doNothing();
+        //if (keysDown() & KEY_START)
+        //    doNothing();
 
         // Wait for VBlank
         swiWaitForVBlank();

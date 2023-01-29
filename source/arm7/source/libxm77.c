@@ -1966,7 +1966,7 @@ void Timer1Handler(void)
             ShouldTriggerNote = NO;
             ShouldChangeVolume = NO;
             ShouldRestartEnvelope = NO;
-            ShouldPitchNote = (module->Transpose!=0) ? YES : NO;
+            ShouldPitchNote = (module->Transpose != 0) ? YES : NO;
             ShouldTriggerKeyOff = NO;
             ShouldChangeInstrument = NO;
 
@@ -2412,8 +2412,7 @@ void Timer1Handler(void)
                         {
                             module->CurrentSongPosition = NextPatternPosition;
                         }
-                        else if (!module->LoopMode)
-                            module->CurrentSongPosition++;
+                        else if (!module->LoopMode) module->CurrentSongPosition++;
 
                         // check if song is finished... it is, we've got to restart!
                         if ((module->CurrentSongPosition) >= (module->ModuleLength)) module->CurrentSongPosition = module->RestartPoint;
@@ -2444,7 +2443,7 @@ void Timer1Handler(void)
         arm7_GlobalSettingsFIFOHandler(fifoGetValue32(FIFO_GLOBAL_SETTINGS), NULL);
 }
 
-void XM7_PlayModuleFromPos(XM7_ModuleManager_Type * module, u8 position)
+void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
 {
 
     // Prepare for playback, set everything to default values ...

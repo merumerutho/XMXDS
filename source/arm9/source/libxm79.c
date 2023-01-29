@@ -271,9 +271,10 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     Module->DefaultBPM = XMModule->DefaultBPM;
 
     // By default un-mute all channels
-    for (u8 i=0; i<Module->NumberofChannels; i++)
+    for (u8 i = 0; i < Module->NumberofChannels; i++)
         Module->ChannelMute[i] = 0;
-    for (u8 i=Module->NumberofChannels; i<16; i++)
+    // Mute those that aren't present, by default
+    for (u8 i = Module->NumberofChannels; i < 16; i++)
         Module->ChannelMute[i] = 1;
 
     memcpy(Module->ModuleName, XMModule->XMModuleName, 20);  // char[20]

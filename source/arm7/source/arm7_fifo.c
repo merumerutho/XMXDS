@@ -15,4 +15,6 @@ void arm7_GlobalSettingsFIFOHandler(u32 p, void *userdata)
         setGlobalBpm(((FifoMsg*) (p))->data[0]);
         setGlobalTempo(((FifoMsg*) (p))->data[1]);
     }
+
+    fifoSendValue32(FIFO_USER_08, 0); // ACK
 }

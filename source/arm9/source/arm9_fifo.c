@@ -8,11 +8,11 @@
 #include "arm9_defines.h"
 
 // Initialize fifo_msg
-FifoMsg* fifoGlobalMsg = NULL;
+FifoMsg *fifoGlobalMsg = NULL;
 
 u8 arm9_globalBpm = DEFAULT_BPM;
 u8 arm9_globalTempo = DEFAULT_TEMPO;
-u8 arm9_globalCuePosition = DEFAULT_CUEPOS;
+u8 arm9_globalHotCuePosition = DEFAULT_CUEPOS;
 
 void IpcInit()
 {

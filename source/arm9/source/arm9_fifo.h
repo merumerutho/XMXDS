@@ -14,7 +14,7 @@
 extern FifoMsg* fifoGlobalMsg;
 extern u8 arm9_globalBpm;
 extern u8 arm9_globalTempo;
-extern u8 arm9_globalCuePosition;
+extern u8 arm9_globalHotCuePosition;
 
 void IpcInit();
 void IpcSend(u8 fifo);

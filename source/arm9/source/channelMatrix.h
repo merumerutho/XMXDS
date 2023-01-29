@@ -9,6 +9,6 @@
 #define ARM9_SOURCE_CHANNELMATRIX_H_
 
 void drawChannelMatrix();
-int8 handleChannelMute(touchPosition* touchPos);
+int8 handleChannelMute(touchPosition *touchPos);
 
 #endif /* ARM9_SOURCE_CHANNELMATRIX_H_ */
