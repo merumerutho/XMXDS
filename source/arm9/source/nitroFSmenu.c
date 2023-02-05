@@ -160,13 +160,6 @@ bool isXM(char *filename)
     return FALSE;  // this never happens
 }
 
-bool isMOD(char *filename)
-{
-    for (u8 i = 2; i < 254; i++)
-        if (filename[i] == '\0') return !(strcmp((char*) &(filename[i - 3]), "mod"));
-    return FALSE;  // this never happens
-}
-
 void composeFileName(char *filepath, char *folder, char *filename)
 {
     strcpy(filepath, folder);
@@ -174,15 +167,6 @@ void composeFileName(char *filepath, char *folder, char *filename)
     strcat(filepath, filename);
     consoleSelect(&bottom);
     iprintf("%s\n", filepath);
-}
-
-/*
- *
- */
-
-void doNothing()
-{
-
 }
 
 u8 XM7_FS_selectModule(char *folderPath)
@@ -263,28 +247,32 @@ u8 XM7_FS_selectModule(char *folderPath)
         if (keysDown() & KEY_A)
         {
             struct dirent *selection = getSelection(folder, pPosition);
-
             if (selection->d_type == TYPE_FILE)
             {
+                // If file selected is a module
                 if (isXM(selection->d_name))
                 {
                     composeFileName((char*) &filepath, folderPath, selection->d_name);
                     consoleClear();
-                    // Stop module if playing, unload module if present
-                    if (deckInfo[0].modManager != NULL)
+
+                    // If deck already loaded
+                    if (deckInfo.modManager != NULL)
                     {
-                        if (deckInfo[0].modManager->State == XM7_STATE_PLAYING) play_stop(&deckInfo[0]);
-                        XMX_UnloadXM(0);
+                        // Stop if playing
+                        if (deckInfo.modManager->State == XM7_STATE_PLAYING) play_stop(&deckInfo);
+                        // Unload module
+                        XMX_UnloadXM();
                     }
-                    deckInfo[0].modManager = malloc(sizeof(XM7_ModuleManager_Type));
-                    deckInfo[0].moduleIndex = 0;
-                    // Load module
-                    deckInfo[0].modData = XM7_FS_loadModule(deckInfo[0].modManager, filepath,
-                    FS_TYPE_XM,
-                                                            0);
-                    if (deckInfo[0].modData != NULL)
+                    deckInfo.modManager = malloc(sizeof(XM7_ModuleManager_Type));
+
+                    // LOADING MODULE
+                    deckInfo.xmData = (XM7_XMModuleHeader_Type*)
+                                            XM7_FS_loadModule(deckInfo.modManager, filepath,
+                                                              FS_TYPE_XM);
+                    // MODULE NAME
+                    if (deckInfo.xmData != NULL)
                     {
-                        strcpy_cut(deckInfo[0].modManager->ModuleName, selection->d_name, 16, FALSE);
+                        strcpy_cut(deckInfo.modManager->ModuleName, selection->d_name, 16, FALSE);
                         return 0; // Loaded successfully
                     }
                     else
@@ -301,7 +289,7 @@ u8 XM7_FS_selectModule(char *folderPath)
     return 3; // should never happen
 }
 
-XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type, u8 slot)
+void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type)
 {
     FILE *modFile = fopen(filepath, "rb");
     u32 size;
@@ -312,16 +300,16 @@ XM7_XMModuleHeader_Type* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *f
     rewind(modFile);
 
     // Data destination
-    void *modHeader = malloc(sizeof(u8) * (size));
+    XM7_XMModuleHeader_Type *modHeader = malloc(sizeof(u8) * (size));
 
     // Read data from file pointer
-    if (fread(modHeader, sizeof(u8), size, modFile) != size) printf("\tCould not read module correctly!\n");
+    if (fread((void *)modHeader, sizeof(u8), size, modFile) != size) printf("\tCould not read module correctly!\n");
 
     if (size > 0)
     {
         if (type == FS_TYPE_XM)
         {
-            ret = XM7_LoadXM(pMod, (XM7_XMModuleHeader_Type*) modHeader, slot);
+            ret = XM7_LoadXM(pMod, modHeader);
             if (ret > 0) return NULL;
         }
         // Ensure data gets written to main RAM (leave no data in cache)

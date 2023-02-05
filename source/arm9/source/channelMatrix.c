@@ -14,7 +14,7 @@
 void drawChannelStatus(u8 idx)
 {
     consoleSelect(&bottom);
-    iprintf("\x1b[%d;%dH%s", (idx / 4) * 6 + 3, (idx % 4) * 8 + 1, deckInfo[0].modManager->ChannelMute[idx] ? "Muted" : "     ");
+    iprintf("\x1b[%d;%dH%s", (idx / 4) * 6 + 3, (idx % 4) * 8 + 1, deckInfo.modManager->ChannelMute[idx] ? "Muted" : "     ");
 }
 
 void drawChannelMatrix()
@@ -59,7 +59,7 @@ int8 handleChannelMute(touchPosition *touchPos)
     u8 idx = 0;
     idx = (u8) (x * 4) + ((int) (y * 4) % 4) * 4;
 
-    deckInfo[0].modManager->ChannelMute[idx] = !(deckInfo[0].modManager->ChannelMute[idx]);
+    deckInfo.modManager->ChannelMute[idx] = !(deckInfo.modManager->ChannelMute[idx]);
 
     drawChannelStatus(idx);
     return idx;

@@ -225,15 +225,12 @@ XM7_Sample_Type* PrepareNewSample(u32 len, u32 looplen, u8 flags)
     return (ptr);
 }
 
-u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule, u8 slot)
+u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule)
 {    // returns 0 if OK, an error otherwise
 
     // Clear screen
     consoleClear();
     iprintf("Loading...\n");
-
-    // Set module index
-    Module->ModuleIndex = slot;
 
     // reset these values
     Module->NumberofPatterns = 0;
@@ -270,7 +267,7 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     Module->DefaultTempo = XMModule->DefaultTempo;
     Module->DefaultBPM = XMModule->DefaultBPM;
 
-    // By default un-mute all channels
+    // By default un-mute all channels available
     for (u8 i = 0; i < Module->NumberofChannels; i++)
         Module->ChannelMute[i] = 0;
     // Mute those that aren't present, by default
@@ -718,6 +715,8 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     Module->Transpose = 0;
     // By default, no loop
     Module->LoopMode = 0;
+    // At startup, current line is 0
+    Module->CurrentLine = 0;
 
     // Set current bpm/tempo and hot cue position
     arm9_globalBpm = Module->DefaultBPM;
@@ -735,239 +734,6 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     return (0);
 }
 
-u16 XM7_LoadMOD(XM7_ModuleManager_Type *Module, XM7_MODModuleHeader_Type *MODModule, u8 slot)
-{
-    // returns 0 if OK, an error otherwise
-
-    // Set module index
-    Module->ModuleIndex = slot;
-
-    int FLT8Flag;
-
-    // file format ID check
-    Module->NumberofChannels = IdentifyMOD(MODModule->FileFormat[0], MODModule->FileFormat[1], MODModule->FileFormat[2], MODModule->FileFormat[3]);
-
-    FLT8Flag = (Module->NumberofChannels >> 7);
-    Module->NumberofChannels &= 0x3f;
-
-    // if MOD has not been identified:
-    if (Module->NumberofChannels == 0)
-    {
-        Module->NumberofInstruments = 0;
-        Module->NumberofPatterns = 0;
-        Module->State = XM7_STATE_ERROR | XM7_ERR_NOT_A_VALID_MODULE;
-        return (XM7_ERR_NOT_A_VALID_MODULE);
-    }
-
-    // if MOD has too many channels:
-    if (Module->NumberofChannels > LIBXM7_MAX_CHANNELS_PER_MODULE)
-    {
-        Module->NumberofInstruments = 0;
-        Module->NumberofPatterns = 0;
-        Module->State = XM7_STATE_ERROR | XM7_ERR_UNSUPPORTED_NUMBER_OF_CHANNELS;
-        return (XM7_ERR_UNSUPPORTED_NUMBER_OF_CHANNELS);
-    }
-
-    // set these values, constants in a MOD file
-    Module->NumberofInstruments = 31;                                                           // 31 instrums, default
-    Module->FreqTable = 0;                                                               // AMIGA Freq. Table ( ==0 !)
-    Module->DefaultTempo = 6;                                                                   // Spd=6, default
-    Module->DefaultBPM = 125;                                                                 // BPM=125, default
-    memcpy(Module->TrackerName, "**** MOD Module ****", 20);                                     // char[20]
-
-    // load all the needed info from the header
-    Module->ModuleLength = MODModule->SongLength;
-    Module->RestartPoint = (MODModule->RestartPosition >= 127) ? 0 : MODModule->RestartPosition;
-    memcpy(Module->PatternOrder, MODModule->PatternOrder, 128);     // u8[128]
-    memcpy(Module->ModuleName, MODModule->MODModuleName, 20);            // char[20]
-
-    // calculate how many patterns are there in the module (in a safe way)
-    Module->NumberofPatterns = 0;
-    int i;
-    for (i = 0; i < 128; i++)
-    {
-        // divide by 2 if it's FLT8
-        if (FLT8Flag) Module->PatternOrder[i] >>= 1;
-
-        if (Module->PatternOrder[i] > Module->NumberofPatterns) Module->NumberofPatterns = Module->PatternOrder[i];
-    }
-
-    // higher number+1
-    Module->NumberofPatterns++;
-    // the MODULE header is finished!
-
-    // now working on the instrument headers (instruments are always 31)
-    int CurrentInstrument;
-    for (CurrentInstrument = 0; CurrentInstrument < Module->NumberofInstruments; CurrentInstrument++)
-    {
-
-        // check if I need to allocate this instrument (or is it empty?)
-        // NOTE: if len==1 then IT'S EMPTY (!!!)
-        if (SwapBytes(MODModule->Instrument[CurrentInstrument].Length) > 1)
-        {
-
-            // allocate the new instrument
-            Module->Instrument[CurrentInstrument] = PrepareNewInstrument();
-            if (Module->Instrument[CurrentInstrument] == NULL)
-            {
-                Module->NumberofInstruments = CurrentInstrument;
-                Module->NumberofPatterns = 0;
-                Module->State = XM7_STATE_ERROR | XM7_ERR_NOT_ENOUGH_MEMORY;
-                return (XM7_ERR_NOT_ENOUGH_MEMORY);
-            }
-
-            XM7_Instrument_Type *CurrentInstrumentPtr = Module->Instrument[CurrentInstrument];
-
-            // load the info from the header
-            CurrentInstrumentPtr->NumberofSamples = 1;
-            memcpy(CurrentInstrumentPtr->Name, MODModule->Instrument[CurrentInstrument].Name, 22);        // char[22]
-
-            // no multisample, it's a MOD
-            memset(CurrentInstrumentPtr->SampleforNote, 0, 96);
-
-            // NO envelopes in a MOD
-            CurrentInstrumentPtr->VolumeType = 0;
-            CurrentInstrumentPtr->PanningType = 0;
-            CurrentInstrumentPtr->NumberofVolumeEnvelopePoints = 0;
-            CurrentInstrumentPtr->NumberofPanningEnvelopePoints = 0;
-
-            // NO auto vibrato in a MOD
-            CurrentInstrumentPtr->VibratoType = 0;
-            CurrentInstrumentPtr->VibratoSweep = 0;
-            CurrentInstrumentPtr->VibratoDepth = 0;
-            CurrentInstrumentPtr->VibratoRate = 0;
-
-            // NO fadeout in a MOD
-            CurrentInstrumentPtr->VolumeFadeout = 0;
-
-            // allocate space for the (only) sample
-            CurrentInstrumentPtr->Sample[0] = PrepareNewSample(SwapBytes(MODModule->Instrument[CurrentInstrument].Length) * 2, SwapBytes(MODModule->Instrument[CurrentInstrument].LoopLength) * 2, 0);
-
-            if (CurrentInstrumentPtr->Sample[0] == NULL)
-            {
-                Module->NumberofInstruments = CurrentInstrument + 1;
-                Module->NumberofPatterns = 0;
-                Module->State = XM7_STATE_ERROR | XM7_ERR_NOT_ENOUGH_MEMORY;
-                return (XM7_ERR_NOT_ENOUGH_MEMORY);
-            }
-
-            XM7_Sample_Type *CurrentSamplePtr = CurrentInstrumentPtr->Sample[0];
-
-            // read all the data
-            CurrentSamplePtr->Length = SwapBytes(MODModule->Instrument[CurrentInstrument].Length) * 2;
-            u8 TmpFineTune = MODModule->Instrument[CurrentInstrument].FineTune & 0x0F;
-
-            // signed nibble (-8 ... + 7)    ->  signed byte*16 (-128 ... +127)
-            if (TmpFineTune <= 7)
-                CurrentSamplePtr->FineTune = TmpFineTune * 16;
-            else
-                CurrentSamplePtr->FineTune = -(16 - TmpFineTune) * 16;
-
-            CurrentSamplePtr->Volume = MODModule->Instrument[CurrentInstrument].Volume;
-            CurrentSamplePtr->LoopStart = SwapBytes(MODModule->Instrument[CurrentInstrument].LoopStart) * 2;
-            CurrentSamplePtr->LoopLength = SwapBytes(MODModule->Instrument[CurrentInstrument].LoopLength) * 2;
-
-            // stupid MOD bug PATCH: if LoopLength is 2 then there's really NO loop.
-            if (CurrentSamplePtr->LoopLength == 2) CurrentSamplePtr->LoopLength = 0;
-
-            CurrentSamplePtr->Flags = (CurrentSamplePtr->LoopLength > 0) ? 1 : 0;    // 8 bit, forward loop
-
-            CurrentSamplePtr->Panning = 0x80;    // default: center (there's no pan in mod samples)
-            CurrentSamplePtr->RelativeNote = 0;         // there's no such thing in MOD
-
-            // copy instrument name in sample name
-            memcpy(CurrentSamplePtr->Name, CurrentInstrumentPtr->Name, 22);      // char[22]
-        }
-        else
-        {
-            // there's no sample in this instrument, so NULL the instrument
-            Module->Instrument[CurrentInstrument] = NULL;
-        }
-    }
-    // instrument headers and sample space preparation finished.
-
-    // now working on the patterns
-    int CurrentPattern;
-    XM7_MODPattern_Type *MODPattern = (XM7_MODPattern_Type*) &(MODModule->NextDataPart);
-
-    for (CurrentPattern = 0; CurrentPattern < (Module->NumberofPatterns); CurrentPattern++)
-    {
-        // Set pattern length (always 64 in MOD)
-        Module->PatternLength[CurrentPattern] = 64;
-
-        // Prepare an empty pattern for the data
-        Module->Pattern[CurrentPattern] = PrepareNewPattern(Module->PatternLength[CurrentPattern], Module->NumberofChannels);
-        if (Module->Pattern[CurrentPattern] == NULL)
-        {
-            Module->NumberofPatterns = CurrentPattern;
-            Module->State = XM7_STATE_ERROR | XM7_ERR_NOT_ENOUGH_MEMORY;
-            return (XM7_ERR_NOT_ENOUGH_MEMORY);
-        }
-
-        XM7_SingleNoteArray_Type *thispattern = Module->Pattern[CurrentPattern];
-
-        // decode the pattern
-        int row, chn, period, curs, curr = 0;
-        for (row = 0; row < Module->PatternLength[CurrentPattern]; row++)
-        {
-            for (chn = 0; chn < Module->NumberofChannels; chn++)
-            {
-                curr = row * Module->NumberofChannels + chn;
-                if (FLT8Flag)
-                    curs = row * 4 + chn + ((chn < 4) ? 0 : 256 - 4);
-                else
-                    curs = curr;
-
-                period = MODPattern->SingleNote[curs].PeriodL + ((MODPattern->SingleNote[curs].PeriodH & 0x0F) * 256);
-                thispattern->Noteblock[curr].Note = (period != 0) ? 1 + FindClosestNoteToAmigaPeriod(period) : 0;
-                thispattern->Noteblock[curr].Instrument = (MODPattern->SingleNote[curs].Instr_EffType >> 4) | (MODPattern->SingleNote[curs].PeriodH & 0x10);
-                thispattern->Noteblock[curr].Volume = 0;     // there's no such info here
-                thispattern->Noteblock[curr].EffectType = (MODPattern->SingleNote[curs].Instr_EffType & 0x0F);
-                thispattern->Noteblock[curr].EffectParam = MODPattern->SingleNote[curs].EffParam;
-            }
-        }
-
-        // prepare for next pattern
-        MODPattern = (XM7_MODPattern_Type*) &(MODPattern->SingleNote[curr + 1]);
-    }    // end 'pattern' for
-
-    // done working with patterns
-    // now loading samples
-
-    u8 *DataBlock = (u8*) MODPattern;
-
-    for (CurrentInstrument = 0; CurrentInstrument < Module->NumberofInstruments; CurrentInstrument++)
-    {
-        // check if this instrument is present
-        if (Module->Instrument[CurrentInstrument] != NULL)
-        {
-            XM7_Sample_Type *CurrentSamplePtr = Module->Instrument[CurrentInstrument]->Sample[0];
-
-            // memcpy LEN bytes from MOD to SampleData memory
-            memcpy(CurrentSamplePtr->SampleData, DataBlock, CurrentSamplePtr->Length);
-
-            // prepare for reading next sample
-            DataBlock = (u8*) &(DataBlock[CurrentSamplePtr->Length]);
-        }
-    }
-
-    // samples read.
-
-    // Set standard panning for MOD 
-    Module->AmigaPanningEmulation = XM7_PANNING_TYPE_AMIGA;
-    // Module->AmigaPanningDisplacement = 0x00;                 // (AmigaPanning, complete separation)
-    Module->AmigaPanningDisplacement = XM7_DEFAULT_PANNING_DISPLACEMENT;
-
-    // Replay style MOD Player (w hack!)
-    Module->ReplayStyle = XM7_REPLAY_STYLE_PT;
-
-    // set State
-    Module->State = XM7_STATE_READY;
-
-    // end OK!
-    return (0);
-}
-
 void XM7_UnloadXM(XM7_ModuleManager_Type *Module)
 {
     s16 i, j;
@@ -978,36 +744,25 @@ void XM7_UnloadXM(XM7_ModuleManager_Type *Module)
     for (i = (Module->NumberofInstruments - 1); i >= 0; i--)
     {
         CurrentInstrumentPtr = Module->Instrument[i];
-
         // samples, from last to first
         for (j = (CurrentInstrumentPtr->NumberofSamples - 1); j >= 0; j--)
         {
             CurrentSamplePtr = CurrentInstrumentPtr->Sample[j];
-
             // remove sample data
             free(CurrentSamplePtr->SampleData);
-
             // remove sample info
             free(CurrentSamplePtr);
         }
-
         // remove instrument
         free(CurrentInstrumentPtr);
     }
-
     // remove patterns
     for (i = (Module->NumberofPatterns - 1); i >= 0; i--)
         free(Module->Pattern[i]);
 
     Module->State = XM7_STATE_EMPTY;
-
     // Reset hot cue position to 0
     arm9_globalHotCuePosition = 0;
-}
-
-void XM7_UnloadMOD(XM7_ModuleManager_Type *Module)
-{
-    XM7_UnloadXM(Module);
 }
 
 void XM7_SetReplayStyle(XM7_ModuleManager_Type *Module, u8 style)

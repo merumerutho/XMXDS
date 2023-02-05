@@ -4,25 +4,24 @@
 #include "tempo.h"
 #include "arm7_fifo.h"
 
-// Default starting values for BPM and tempo are 0.
-// They must be communicated by ARMv9
+// Default starting values for BPM and tempo.
 
-u8 globalBpm = 0;
-u8 globalTempo = 0;
+u8 arm7_globalBpm = 125;
+u8 arm7_globalTempo = 6;
 
 void setGlobalBpm(u8 value)
 {
-    globalBpm = value;
+    arm7_globalBpm = value;
     // Update value to modules
-    SetTimerSpeedBPM(globalBpm);
+    SetTimerSpeedBPM(arm7_globalBpm);
 }
 
 void setGlobalTempo(u8 value)
 {
-    globalTempo = value;
+    arm7_globalTempo = value;
     // Update value to modules
     for (u8 mm = 0; mm < LIBXM7_ALLOWED_MODULES; mm++)
     {
-        XM7_Modules[mm]->CurrentTempo = globalTempo;
+        XM7_Module->CurrentTempo = arm7_globalTempo;
     }
 }

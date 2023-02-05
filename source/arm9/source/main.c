@@ -17,7 +17,7 @@
 
 #define DEFAULT_ROOT_PATH "./"
 
-#define MODULE (deckInfo[0].modManager)
+#define MODULE (deckInfo.modManager)
 
 //
 
@@ -41,7 +41,6 @@ void updateArmV7()
     fifoGlobalMsg->data[1] = arm9_globalTempo;
     fifoGlobalMsg->command = CMD_SET_BPM_TEMPO;
     IpcSend(FIFO_GLOBAL_SETTINGS);
-    //drawTitle(0);
 }
 
 void drawIntro()
@@ -112,9 +111,8 @@ int main(int argc, char **argv)
     drawTitle(0);
     drawChannelMatrix();
 
-    //irqSet(IRQ_VBLANK, arm9_VBlankHandler);
-
     bool touchRelease = true;
+
     while (TRUE)
     {
         drawTitle(0);
@@ -141,21 +139,16 @@ int main(int argc, char **argv)
             if (keysDown() & KEY_A)
             {
                 // If playing, stop
-                if (MODULE->State == XM7_STATE_PLAYING) play_stop(&deckInfo[0]);
-                swiWaitForVBlank();
-                MODULE->CurrentSongPosition = arm9_globalHotCuePosition;
-                // Then start playing module again
-                play_stop(&deckInfo[0]);
-                updateArmV7();  // This can be used to 'notify' armv7 of changes
-            }
-
-            // PAUSE
-            if (keysDown() & KEY_B)
-            {
                 if (MODULE->State == XM7_STATE_PLAYING)
                 {
-                    play_stop(&deckInfo[0]);
-                    MODULE->State = XM7_STATE_STOPPED;
+                    play_stop(&deckInfo);
+                    updateArmV7();
+                }
+                else
+                {
+                    MODULE->CurrentSongPosition = arm9_globalHotCuePosition;
+                    // Then start playing module again
+                    play_stop(&deckInfo);
                     updateArmV7();  // This can be used to 'notify' armv7 of changes
                 }
             }
@@ -229,7 +222,6 @@ int main(int argc, char **argv)
                     MODULE->CurrentTick = 0;
                     MODULE->CurrentLine++;
                 }
-                updateArmV7();
             }
 
             // NUDGE BACKWARD
@@ -244,7 +236,6 @@ int main(int argc, char **argv)
                     MODULE->CurrentTick = MODULE->CurrentTempo - 1;
                     MODULE->CurrentLine--;
                 }
-                updateArmV7();
             }
         }
 

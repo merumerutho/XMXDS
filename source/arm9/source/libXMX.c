@@ -1,16 +1,15 @@
 #include "libXMX.h"
 
-XMX_DeckInfo deckInfo[LIBXM7_ALLOWED_MODULES] = {
+XMX_DeckInfo deckInfo =
         {
-            .modData = NULL,
+            .xmData = NULL,
             .modManager = NULL,
-            .moduleIndex = 0xFF
-        }
-};
+            .moduleIndex = 0,
+        };
 
-void XMX_UnloadXM(u8 idx)
+void XMX_UnloadXM()
 {
-    XM7_UnloadXM(deckInfo[idx].modManager);
-    free(deckInfo[idx].modData);
-    deckInfo[idx].moduleIndex = 0xFF;
+    XM7_UnloadXM((XM7_ModuleManager_Type *)deckInfo.modManager);
+    if (deckInfo.xmData != NULL)
+        free((void*)deckInfo.xmData);
 }

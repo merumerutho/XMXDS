@@ -15,8 +15,8 @@
 #define Y_MIN 224
 #define Y_MAX 3904
 
-extern float X_NORM;
-extern float Y_NORM;
+extern const float X_NORM;
+extern const float Y_NORM;
 
 extern PrintConsole top, bottom;
 

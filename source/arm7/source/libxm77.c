@@ -9,7 +9,7 @@
 #include "tempo.h"
 
 // Modules handled by the library
-XM7_ModuleManager_Type *XM7_Modules[LIBXM7_ALLOWED_MODULES];
+XM7_ModuleManager_Type *XM7_Module;
 
 // calculated as 
 // Period = 10*12*16*4 - Note*16*4 - FineTune/2;     (finetune = 0)
@@ -279,7 +279,7 @@ u8 CalculateFinalVolume(XM7_ModuleManager_Type *module, u8 samplevol, u8 envelop
     // gives back [0x00-0x7f]
     // FinalVol=(FadeOutVol/32768)*(EnvelopeVol/64)*(GlobalVol/64)*(Vol/64)*Scale;
     // scale is 0x80
-    u8 tmpvol = (u32) ((fadeoutvol >> 3) * envelopevol * (module->CurrentGlobalVolume / 2) * samplevol) >> 23;
+    u8 tmpvol = (u32) ((fadeoutvol >> 3) * envelopevol * (module->CurrentGlobalVolume/2) * samplevol) >> 23;
     // clip volume value
     if (tmpvol > 0x7f)
     {
@@ -409,15 +409,6 @@ void ApplyVolumeandPanning(XM7_ModuleManager_Type *module, u8 chn)
     s8 tremolo = module->CurrentTremoloVolume[chn];
     u8 tremormute = module->CurrentTremorMuting[chn];
 
-    // Playback channel for low level playing must be selected based on the module slot
-    // since, when having multiple modules playing, there might be no direct correspondence
-    // between playback channel and the current module channel
-
-    // E.g. if there are 2 modules playing (SlotA, SlotB), then:
-    // First module has channels 0... 7 and should playback in channels 15 ... 8
-    // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-    u8 pbChn = chn + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
-
     if (tremormute)
     {
         volume = 0;
@@ -446,7 +437,7 @@ void ApplyVolumeandPanning(XM7_ModuleManager_Type *module, u8 chn)
     u8 panning = CalculateFinalPanning(module, chn, module->CurrentSamplePanning[chn], module->CurrentSamplePanningEnvelope[chn]);
 
     // CHANGE VOLUME & PAN !
-    XM7_lowlevel_setVolumeandPanning(pbChn, volume, panning);
+    XM7_lowlevel_setVolumeandPanning(chn, volume, panning);
 }
 
 void ApplyNewGlobalVolume(XM7_ModuleManager_Type *module)
@@ -1787,14 +1778,6 @@ void PitchNote(XM7_ModuleManager_Type *module, u8 chn, u8 pitch, s32 porta, s8 v
 
     XM7_Sample_Type *sample_ptr = GetSamplePointer(module, note, instrument);
 
-    // Playback channel for low level playing must be selected based on the module slot
-    // since, when having multiple modules playing, there might be no direct correspondence
-    // between playback channel and the current module channel
-
-    // E.g. if there are 2 modules playing (SlotA, SlotB), then:
-    // First module has channels 0... 7 and should playback in channels 15 ... 8
-    // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-    u8 pbChn = chn + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
 
     if (sample_ptr != NULL)
     {
@@ -1804,7 +1787,7 @@ void PitchNote(XM7_ModuleManager_Type *module, u8 chn, u8 pitch, s32 porta, s8 v
                 ((instrument != 0) && (module->Instrument[instrument - 1]->VibratoDepth != 0) && (module->Instrument[instrument - 1]->VibratoRate != 0)) ?
                         CalculateAutoVibrato(module, chn, instrument) : 0;
         int freq = CalculateFreq(module->FreqTable, (note + pitch + module->Transpose), sample_ptr->RelativeNote, finetune, porta, vibra, autovibra, glis);
-        XM7_lowlevel_pitchSound(freq, pbChn);
+        XM7_lowlevel_pitchSound(freq, chn);
     }
 }
 
@@ -1816,15 +1799,6 @@ void PlayNote(XM7_ModuleManager_Type *module, u8 chn, u16 sample_offset)
     s8 vibra = module->CurrentVibratoValue[chn];
 
     XM7_Sample_Type *sample_ptr = GetSamplePointer(module, note, instrument);
-
-    // Playback channel for low level playing must be selected based on the module slot
-    // since, when having multiple modules playing, there might be no direct correspondence
-    // between playback channel and the current module channel
-
-    // E.g. if there are 2 modules playing (SlotA, SlotB), then:
-    // First module has channels 0... 7 and should playback in channels 15 ... 8
-    // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-    u8 pbChn = chn + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
 
     if (sample_ptr != NULL)
     {
@@ -1864,19 +1838,19 @@ void PlayNote(XM7_ModuleManager_Type *module, u8 chn, u16 sample_offset)
             if ((sample_ptr->Flags & 0x01) == 0)
             {
                 // no loop
-                XM7_lowlevel_startSound(freq, sample_ptr->SampleData, sample_ptr->Length, pbChn, volume, panning, (sample_ptr->Flags >> 4), sample_offset);
+                XM7_lowlevel_startSound(freq, sample_ptr->SampleData, sample_ptr->Length, chn, volume, panning, (sample_ptr->Flags >> 4), sample_offset);
             }
             else
             {
                 // has a loop
-                XM7_lowlevel_startSoundwLoop(freq, sample_ptr->SampleData, sample_ptr->LoopLength, sample_ptr->LoopStart, pbChn, volume, panning, (sample_ptr->Flags >> 4), sample_offset);
+                XM7_lowlevel_startSoundwLoop(freq, sample_ptr->SampleData, sample_ptr->LoopLength, sample_ptr->LoopStart, chn, volume, panning, (sample_ptr->Flags >> 4), sample_offset);
             }
         }
     }
     else
     {
         // it's NULL: play nothing! (stop this channel)
-        XM7_lowlevel_startSound(0, NULL, 0, pbChn, 0, 0, 0, 0);
+        XM7_lowlevel_startSound(0, NULL, 0, chn, 0, 0, 0, 0);
     }
 }
 
@@ -1886,20 +1860,11 @@ void ChangeSample(XM7_ModuleManager_Type *module, u8 chn)
     u8 instrument = module->CurrentChannelLastInstrument[chn];
     XM7_Sample_Type *sample_ptr = GetSamplePointer(module, note, instrument);
 
-    // Playback channel for low level playing must be selected based on the module slot
-    // since, when having multiple modules playing, there might be no direct correspondence
-    // between playback channel and the current module channel
-
-    // E.g. if there are 2 modules playing (SlotA, SlotB), then:
-    // First module has channels 0... 7 and should playback in channels 15 ... 8
-    // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-    u8 pbChn = chn + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
-
     if (sample_ptr != NULL)
-        XM7_lowlevel_changeSample(sample_ptr->SampleData, sample_ptr->LoopLength, sample_ptr->LoopStart, pbChn, (sample_ptr->Flags >> 4));
+        XM7_lowlevel_changeSample(sample_ptr->SampleData, sample_ptr->LoopLength, sample_ptr->LoopStart, chn, (sample_ptr->Flags >> 4));
     else
         // should 'play silence'
-        XM7_lowlevel_changeSample(&module->Silence, 4, 0, pbChn, 0);
+        XM7_lowlevel_changeSample(&module->Silence, 4, 0, chn, 0);
 }
 
 void Timer1Handler(void)
@@ -1908,7 +1873,6 @@ void Timer1Handler(void)
     XM7_SingleNoteArray_Type *CurrNoteLine;
     XM7_SingleNote_Type *CurrNote = NULL;
 
-    u8 mm;      // module index
     u8 chn;     // channel index
     u8 EDxInAction;
     u8 EnvStartPoint;
@@ -1944,501 +1908,488 @@ void Timer1Handler(void)
     u8 RequestedLoops = 0;
     u8 CurrentLoopEffChannel = 0;
 
-    // flag for queued patterns
-    bool startQueuedModule = FALSE;
-
     // For every module...
-    for (mm = 0; mm < LIBXM7_ALLOWED_MODULES; mm++)
+
+    XM7_ModuleManager_Type *module = XM7_Module;
+
+    if (module == NULL || module->State != XM7_STATE_PLAYING) return;
+
+    // For every channel...
+    for (chn = 0; chn < (module->NumberofChannels); chn++)
     {
-        XM7_ModuleManager_Type *module = XM7_Modules[mm];
-
-        if (module == NULL || module->State != XM7_STATE_PLAYING) continue;
-
-        // For every channel...
-        for (chn = 0; chn < (module->NumberofChannels); chn++)
+        if (module->ChannelMute[chn])
         {
-            if (module->ChannelMute[chn])
+            XM7_lowlevel_setVolume(chn, 0);
+            continue;
+        }
+
+        ShouldTriggerNote = NO;
+        ShouldChangeVolume = NO;
+        ShouldRestartEnvelope = NO;
+        ShouldPitchNote = (module->Transpose != 0) ? YES : NO;
+        ShouldTriggerKeyOff = NO;
+        ShouldChangeInstrument = NO;
+
+        KeepArpeggioedNote = NO;
+
+        PitchToNote = NO;
+        OverrideFinetune = NO;
+
+        EDxInAction = 0;
+        SampleStartOffset = 0;
+        EnvStartPoint = 0;
+
+        ArpeggioValue = 0;
+
+        // read the line and do what's written
+        CurrNoteLine = (XM7_SingleNoteArray_Type*) &(module->Pattern[module->CurrentPatternNumber]->Noteblock[module->CurrentLine * (module->NumberofChannels)]);
+        CurrNote = &(CurrNoteLine->Noteblock[chn]);
+
+        // decode effects that could apply NOW!
+        effres = DecodeBeforeEffectsColumn(chn, CurrNote->EffectType, CurrNote->EffectParam, module->CurrentTick);
+        switch (effres >> 4)
+        {
+            case 0x000:
+                break;
+
+            case 0x030:
+                PitchToNote = YES;
+                break;
+
+            case 0x0b0 ... 0xbf:
+                BreakThisPattern = YES;
+                NextPatternPosition = (effres & 0x00ff);
+                break;
+
+            case 0x0d0 ... 0xdf:
+                BreakThisPattern = YES;
+                NextPatternStartLine = (effres & 0x00ff);
+                break;
+
+            case 0x0ED:
+                EDxInAction = (effres & 0x000f);  // EDx
+                break;
+
+            case 0x0E5:
+                OverrideFinetune = YES;       //  E5x
+                break;
+
+            case 0x140:
+                ShouldTriggerKeyOff = YES;    // Kxx
+                break;
+
+            case 0x150 ... 0x15f:
+                if (module->CurrentTick == 0)         // Lxx
+                    EnvStartPoint = (effres & 0x00ff);
+                break;
+        }
+
+        // check if portamento to note (Mx)
+        if ((CurrNote->Volume >= 0xf0) && (CurrNote->Volume <= 0xff)) PitchToNote = YES;
+
+        // is there a note specified?
+        if ((CurrNote->Note > 0) && (CurrNote->Note < 97))
+        {
+            // is there a 3xx specified?
+            if (!PitchToNote)
             {
-                XM7_lowlevel_setVolume(chn, 0);
-                continue;
-            }
-
-            ShouldTriggerNote = NO;
-            ShouldChangeVolume = NO;
-            ShouldRestartEnvelope = NO;
-            ShouldPitchNote = (module->Transpose != 0) ? YES : NO;
-            ShouldTriggerKeyOff = NO;
-            ShouldChangeInstrument = NO;
-
-            KeepArpeggioedNote = NO;
-
-            PitchToNote = NO;
-            OverrideFinetune = NO;
-
-            EDxInAction = 0;
-            SampleStartOffset = 0;
-            EnvStartPoint = 0;
-
-            ArpeggioValue = 0;
-
-            // read the line and do what's written
-            CurrNoteLine = (XM7_SingleNoteArray_Type*) &(module->Pattern[module->CurrentPatternNumber]->Noteblock[module->CurrentLine * (module->NumberofChannels)]);
-            CurrNote = &(CurrNoteLine->Noteblock[chn]);
-
-            // decode effects that could apply NOW!
-            effres = DecodeBeforeEffectsColumn(chn, CurrNote->EffectType, CurrNote->EffectParam, module->CurrentTick);
-            switch (effres >> 4)
-            {
-                case 0x000:
-                    break;
-
-                case 0x030:
-                    PitchToNote = YES;
-                    break;
-
-                case 0x0b0 ... 0xbf:
-                    BreakThisPattern = YES;
-                    NextPatternPosition = (effres & 0x00ff);
-                    break;
-
-                case 0x0d0 ... 0xdf:
-                    BreakThisPattern = YES;
-                    NextPatternStartLine = (effres & 0x00ff);
-                    break;
-
-                case 0x0ED:
-                    EDxInAction = (effres & 0x000f);  // EDx
-                    break;
-
-                case 0x0E5:
-                    OverrideFinetune = YES;       //  E5x
-                    break;
-
-                case 0x140:
-                    ShouldTriggerKeyOff = YES;    // Kxx
-                    break;
-
-                case 0x150 ... 0x15f:
-                    if (module->CurrentTick == 0)         // Lxx
-                        EnvStartPoint = (effres & 0x00ff);
-                    break;
-            }
-
-            // check if portamento to note (Mx)
-            if ((CurrNote->Volume >= 0xf0) && (CurrNote->Volume <= 0xff)) PitchToNote = YES;
-
-            // is there a note specified?
-            if ((CurrNote->Note > 0) && (CurrNote->Note < 97))
-            {
-                // is there a 3xx specified?
-                if (!PitchToNote)
+                if (module->CurrentTick == EDxInAction)
                 {
-                    if (module->CurrentTick == EDxInAction)
+                    module->CurrentChannelLastNote[chn] = CurrNote->Note;
+                    module->CurrentSamplePortamento[chn] = 0;
+
+                    // instrument specified?
+                    if (CurrNote->Instrument != 0)
                     {
-                        module->CurrentChannelLastNote[chn] = CurrNote->Note;
-                        module->CurrentSamplePortamento[chn] = 0;
-
-                        // instrument specified?
-                        if (CurrNote->Instrument != 0)
-                        {
-                            module->CurrentChannelLastInstrument[chn] = CurrNote->Instrument;
-                            XM7_Sample_Type *sample_ptr = GetSamplePointer(module, (CurrNote->Note - 1), CurrNote->Instrument);
-                            ShouldRestartEnvelope = YES;
-                            // sample_ptr can be NULL!
-                            if (sample_ptr != NULL)
-                            {
-                                module->CurrentSampleVolume[chn] = sample_ptr->Volume;
-                                module->CurrentSamplePanning[chn] = sample_ptr->Panning;
-                            }
-                            else
-                            {
-                                // mute the channel ('old' trick)
-                                module->CurrentSampleVolume[chn] = 0;
-                            }
-                        }
-
-                        // EDx specified? (means that envelope has to be restarted!)
-                        if ((EDxInAction != 0) && (module->CurrentChannelLastInstrument[chn] != 0)) ShouldRestartEnvelope = YES;
-
-                        // trigger ONLY if there has been an instrument specified before, 'somewhere in time'!
-                        // (it means also thay if CurrNote->Instrument was 0 then Vol&Pan will be RETAINED!
-                        if (module->CurrentChannelLastInstrument[chn] != 0)
-                        {
-                            // module->CurrentFinetuneOverrideOn[chn] = OverrideFinetune;
-                            ShouldTriggerNote = YES;
-                        }
-                    }
-                }
-                else
-                {
-                    // we want to pitch toward this note
-                    if (module->FreqTable != 0)
-                        // LINEAR FREQ TABLE (semitones*16*4)
-                        module->CurrentSamplePortaDest[chn] = (module->CurrentChannelLastNote[chn] - CurrNote->Note) * (4 * 16);
-                    else
-                        // AMIGA FREQ TABLE (periods*4)
-                        module->CurrentSamplePortaDest[chn] = (GetAmigaPeriod(CurrNote->Note - 1) - GetAmigaPeriod(module->CurrentChannelLastNote[chn] - 1)) * 4;
-                }
-            }
-
-            if (CurrNote->Note == 97)
-            {
-                // it's a key off:
-                if (module->CurrentTick == EDxInAction) ShouldTriggerKeyOff = YES;
-            }
-
-            if (ShouldTriggerKeyOff)
-            {
-                // key-off, should be like that
-                if (module->CurrentSampleVolumeEnvelopeState[chn] != ENVELOPE_NONE)
-                {
-                    // volume envelope should go to RELEASE state
-                    module->CurrentSampleVolumeEnvelopeState[chn] = ENVELOPE_RELEASE;
-
-                    // maybe there's also a PANNING envelope
-                    if (module->CurrentSamplePanningEnvelopeState[chn] != ENVELOPE_NONE) module->CurrentSamplePanningEnvelopeState[chn] =
-                    ENVELOPE_RELEASE;
-
-                }
-                else
-                {
-                    // no envelope, stop the channel
-                    // stopSound (chn);
-                    // no! lower volume to ZERO!
-                    module->CurrentSampleVolume[chn] = 0;
-                    ShouldChangeVolume = YES;
-                }
-            }
-
-            // is there an instrument specified (without note!) ?
-            // OR is there even a note BUT it's specified for bending?
-            if (((CurrNote->Instrument != 0) && (CurrNote->Note == 0)) || ((CurrNote->Instrument != 0) && (PitchToNote)))
-            {
-
-                //  **** BETA: ProTracker on-the-fly sample change emulation    ******************
-                if (module->ReplayStyle & XM7_REPLAY_ONTHEFLYSAMPLECHANGE_FLAG)
-                    if (module->CurrentTick == EDxInAction) if (module->CurrentChannelLastInstrument[chn] != CurrNote->Instrument && module->CurrentChannelLastNote[chn] != 0)
-                    {
-                        // save the new instrument number and trigger instrument change
                         module->CurrentChannelLastInstrument[chn] = CurrNote->Instrument;
-                        ShouldChangeInstrument = YES;
-                    }
-                //  ************************************************************************ END ****
-
-                //  ... and check if there's a last note! otherwise simply ignore it!
-                if (module->CurrentChannelLastNote[chn] != 0)
-                {
-                    // reset volume & panning
-                    if (module->CurrentTick == EDxInAction)
-                    {
-                        XM7_Sample_Type *sample_ptr = GetSamplePointer(module, (module->CurrentChannelLastNote[chn] - 1), module->CurrentChannelLastInstrument[chn]);
+                        XM7_Sample_Type *sample_ptr = GetSamplePointer(module, (CurrNote->Note - 1), CurrNote->Instrument);
+                        ShouldRestartEnvelope = YES;
+                        // sample_ptr can be NULL!
                         if (sample_ptr != NULL)
                         {
                             module->CurrentSampleVolume[chn] = sample_ptr->Volume;
                             module->CurrentSamplePanning[chn] = sample_ptr->Panning;
-
-                            ShouldChangeVolume = YES;
-                            ShouldRestartEnvelope = YES;  // reset envelope too!
                         }
-
-                        /* else {
-                         // try muting the volume if the sample doesn't exists
-                         module->CurrentSampleVolume[chn] = 0;
-                         } */
+                        else
+                        {
+                            // mute the channel ('old' trick)
+                            module->CurrentSampleVolume[chn] = 0;
+                        }
                     }
-                }
-            }
 
-            // if EDx (w/ x>0) you should trigger note (and its envelope) even if there's no note 
-            // and/or no instrument. Reset portamento too!
-            if ((EDxInAction != 0) && (module->CurrentTick == EDxInAction) && (CurrNote->Note == 0))
-            {
-                if ((module->CurrentChannelLastNote[chn] != 0) && (module->CurrentChannelLastInstrument[chn] != 0))
-                {
-                    // reset portamento to last note    
-                    module->CurrentSamplePortamento[chn] = 0;
-                    // retrigger note & restart envelope    
-                    ShouldRestartEnvelope = YES;
-                    ShouldTriggerNote = YES;
-                }
-            }
+                    // EDx specified? (means that envelope has to be restarted!)
+                    if ((EDxInAction != 0) && (module->CurrentChannelLastInstrument[chn] != 0)) ShouldRestartEnvelope = YES;
 
-            // should we keep note arpeggioed?
-            // if (module->CurrentTick==0)
-            //   KeepArpeggioedNote = NO;
-
-            // check if we need to retrigger vibrato/tremolo/tremor
-            if (ShouldTriggerNote || ShouldRestartEnvelope)
-            {
-
-                // should we REtrigger vibrato wave?
-                if (module->CurrentVibratoType[chn] < 4)
-                {
-                    module->CurrentVibratoPoint[chn] = 0;
-                    module->CurrentVibratoValue[chn] = 0;  // BETA (?)
-                }
-
-                // should we REtrigger tremolo wave?
-                if (module->CurrentTremoloType[chn] < 4)
-                {
-                    module->CurrentTremoloPoint[chn] = 0;
-                    module->CurrentTremoloVolume[chn] = 0;  // BETA (?)
-                }
-
-                // Retrigger Tremor wave
-                module->CurrentTremorMuting[chn] = 0;
-                module->CurrentTremorPoint[chn] = 0;
-
-                // Retrigger Instrument (auto) Vibrato
-                module->CurrentAutoVibratoSweep[chn] = 0;
-                module->CurrentAutoVibratoPoint[chn] = 0;
-            }
-
-            // autovibrato (if is ON, it means that we should change pitch in this tick)
-            if (module->CurrentChannelLastInstrument[chn] > 0)
-            {
-                // check if this instrument exists before accessing its data!!!
-                if (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1] != NULL)
-                {
-                    if ((module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoDepth != 0) && (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate != 0))
+                    // trigger ONLY if there has been an instrument specified before, 'somewhere in time'!
+                    // (it means also thay if CurrNote->Instrument was 0 then Vol&Pan will be RETAINED!
+                    if (module->CurrentChannelLastInstrument[chn] != 0)
                     {
-                        // instrument autovibrato sweep
-                        module->CurrentAutoVibratoSweep[chn] += module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoSweep;
-                        if (module->CurrentAutoVibratoSweep[chn] > 0x10000) module->CurrentAutoVibratoSweep[chn] = 0x10000;
-
-                        ShouldPitchNote = YES;
+                        // module->CurrentFinetuneOverrideOn[chn] = OverrideFinetune;
+                        ShouldTriggerNote = YES;
                     }
                 }
             }
-
-            // is there a Volume col?
-            if (CurrNote->Volume >= 0x10)
+            else
             {
-                effres = DecodeVolumeColumn(module, chn, CurrNote->Volume, module->CurrentTick, EDxInAction);
-                if (effres & 0x0001) ShouldChangeVolume = YES;
-                if (effres & 0x0002) ShouldPitchNote = YES;
+                // we want to pitch toward this note
+                if (module->FreqTable != 0)
+                    // LINEAR FREQ TABLE (semitones*16*4)
+                    module->CurrentSamplePortaDest[chn] = (module->CurrentChannelLastNote[chn] - CurrNote->Note) * (4 * 16);
+                else
+                    // AMIGA FREQ TABLE (periods*4)
+                    module->CurrentSamplePortaDest[chn] = (GetAmigaPeriod(CurrNote->Note - 1) - GetAmigaPeriod(module->CurrentChannelLastNote[chn] - 1)) * 4;
             }
+        }
 
-            // is there an EFFECT?
-            if ((CurrNote->EffectType != 0x00) || (CurrNote->EffectParam != 0x00))
+        if (CurrNote->Note == 97)
+        {
+            // it's a key off:
+            if (module->CurrentTick == EDxInAction) ShouldTriggerKeyOff = YES;
+        }
+
+        if (ShouldTriggerKeyOff)
+        {
+            // key-off, should be like that
+            if (module->CurrentSampleVolumeEnvelopeState[chn] != ENVELOPE_NONE)
             {
-                effres = DecodeEffectsColumn(module, chn, CurrNote->EffectType, CurrNote->EffectParam, module->CurrentTick, module->CurrentAdditionalTick);
+                // volume envelope should go to RELEASE state
+                module->CurrentSampleVolumeEnvelopeState[chn] = ENVELOPE_RELEASE;
 
-                switch (effres >> 8)
-                {
-                    case 0x00:
-                        ArpeggioValue = effres & 0x000f;
-                        module->CurrentChannelIsArpeggioedNote[chn] = YES;
-                        ShouldPitchNote = YES;
-                        KeepArpeggioedNote = YES;
-                        break;
+                // maybe there's also a PANNING envelope
+                if (module->CurrentSamplePanningEnvelopeState[chn] != ENVELOPE_NONE) module->CurrentSamplePanningEnvelopeState[chn] =
+                ENVELOPE_RELEASE;
 
-                    case 0x01:
-                        ShouldPitchNote = YES;
-                        break;
-
-                    case 0x05:
-                        ShouldPitchNote = YES;
-                        ShouldChangeVolume = YES;
-                        break;
-
-                    case 0x09:
-                        SampleStartOffset = (effres & 0x00ff) << 8;
-                        break;
-
-                    case 0x0e:
-                        switch (effres >> 4)
-                        {
-                            case 0xe9:
-                                if (effres & 0x001) if (module->CurrentChannelLastInstrument[chn])
-                                {
-                                    ShouldTriggerNote = YES;
-                                    ShouldRestartEnvelope = YES;
-                                }
-                                break;
-
-                            case 0xe6:
-                                RequestedLoops = (effres & 0x000F);
-                                CurrentLoopEffChannel = chn;
-                                module->CurrentLoopEnd[CurrentLoopEffChannel] = module->CurrentLine;
-                                break;
-                        }
-                        break;
-
-                    case 0x1b:
-                        if (effres & 0x0001)    // Rxy
-                        {
-                            if (module->CurrentChannelLastInstrument[chn])
-                            {
-                                ShouldTriggerNote = YES;
-                                // ShouldRestartEnvelope = YES;  // Rxy won't reset envelope!
-                            }
-
-                            // if there's a volume specified (xx), we should reset before retrigger!
-                            // ... I know it's strange, but FT2 works that way...
-                            if ((CurrNote->Volume >= 0x10) && (CurrNote->Volume <= 0x40)) effres = DecodeVolumeColumn(module, chn, CurrNote->Volume, 0, 0);
-                        }
-
-                        // if it's not the 1st tick you should change volume
-                        if (module->CurrentTick != 0) if (effres & 0x0001) ShouldChangeVolume = YES;
-                        break;
-
-                        /*
-                         case 0x1d:                  // Txy
-                         if (effres & 0x0001)
-                         TremorisMuting = YES;
-                         ShouldChangeVolume = YES;
-                         break;  */
-
-                    case 0xff:
-                        ShouldChangeVolume = YES;
-                        break;
-                }
             }
-
-            // *******************  Arpeggio (reset?) *************  
-            // was the note arpeggioed and should be reset?
-            if (module->CurrentChannelIsArpeggioedNote[chn] && (!KeepArpeggioedNote) && (module->CurrentTick == 0))
+            else
             {
-                module->CurrentChannelIsArpeggioedNote[chn] = NO;
-                ShouldPitchNote = YES;
-            }
-
-            // *******************  ENVELOPES!  *************
-            if (ShouldRestartEnvelope)
-            {
-                // we need to start an envelope, if needed
-                StartEnvelope(module, chn, EnvStartPoint);
+                // no envelope, stop the channel
+                // stopSound (chn);
+                // no! lower volume to ZERO!
+                module->CurrentSampleVolume[chn] = 0;
                 ShouldChangeVolume = YES;
             }
-            else
-            {
-                // check if we need to go on with an envelope
-                if ((module->CurrentSampleVolumeEnvelopeState[chn] != ENVELOPE_NONE) || (module->CurrentSamplePanningEnvelopeState[chn] != ENVELOPE_NONE))
+        }
+
+        // is there an instrument specified (without note!) ?
+        // OR is there even a note BUT it's specified for bending?
+        if (((CurrNote->Instrument != 0) && (CurrNote->Note == 0)) || ((CurrNote->Instrument != 0) && (PitchToNote)))
+        {
+
+            //  **** BETA: ProTracker on-the-fly sample change emulation    ******************
+            if (module->ReplayStyle & XM7_REPLAY_ONTHEFLYSAMPLECHANGE_FLAG)
+                if (module->CurrentTick == EDxInAction) if (module->CurrentChannelLastInstrument[chn] != CurrNote->Instrument && module->CurrentChannelLastNote[chn] != 0)
                 {
-                    // there's an envelope to follow...
-                    ElaborateEnvelope(module, chn, module->CurrentChannelLastInstrument[chn]);
+                    // save the new instrument number and trigger instrument change
+                    module->CurrentChannelLastInstrument[chn] = CurrNote->Instrument;
+                    ShouldChangeInstrument = YES;
+                }
+            //  ************************************************************************ END ****
+
+            //  ... and check if there's a last note! otherwise simply ignore it!
+            if (module->CurrentChannelLastNote[chn] != 0)
+            {
+                // reset volume & panning
+                if (module->CurrentTick == EDxInAction)
+                {
+                    XM7_Sample_Type *sample_ptr = GetSamplePointer(module, (module->CurrentChannelLastNote[chn] - 1), module->CurrentChannelLastInstrument[chn]);
+                    if (sample_ptr != NULL)
+                    {
+                        module->CurrentSampleVolume[chn] = sample_ptr->Volume;
+                        module->CurrentSamplePanning[chn] = sample_ptr->Panning;
+
+                        ShouldChangeVolume = YES;
+                        ShouldRestartEnvelope = YES;  // reset envelope too!
+                    }
+
+                    /* else {
+                     // try muting the volume if the sample doesn't exists
+                     module->CurrentSampleVolume[chn] = 0;
+                     } */
+                }
+            }
+        }
+
+        // if EDx (w/ x>0) you should trigger note (and its envelope) even if there's no note
+        // and/or no instrument. Reset portamento too!
+        if ((EDxInAction != 0) && (module->CurrentTick == EDxInAction) && (CurrNote->Note == 0))
+        {
+            if ((module->CurrentChannelLastNote[chn] != 0) && (module->CurrentChannelLastInstrument[chn] != 0))
+            {
+                // reset portamento to last note
+                module->CurrentSamplePortamento[chn] = 0;
+                // retrigger note & restart envelope
+                ShouldRestartEnvelope = YES;
+                ShouldTriggerNote = YES;
+            }
+        }
+
+        // should we keep note arpeggioed?
+        // if (module->CurrentTick==0)
+        //   KeepArpeggioedNote = NO;
+
+        // check if we need to retrigger vibrato/tremolo/tremor
+        if (ShouldTriggerNote || ShouldRestartEnvelope)
+        {
+
+            // should we REtrigger vibrato wave?
+            if (module->CurrentVibratoType[chn] < 4)
+            {
+                module->CurrentVibratoPoint[chn] = 0;
+                module->CurrentVibratoValue[chn] = 0;  // BETA (?)
+            }
+
+            // should we REtrigger tremolo wave?
+            if (module->CurrentTremoloType[chn] < 4)
+            {
+                module->CurrentTremoloPoint[chn] = 0;
+                module->CurrentTremoloVolume[chn] = 0;  // BETA (?)
+            }
+
+            // Retrigger Tremor wave
+            module->CurrentTremorMuting[chn] = 0;
+            module->CurrentTremorPoint[chn] = 0;
+
+            // Retrigger Instrument (auto) Vibrato
+            module->CurrentAutoVibratoSweep[chn] = 0;
+            module->CurrentAutoVibratoPoint[chn] = 0;
+        }
+
+        // autovibrato (if is ON, it means that we should change pitch in this tick)
+        if (module->CurrentChannelLastInstrument[chn] > 0)
+        {
+            // check if this instrument exists before accessing its data!!!
+            if (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1] != NULL)
+            {
+                if ((module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoDepth != 0) && (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate != 0))
+                {
+                    // instrument autovibrato sweep
+                    module->CurrentAutoVibratoSweep[chn] += module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoSweep;
+                    if (module->CurrentAutoVibratoSweep[chn] > 0x10000) module->CurrentAutoVibratoSweep[chn] = 0x10000;
+
+                    ShouldPitchNote = YES;
+                }
+            }
+        }
+
+        // is there a Volume col?
+        if (CurrNote->Volume >= 0x10)
+        {
+            effres = DecodeVolumeColumn(module, chn, CurrNote->Volume, module->CurrentTick, EDxInAction);
+            if (effres & 0x0001) ShouldChangeVolume = YES;
+            if (effres & 0x0002) ShouldPitchNote = YES;
+        }
+
+        // is there an EFFECT?
+        if ((CurrNote->EffectType != 0x00) || (CurrNote->EffectParam != 0x00))
+        {
+            effres = DecodeEffectsColumn(module, chn, CurrNote->EffectType, CurrNote->EffectParam, module->CurrentTick, module->CurrentAdditionalTick);
+
+            switch (effres >> 8)
+            {
+                case 0x00:
+                    ArpeggioValue = effres & 0x000f;
+                    module->CurrentChannelIsArpeggioedNote[chn] = YES;
+                    ShouldPitchNote = YES;
+                    KeepArpeggioedNote = YES;
+                    break;
+
+                case 0x01:
+                    ShouldPitchNote = YES;
+                    break;
+
+                case 0x05:
+                    ShouldPitchNote = YES;
                     ShouldChangeVolume = YES;
-                }
-            }
+                    break;
 
-            // E5x: activate/cancel it if there's a new trigger
-            if (ShouldTriggerNote) module->CurrentFinetuneOverrideOn[chn] = OverrideFinetune;
+                case 0x09:
+                    SampleStartOffset = (effres & 0x00ff) << 8;
+                    break;
 
-            // *******************  ACTION!!!! **************
-            // DO what is needed for this channel
-            if (ShouldTriggerNote)
-            {
-                PlayNote(module, chn, SampleStartOffset);
-            }
-            else
-            {
-                // **** BETA: ProTracker on-the-fly sample change emulation  ******************      
-                if (ShouldChangeInstrument) ChangeSample(module, chn);
-                // ****************************************************************************
-                if (ShouldChangeVolume) ApplyVolumeandPanning(module, chn);
-                if (ShouldPitchNote) PitchNote(module, chn, ArpeggioValue, module->CurrentSamplePortamento[chn], module->CurrentVibratoValue[chn]);
-            }
-
-            // last thing to do
-            // Autovibrato: move to next point, if needed (if it's ON!)
-            if (module->CurrentChannelLastInstrument[chn] != 0)
-            {
-                // check if this instrument exists before accessing its data!!!
-                if (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1] != NULL)
-                {
-                    if ((module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoDepth != 0) && (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate != 0))
+                case 0x0e:
+                    switch (effres >> 4)
                     {
-                        // move point forward, for next
-                        module->CurrentAutoVibratoPoint[chn] += module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate;
+                        case 0xe9:
+                            if (effres & 0x001) if (module->CurrentChannelLastInstrument[chn])
+                            {
+                                ShouldTriggerNote = YES;
+                                ShouldRestartEnvelope = YES;
+                            }
+                            break;
+
+                        case 0xe6:
+                            RequestedLoops = (effres & 0x000F);
+                            CurrentLoopEffChannel = chn;
+                            module->CurrentLoopEnd[CurrentLoopEffChannel] = module->CurrentLine;
+                            break;
                     }
-                }
-            }
+                    break;
 
-        }    // end FOR channels
-
-        // calculate delay ticks from delay lines
-        if ((module->CurrentDelayLines) || (module->CurrentDelayTick == 0))
-        {
-            module->CurrentDelayTick = module->CurrentDelayLines * module->CurrentTempo;
-            module->CurrentDelayLines = 0;
-        }
-
-        // increments the tick...
-        module->CurrentTick++;
-
-        // check if it's time to change line/pattern
-        if ((module->CurrentTick) >= (module->CurrentTempo))
-        {
-            // end of the line: check if there are some DelayTick (effect EEx)
-            if (module->CurrentDelayTick > 0)
-            {
-                // I should wait before changing line...
-                module->CurrentDelayTick--;
-                module->CurrentAdditionalTick++;
-                module->CurrentTick--;
-            }
-            else
-            {
-                // next line! (whatever 'next' means...)
-                module->CurrentTick = 0;
-                module->CurrentAdditionalTick = 0;
-
-                // Check if we should loop in this pattern
-                if (RequestedLoops > (module->CurrentLoopCounter[CurrentLoopEffChannel]))
-                {
-                    module->CurrentLine = module->CurrentLoopBegin[CurrentLoopEffChannel];
-                    module->CurrentLoopCounter[CurrentLoopEffChannel]++;
-                }
-                else
-                {
-                    // go to NEXT line
-                    module->CurrentLine++;
-
-                    // if loopend passed, reset the loop counter
-                    if (module->CurrentLine > module->CurrentLoopEnd[CurrentLoopEffChannel]) module->CurrentLoopCounter[CurrentLoopEffChannel] = 0;
-
-                    // now check if pattern is over (or should be breaked!)
-                    if (BreakThisPattern || ((module->CurrentLine) >= (module->PatternLength[module->CurrentPatternNumber])))
+                case 0x1b:
+                    if (effres & 0x0001)    // Rxy
                     {
-                        fifoSendValue32(FIFO_USER_08, 0); // just to trigger callback
-                        // next pattern!
-                        // Set new pattern flag to TRUE.
-                        startQueuedModule = TRUE;
-                        module->CurrentLine = NextPatternStartLine; // should be 0 when not using Dxx
-
-                        // NextPatternPosition comes from Bxx
-                        if ((NextPatternPosition >= 0) && (NextPatternPosition < module->ModuleLength))
+                        if (module->CurrentChannelLastInstrument[chn])
                         {
-                            module->CurrentSongPosition = NextPatternPosition;
+                            ShouldTriggerNote = YES;
+                            // ShouldRestartEnvelope = YES;  // Rxy won't reset envelope!
                         }
-                        else if (!module->LoopMode) module->CurrentSongPosition++;
 
-                        // check if song is finished... it is, we've got to restart!
-                        if ((module->CurrentSongPosition) >= (module->ModuleLength)) module->CurrentSongPosition = module->RestartPoint;
-
-                        // set new current pattern number!
-                        module->CurrentPatternNumber = module->PatternOrder[module->CurrentSongPosition];
-
-                        // reset the loopbegin[], we are in a new pattern!
-                        for (chn = 0; chn < LIBXM7_MAX_CHANNELS_PER_MODULE; chn++)
-                            module->CurrentLoopBegin[chn] = 0;
-
+                        // if there's a volume specified (xx), we should reset before retrigger!
+                        // ... I know it's strange, but FT2 works that way...
+                        if ((CurrNote->Volume >= 0x10) && (CurrNote->Volume <= 0x40)) effres = DecodeVolumeColumn(module, chn, CurrNote->Volume, 0, 0);
                     }
+
+                    // if it's not the 1st tick you should change volume
+                    if (module->CurrentTick != 0) if (effres & 0x0001) ShouldChangeVolume = YES;
+                    break;
+
+                    /*
+                     case 0x1d:                  // Txy
+                     if (effres & 0x0001)
+                     TremorisMuting = YES;
+                     ShouldChangeVolume = YES;
+                     break;  */
+
+                case 0xff:
+                    ShouldChangeVolume = YES;
+                    break;
+            }
+        }
+
+        // *******************  Arpeggio (reset?) *************
+        // was the note arpeggioed and should be reset?
+        if (module->CurrentChannelIsArpeggioedNote[chn] && (!KeepArpeggioedNote) && (module->CurrentTick == 0))
+        {
+            module->CurrentChannelIsArpeggioedNote[chn] = NO;
+            ShouldPitchNote = YES;
+        }
+
+        // *******************  ENVELOPES!  *************
+        if (ShouldRestartEnvelope)
+        {
+            // we need to start an envelope, if needed
+            StartEnvelope(module, chn, EnvStartPoint);
+            ShouldChangeVolume = YES;
+        }
+        else
+        {
+            // check if we need to go on with an envelope
+            if ((module->CurrentSampleVolumeEnvelopeState[chn] != ENVELOPE_NONE) || (module->CurrentSamplePanningEnvelopeState[chn] != ENVELOPE_NONE))
+            {
+                // there's an envelope to follow...
+                ElaborateEnvelope(module, chn, module->CurrentChannelLastInstrument[chn]);
+                ShouldChangeVolume = YES;
+            }
+        }
+
+        // E5x: activate/cancel it if there's a new trigger
+        if (ShouldTriggerNote) module->CurrentFinetuneOverrideOn[chn] = OverrideFinetune;
+
+        // *******************  ACTION!!!! **************
+        // DO what is needed for this channel
+        if (ShouldTriggerNote)
+        {
+            PlayNote(module, chn, SampleStartOffset);
+        }
+        else
+        {
+            // **** BETA: ProTracker on-the-fly sample change emulation  ******************
+            if (ShouldChangeInstrument) ChangeSample(module, chn);
+            // ****************************************************************************
+            if (ShouldChangeVolume) ApplyVolumeandPanning(module, chn);
+            if (ShouldPitchNote) PitchNote(module, chn, ArpeggioValue, module->CurrentSamplePortamento[chn], module->CurrentVibratoValue[chn]);
+        }
+
+        // last thing to do
+        // Autovibrato: move to next point, if needed (if it's ON!)
+        if (module->CurrentChannelLastInstrument[chn] != 0)
+        {
+            // check if this instrument exists before accessing its data!!!
+            if (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1] != NULL)
+            {
+                if ((module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoDepth != 0) && (module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate != 0))
+                {
+                    // move point forward, for next
+                    module->CurrentAutoVibratoPoint[chn] += module->Instrument[module->CurrentChannelLastInstrument[chn] - 1]->VibratoRate;
+                }
+            }
+        }
+
+    }    // end FOR channels
+
+    // calculate delay ticks from delay lines
+    if ((module->CurrentDelayLines) || (module->CurrentDelayTick == 0))
+    {
+        module->CurrentDelayTick = module->CurrentDelayLines * module->CurrentTempo;
+        module->CurrentDelayLines = 0;
+    }
+
+    // increments the tick...
+    module->CurrentTick++;
+
+    // check if it's time to change line/pattern
+    if ((module->CurrentTick) >= (module->CurrentTempo))
+    {
+        // end of the line: check if there are some DelayTick (effect EEx)
+        if (module->CurrentDelayTick > 0)
+        {
+            // I should wait before changing line...
+            module->CurrentDelayTick--;
+            module->CurrentAdditionalTick++;
+            module->CurrentTick--;
+        }
+        else
+        {
+            // next line! (whatever 'next' means...)
+            module->CurrentTick = 0;
+            module->CurrentAdditionalTick = 0;
+
+            // Check if we should loop in this pattern
+            if (RequestedLoops > (module->CurrentLoopCounter[CurrentLoopEffChannel]))
+            {
+                module->CurrentLine = module->CurrentLoopBegin[CurrentLoopEffChannel];
+                module->CurrentLoopCounter[CurrentLoopEffChannel]++;
+            }
+            else
+            {
+                // go to NEXT line
+                module->CurrentLine++;
+
+                // if loopend passed, reset the loop counter
+                if (module->CurrentLine > module->CurrentLoopEnd[CurrentLoopEffChannel]) module->CurrentLoopCounter[CurrentLoopEffChannel] = 0;
+
+                // now check if pattern is over (or should be breaked!)
+                if (BreakThisPattern || ((module->CurrentLine) >= (module->PatternLength[module->CurrentPatternNumber])))
+                {
+                    fifoSendValue32(FIFO_USER_08, 0); // just to trigger callback
+                    // next pattern!
+                    module->CurrentLine = NextPatternStartLine; // should be 0 when not using Dxx
+
+                    // NextPatternPosition comes from Bxx
+                    if ((NextPatternPosition >= 0) && (NextPatternPosition < module->ModuleLength))
+                    {
+                        module->CurrentSongPosition = NextPatternPosition;
+                    }
+                    // Advance song normally otherwise
+                    else if (!module->LoopMode)
+                        module->CurrentSongPosition++;
+
+                    // check if song is finished... it is, we've got to restart!
+                    if ((module->CurrentSongPosition) >= (module->ModuleLength)) module->CurrentSongPosition = module->RestartPoint;
+
+                    // set new current pattern number!
+                    module->CurrentPatternNumber = module->PatternOrder[module->CurrentSongPosition];
+
+                    // reset the loopbegin[], we are in a new pattern!
+                    for (chn = 0; chn < LIBXM7_MAX_CHANNELS_PER_MODULE; chn++)
+                        module->CurrentLoopBegin[chn] = 0;
+
                 }
             }
         }
     }
 
-    // Check if any module shall start playing at beginning of new pattern
-    if (startQueuedModule)
-    {
-        for (u8 mmm = 0; mmm < LIBXM7_ALLOWED_MODULES; mmm++)
-        {
-            if (XM7_Modules[mmm]->State == XM7_STATE_QUEUED) XM7_Modules[mmm]->State = XM7_STATE_PLAYING;
-        }
-    }
-
+    // Execute stuff in the FIFO queue
     while (fifoCheckValue32(FIFO_GLOBAL_SETTINGS))
         arm7_GlobalSettingsFIFOHandler(fifoGetValue32(FIFO_GLOBAL_SETTINGS), NULL);
 }
@@ -2449,8 +2400,8 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
     // Prepare for playback, set everything to default values ...
 
     // re-set the Module tempo & bpm & global volume
-    module->CurrentBPM = globalBpm;
-    module->CurrentTempo = globalTempo;
+    module->CurrentBPM = arm7_globalBpm;
+    module->CurrentTempo = arm7_globalTempo;
 
     // re-set the Module position
     module->CurrentSongPosition = (position < module->ModuleLength) ? position : 0;
@@ -2529,7 +2480,7 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
 
         // Set Timer divider and BPM
         TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-        SetTimerSpeedBPM(globalBpm);
+        SetTimerSpeedBPM(arm7_globalBpm);
 
         // Module has to start playing already
         module->State = XM7_STATE_PLAYING;
@@ -2545,21 +2496,16 @@ void XM7_PlayModule(XM7_ModuleManager_Type *module)
 
 void XM7_StopModule(XM7_ModuleManager_Type *module)
 {
-    u8 i;
-
-    for (i = 0; i < (module->NumberofChannels); i++)
+    // Stop channel sound
+    for (u8 chn = 0; chn < (module->NumberofChannels); chn++)
     {
-        // Playback channel for low level playing must be selected based on the module slot
-        // since, when having multiple modules playing, there might be no direct correspondence
-        // between playback channel and the current module channel
-
-        // E.g. if there are 2 modules playing (SlotA, SlotB), then:
-        // First module has channels 0... 7 and should playback in channels 15 ... 8
-        // Second module has also channels 0 ... 7 but should playback in channels 7 ... 0
-        u8 pbChn = i + (module->ModuleIndex * LIBXM7_MAX_CHANNELS_PER_MODULE);
-        XM7_lowlevel_stopSound(pbChn);
+        XM7_lowlevel_stopSound(chn);
     }
-    // change the state
+
+    module->CurrentLine = 0;
+    module->CurrentTick = 0;
+
+    // Change the module state
     module->State = XM7_STATE_STOPPED;
 
     // disable IRQ
@@ -2572,13 +2518,10 @@ void XM7_PauseModule(XM7_ModuleManager_Type *module)
     // will deactivate the timer IRQ (and stop the channels)
     // TIMER1_CR = 0;
     // irqDisable(IRQ_TIMER1);
-    for (u8 mm = 0; mm < LIBXM7_ALLOWED_MODULES; mm++)
+    if (XM7_Module != NULL)
     {
-        if (XM7_Modules[mm] != NULL)
-        {
-            // Pause the module
-            XM7_Modules[mm]->State = XM7_STATE_PAUSED;
-        }
+        // Pause the module
+        XM7_Module->State = XM7_STATE_PAUSED;
     }
 }
 
@@ -2587,46 +2530,3 @@ void XM7_Initialize()
     CalculateVeryFineTunes();
     // CalculateRealPanningArray (45);   //  (35% of 128 = 44,8)
 }
-/*
- void XM7_ResumeModule()
- {
- int i;
- // then set the timer and make it start!
- TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
- SetTimerSpeedBPM (XM7_TheModule->CurrentBPM);
- irqEnable(IRQ_TIMER1);
-
- for (i=0;i<(XM7_TheModule->NumberofChannels);i++)
- XM7_lowlevel_resumeSound (i);
- }
- */
-
-/*
- case PLAY_ONE_SHOT_SAMPLE:
- // TEST: play a sample (no looping) on the req'd channel
- startSound(IPC_ptr->Sample.Frequency,IPC_ptr->Sample.Data,IPC_ptr->Sample.Length,IPC_ptr->Sample.Channel, IPC_ptr->Sample.Volume,64,0);
- break;
- case PLAY_LOOPING_SAMPLE:
- // TEST: play a sample (WITH looping) on the req'd channel
- startSoundwLoop(IPC_ptr->Sample.Frequency,IPC_ptr->Sample.Data,IPC_ptr->Sample.Length,IPC_ptr->Sample.LoopStart,IPC_ptr->Sample.Channel, IPC_ptr->Sample.Volume,64,0);
- break;
- */
-
-/*
- u16 timer = (1963710 / (XM7_TheModule->DefaultBPM)) / (6 * 4);
- TIMER1_DATA = - timer;
- */
-
-/*
- void startSound(int sampleRate, const void* data, u32 bytes, u8 channel, u8 vol,    u8 pan, u8 format) {
-
- SCHANNEL_CR(channel) = 0;
-
- if (bytes>0) {
- SCHANNEL_TIMER(channel)  = SOUND_FREQ(sampleRate);
- SCHANNEL_SOURCE(channel) = (u32)data;
- SCHANNEL_LENGTH(channel) = bytes >> 2;
- SCHANNEL_CR(channel)         = SCHANNEL_ENABLE | SOUND_ONE_SHOT | SOUND_VOL(vol) | SOUND_PAN(pan) | (format==0?SOUND_8BIT:SOUND_16BIT);
- }
- }
- */

@@ -144,7 +144,7 @@ typedef struct
 {
 
     // status of the engine/module/playback
-    u16 State;                                           // bit 15: error if set
+    vu16 State;                                           // bit 15: error if set
                                                          // bit 14: module loaded if set
                                                          // bit 13: module playing if set
     u16 ModuleLength;
@@ -171,14 +171,14 @@ typedef struct
                                                     // bit 1: on-the-fly sample change flag (1=ON)
     // -
     // these _could_ change during the playback!
-    u8 CurrentTempo;                // copy of DefaultTempo (at startup)
-    u8 CurrentBPM;                  // copy of DefaultBPM       (at startup)
+    vu8 CurrentTempo;                // copy of DefaultTempo (at startup)
+    vu8 CurrentBPM;                  // copy of DefaultBPM       (at startup)
     u8 CurrentGlobalVolume; // 0x40                                 (at startup)
 
-    u8 CurrentSongPosition; //  the pattern in playback now (position in the PatternOrder array)
+    vu8 CurrentSongPosition; //  the pattern in playback now (position in the PatternOrder array)
     u8 CurrentPatternNumber;       //  the pattern in playback now (its number!)
     u16 CurrentLine;      //  the line in playback now (0..length of the pattern)
-    u8 CurrentTick;                         //  the tick in playback now (0..31)
+    vu8 CurrentTick;                         //  the tick in playback now (0..31)
 
     u8 CurrentDelayLines;  //  the lines to "delay" after this line (effect EEx)
     // -
@@ -268,13 +268,9 @@ typedef struct
     char ModuleName[20];
     char TrackerName[20];
 
-    u8 ChannelMute[16];  // 1 = mute, 0 = un-mute
-
-    u8 LoopMode; // 0 = no loop, 1 = pattern loop
-
-    int8 Transpose;
-
-    u8 ModuleIndex;
+    vu8 ChannelMute[16];  // 1 = mute, 0 = un-mute
+    vu8 LoopMode; // 0 = no loop, 1 = pattern loop
+    vint8 Transpose;
 
 } XM7_ModuleManager_Type;
 
@@ -409,8 +405,7 @@ typedef struct
 
 // end of MOD section
 
-// There are currently two modules handled at a time
-extern XM7_ModuleManager_Type *XM7_Modules[LIBXM7_ALLOWED_MODULES];
+extern XM7_ModuleManager_Type *XM7_Module;
 
 // ARM7 functions
 void XM7_Initialize(void);
@@ -422,11 +417,8 @@ void XM7_PauseModule(XM7_ModuleManager_Type *module);
 void SetTimerSpeedBPM(u8 BPM);
 
 // ARM9 functions (... well, you can use them even on ARM7 if you want...)
-u16 XM7_LoadXM(XM7_ModuleManager_Type*, XM7_XMModuleHeader_Type*, u8 slot);
+u16 XM7_LoadXM(XM7_ModuleManager_Type*, XM7_XMModuleHeader_Type*);
 void XM7_UnloadXM(XM7_ModuleManager_Type*);
-
-u16 XM7_LoadMOD(XM7_ModuleManager_Type*, XM7_MODModuleHeader_Type*, u8 slot);
-void XM7_UnloadMOD(XM7_ModuleManager_Type*);
 
 void XM7_SetReplayStyle(XM7_ModuleManager_Type *Module, u8 style);
 void XM7_SetPanningStyle(XM7_ModuleManager_Type *Module, u8 style, u8 displacement);
