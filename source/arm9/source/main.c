@@ -108,7 +108,6 @@ int main(int argc, char **argv)
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);
 
     XM7_FS_init();
-    drawTitle(0);
     drawChannelMatrix();
 
     bool touchRelease = true;

@@ -137,7 +137,7 @@ typedef struct
     vu16 State;                                           // bit 15: error if set
                                                          // bit 14: module loaded if set
                                                          // bit 13: module playing if set
-    u16 ModuleLength;
+    vu16 ModuleLength;
     u16 RestartPoint;
     u16 NumberofPatterns;           // ...up to 256
 
@@ -176,7 +176,7 @@ typedef struct
 
     u8 PatternOrder[256]; // play the patterns in this order (PatternNumber is 0..255)
 
-    u16 PatternLength[256]; // the length (in lines) of each pattern (min 1, max 256)  (default=64!)
+    vu16 PatternLength[256]; // the length (in lines) of each pattern (min 1, max 256)  (default=64!)
 
     XM7_SingleNoteArray_Type *Pattern[256]; // pointer to the beginning of every single pattern
                                             // length = (PatternLength)*(NumberofChannels)*5    (bytes)
