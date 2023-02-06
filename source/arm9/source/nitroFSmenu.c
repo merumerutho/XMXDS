@@ -273,12 +273,14 @@ u8 XM7_FS_selectModule(char *folderPath)
                     if (deckInfo.xmData != NULL)
                     {
                         strcpy_cut(deckInfo.modManager->ModuleName, selection->d_name, 16, FALSE);
+                        closedir(folder);
                         return 0; // Loaded successfully
                     }
                     else
                     {
                         consoleSelect(&bottom);
                         iprintf("Could not load module!");
+                        closedir(folder);
                         return 2; // Unable to load
                     }
                 }
@@ -286,25 +288,32 @@ u8 XM7_FS_selectModule(char *folderPath)
         }
         swiWaitForVBlank();
     }
+    closedir(folder);
     return 3; // should never happen
 }
 
 void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type)
 {
-    FILE *modFile = fopen(filepath, "rb");
-    u32 size;
+    FILE *moduleFile = fopen(filepath, "rb");
     u16 ret;
 
-    fseek(modFile, 0L, SEEK_END);
-    size = ftell(modFile);
-    rewind(modFile);
+    // Get size
+    fseek(moduleFile, 0L, SEEK_END);
+    u32 size = ftell(moduleFile);
+    rewind(moduleFile);
 
     // Data destination
     XM7_XMModuleHeader_Type *modHeader = malloc(sizeof(u8) * (size));
 
-    // Read data from file pointer
-    if (fread((void *)modHeader, sizeof(u8), size, modFile) != size) printf("\tCould not read module correctly!\n");
+    // Read data from file pointer and write it to modHeader
+    if (fread((void *)modHeader, sizeof(u8), size, moduleFile) != size)
+    {
+        printf("\tCould not read file correctly!\n");
+        return NULL;
+    }
+    fclose(moduleFile);
 
+    // Load module
     if (size > 0)
     {
         if (type == FS_TYPE_XM)
@@ -315,6 +324,7 @@ void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type)
         // Ensure data gets written to main RAM (leave no data in cache)
         DC_FlushAll();
     }
+
     return modHeader;
 }
 

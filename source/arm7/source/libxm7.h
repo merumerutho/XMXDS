@@ -38,19 +38,10 @@
 #define XM7_DEFAULT_PANNING_DISPLACEMENT        42
 // 42 = 127/3 circa = panning 1/3 + 2/3
 
-// Replay style flags:
-#define XM7_REPLAY_STYLE_XM_PLAYER              0x00
-#define XM7_REPLAY_STYLE_MOD_PLAYER             0x01
-#define XM7_REPLAY_ONTHEFLYSAMPLECHANGE_FLAG    0x02
-
-// Replay style default defines:
-#define XM7_REPLAY_STYLE_FT2                                        0x00
-#define XM7_REPLAY_STYLE_PT                                         (XM7_REPLAY_STYLE_MOD_PLAYER|XM7_REPLAY_ONTHEFLYSAMPLECHANGE_FLAG)
-
 typedef struct
 {
     u8 Note;                     // 0 = no note; 1..96 = C-0...B-7; 97 = key off
-    u8 Instrument;                  // 0 or 1..128
+    u8 Instrument;               // 0 or 1..128
     u8 Volume;
     u8 EffectType;
     u8 EffectParam;
@@ -104,7 +95,6 @@ typedef struct
 
 typedef struct
 {
-
     XM7_Sample_Type *Sample[16];            // pointers to the samples
 
     XM7_EnvelopePoints_Type VolumeEnvelopePoint[12]; //  -- Envelope points: x,y...x,y....
@@ -165,10 +155,6 @@ typedef struct
     u8 AmigaPanningEmulation;       // should the panning be 'fixed' in the Amiga style?
     u8 AmigaPanningDisplacement;        // amiga panning 'displacement'
                                         // will be added to 0x00 / subtracted to 0x7F
-
-    u8 ReplayStyle;                                 // bit 0: 0 = FT2 style
-                                                    //              1 = MOD player style
-                                                    // bit 1: on-the-fly sample change flag (1=ON)
     // -
     // these _could_ change during the playback!
     vu8 CurrentTempo;                // copy of DefaultTempo (at startup)
@@ -177,7 +163,7 @@ typedef struct
 
     vu8 CurrentSongPosition; //  the pattern in playback now (position in the PatternOrder array)
     u8 CurrentPatternNumber;       //  the pattern in playback now (its number!)
-    u16 CurrentLine;      //  the line in playback now (0..length of the pattern)
+    vu16 CurrentLine;      //  the line in playback now (0..length of the pattern)
     vu8 CurrentTick;                         //  the tick in playback now (0..31)
 
     u8 CurrentDelayLines;  //  the lines to "delay" after this line (effect EEx)

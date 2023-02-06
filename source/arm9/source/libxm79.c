@@ -189,9 +189,7 @@ XM7_Sample_Type* PrepareNewSample(u32 len, u32 looplen, u8 flags)
          // 16 bit/sample
          malloclen += (looplen - 4);                 // -2 samples (-4 bytes) because of the 1st and last which shouldn't be duplicated
          }
-
          */
-
         malloclen += looplen;                   // adds the portion that gets reverted
     }
 
@@ -200,7 +198,6 @@ XM7_Sample_Type* PrepareNewSample(u32 len, u32 looplen, u8 flags)
     // check if memory has been allocated before using it
     if (ptr != NULL)
     {
-
         data_ptr = (XM7_SampleData_Type*) malloc(sizeof(u8) * malloclen);
 
         // check if SAMPLE memory has been allocated before using it
@@ -210,7 +207,6 @@ XM7_Sample_Type* PrepareNewSample(u32 len, u32 looplen, u8 flags)
             ptr->SampleData = data_ptr;
             ptr->Length = len;                      // yes, len, not malloclen.
                                                     //  this will be fixed later
-
             // set the name to empty    
             memset(ptr->Name, 0, 22);   // 22 asciizero
         }
@@ -701,9 +697,6 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     // Set volume
     Module->CurrentGlobalVolume = 0x40;
 
-    // Replay style FT2 for XM
-    Module->ReplayStyle = XM7_REPLAY_STYLE_FT2;
-
     // set State
     Module->State = XM7_STATE_READY;
 
@@ -763,11 +756,6 @@ void XM7_UnloadXM(XM7_ModuleManager_Type *Module)
     Module->State = XM7_STATE_EMPTY;
     // Reset hot cue position to 0
     arm9_globalHotCuePosition = 0;
-}
-
-void XM7_SetReplayStyle(XM7_ModuleManager_Type *Module, u8 style)
-{
-    Module->ReplayStyle = style;
 }
 
 void XM7_SetPanningStyle(XM7_ModuleManager_Type *Module, u8 style, u8 displacement)

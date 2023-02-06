@@ -1013,15 +1013,6 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
 
             tmpvalue = (curtick + addtick) % 3;
 
-            // swap Arpeggio order (0,x,y) if style is not FT2
-            if ((module->ReplayStyle & XM7_REPLAY_STYLE_MOD_PLAYER) && (tmpvalue != 0))
-            {
-                if (tmpvalue == 1)
-                    tmpvalue = 2;
-                else
-                    tmpvalue = 1;
-            }
-
             switch (tmpvalue)
             {
                 case 0:
@@ -1284,16 +1275,6 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
                     // Set note fine-tune
                     // This command is different for XM and MOD replay! (v1.06)
                     // http://www.milkytracker.net/docs/MilkyTracker.html#fxE5x
-
-                    if (module->ReplayStyle & XM7_REPLAY_STYLE_MOD_PLAYER)
-                    {
-                        // for MOD replay
-                        if (tmpvalue < 8)
-                            module->CurrentFinetuneOverride[chn] = +16 * tmpvalue;
-                        else
-                            module->CurrentFinetuneOverride[chn] = -16 * (16 - tmpvalue);
-                    }
-                    else
                     {
                         // for XM replay
                         if (tmpvalue >= 8)
@@ -2074,17 +2055,6 @@ void Timer1Handler(void)
         // OR is there even a note BUT it's specified for bending?
         if (((CurrNote->Instrument != 0) && (CurrNote->Note == 0)) || ((CurrNote->Instrument != 0) && (PitchToNote)))
         {
-
-            //  **** BETA: ProTracker on-the-fly sample change emulation    ******************
-            if (module->ReplayStyle & XM7_REPLAY_ONTHEFLYSAMPLECHANGE_FLAG)
-                if (module->CurrentTick == EDxInAction) if (module->CurrentChannelLastInstrument[chn] != CurrNote->Instrument && module->CurrentChannelLastNote[chn] != 0)
-                {
-                    // save the new instrument number and trigger instrument change
-                    module->CurrentChannelLastInstrument[chn] = CurrNote->Instrument;
-                    ShouldChangeInstrument = YES;
-                }
-            //  ************************************************************************ END ****
-
             //  ... and check if there's a last note! otherwise simply ignore it!
             if (module->CurrentChannelLastNote[chn] != 0)
             {
@@ -2100,11 +2070,6 @@ void Timer1Handler(void)
                         ShouldChangeVolume = YES;
                         ShouldRestartEnvelope = YES;  // reset envelope too!
                     }
-
-                    /* else {
-                     // try muting the volume if the sample doesn't exists
-                     module->CurrentSampleVolume[chn] = 0;
-                     } */
                 }
             }
         }
