@@ -8,6 +8,7 @@
 
 u8 arm7_globalBpm = 125;
 u8 arm7_globalTempo = 6;
+u8 arm7_globalHotCuePosition = 0;
 
 void setGlobalBpm(u8 value)
 {
@@ -20,8 +21,11 @@ void setGlobalTempo(u8 value)
 {
     arm7_globalTempo = value;
     // Update value to modules
-    for (u8 mm = 0; mm < LIBXM7_ALLOWED_MODULES; mm++)
-    {
-        XM7_Module->CurrentTempo = arm7_globalTempo;
-    }
+    XM7_Module->CurrentTempo = arm7_globalTempo;
+
+}
+
+void setHotCuePos(u8 value)
+{
+    arm7_globalHotCuePosition = value;
 }

@@ -39,7 +39,8 @@ void updateArmV7()
 {
     fifoGlobalMsg->data[0] = arm9_globalBpm;
     fifoGlobalMsg->data[1] = arm9_globalTempo;
-    fifoGlobalMsg->command = CMD_SET_BPM_TEMPO;
+    fifoGlobalMsg->data[2] = arm9_globalHotCuePosition;
+    fifoGlobalMsg->command = CMD_APPLY_GLOBAL_SETTINGS;
     IpcSend(FIFO_GLOBAL_SETTINGS);
 }
 
@@ -145,10 +146,9 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    MODULE->CurrentSongPosition = arm9_globalHotCuePosition;
+                    updateArmV7();  // This can be used to 'notify' armv7 of changes
                     // Then start playing module again
                     play_stop(&deckInfo);
-                    updateArmV7();  // This can be used to 'notify' armv7 of changes
                 }
             }
 
@@ -167,14 +167,14 @@ int main(int argc, char **argv)
             }
 
             // SET HOT CUE
-            if (keysDown() & KEY_Y)
+            if (keysDown() & KEY_B)
             {
                 arm9_globalHotCuePosition = MODULE->CurrentSongPosition;
                 updateArmV7();  // This can be used to 'notify' armv7 of changes
             }
 
             // CUE MOVE
-            if (keysHeld() & KEY_Y)
+            if (keysHeld() & KEY_B)
             {
                 if (keysDown() & KEY_LEFT)
                 {
@@ -195,6 +195,16 @@ int main(int argc, char **argv)
                 updateArmV7();  // This can be used to update arm7 of some changes
             }
 
+            // GO TO HOT CUEd PATTERN AT END OF CURRENT PATTERN
+            if (keysDown() & KEY_Y)
+            {
+                // Only necessary to set CurrentSongPosition.
+                // It will be evaluated only at end of pattern by design
+                MODULE->bGotoHotCue = TRUE;
+                MODULE->CurrentSongPosition = arm9_globalHotCuePosition;
+                updateArmV7();  // This can be used to update arm7 of some changes
+            }
+
             // BPM INCREASE
             if (keysDown() & KEY_UP)
             {
@@ -210,7 +220,7 @@ int main(int argc, char **argv)
             }
 
             // NUDGE FORWARD
-            if ((keysDown() & KEY_RIGHT) && !(keysHeld() & KEY_Y))
+            if ((keysDown() & KEY_RIGHT) && !(keysHeld() & KEY_B))
             {
                 if (MODULE->CurrentTick < MODULE->CurrentTempo)
                 {
@@ -224,7 +234,7 @@ int main(int argc, char **argv)
             }
 
             // NUDGE BACKWARD
-            if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_Y))
+            if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_B))
             {
                 if (MODULE->CurrentTick > 0)
                 {

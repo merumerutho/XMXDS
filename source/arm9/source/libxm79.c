@@ -710,6 +710,8 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     Module->LoopMode = 0;
     // At startup, current line is 0
     Module->CurrentLine = 0;
+    // Set to false by default
+    Module->bGotoHotCue = FALSE;
 
     // Set current bpm/tempo and hot cue position
     arm9_globalBpm = Module->DefaultBPM;

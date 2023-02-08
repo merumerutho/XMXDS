@@ -1893,6 +1893,10 @@ void Timer1Handler(void)
 
     XM7_ModuleManager_Type *module = XM7_Module;
 
+    // Execute stuff in the FIFO queue
+    while (fifoCheckValue32(FIFO_GLOBAL_SETTINGS))
+        arm7_GlobalSettingsFIFOHandler(fifoGetValue32(FIFO_GLOBAL_SETTINGS), NULL);
+
     if (module == NULL || module->State != XM7_STATE_PLAYING) return;
 
     // For every channel...
@@ -2332,12 +2336,15 @@ void Timer1Handler(void)
 
                     // NextPatternPosition comes from Bxx
                     if ((NextPatternPosition >= 0) && (NextPatternPosition < module->ModuleLength))
-                    {
                         module->CurrentSongPosition = NextPatternPosition;
+                    else if (module->LoopMode || module->bGotoHotCue)
+                    {
+                        // Do nothing if gotohotcue is set or in loopmode
                     }
-                    // Advance song normally otherwise
-                    else if (!module->LoopMode)
-                        module->CurrentSongPosition++;
+                    else
+                        module->CurrentSongPosition++;  // Advance song normally otherwise
+
+                    module->bGotoHotCue = FALSE; // Always set to false after evaluation
 
                     // check if song is finished... it is, we've got to restart!
                     if ((module->CurrentSongPosition) >= (module->ModuleLength)) module->CurrentSongPosition = module->RestartPoint;
@@ -2353,10 +2360,6 @@ void Timer1Handler(void)
             }
         }
     }
-
-    // Execute stuff in the FIFO queue
-    while (fifoCheckValue32(FIFO_GLOBAL_SETTINGS))
-        arm7_GlobalSettingsFIFOHandler(fifoGetValue32(FIFO_GLOBAL_SETTINGS), NULL);
 }
 
 void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
@@ -2456,6 +2459,10 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
 
 void XM7_PlayModule(XM7_ModuleManager_Type *module)
 {
+    // Execute stuff in the FIFO queue (be sure to get CurrentSongPosition information
+    while (fifoCheckValue32(FIFO_GLOBAL_SETTINGS))
+        arm7_GlobalSettingsFIFOHandler(fifoGetValue32(FIFO_GLOBAL_SETTINGS), NULL);
+    module->CurrentSongPosition = arm7_globalHotCuePosition;
     XM7_PlayModuleFromPos(module, module->CurrentSongPosition);
 }
 

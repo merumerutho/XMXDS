@@ -8,6 +8,6 @@
 void play_stop(XMX_DeckInfo *mInfo)
 {
     // sending pointer to the libxm7 engine on ARM7
-    if (!fifoSendValue32(FIFO_XM7, (u32) mInfo->modManager)) iprintf("Could not send data correctly...\n");
+    if (!fifoSendValue32(FIFO_XM7, (u32) deckInfo.modManager)) iprintf("Could not send data correctly...\n");
 }
 

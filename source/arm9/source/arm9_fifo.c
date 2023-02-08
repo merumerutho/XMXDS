@@ -10,9 +10,9 @@
 // Initialize fifo_msg
 FifoMsg *fifoGlobalMsg = NULL;
 
-u8 arm9_globalBpm = DEFAULT_BPM;
-u8 arm9_globalTempo = DEFAULT_TEMPO;
-u8 arm9_globalHotCuePosition = DEFAULT_CUEPOS;
+vu8 arm9_globalBpm = DEFAULT_BPM;
+vu8 arm9_globalTempo = DEFAULT_TEMPO;
+vu8 arm9_globalHotCuePosition = DEFAULT_CUEPOS;
 
 void IpcInit()
 {
@@ -28,6 +28,6 @@ void sendBpmTempo(u8 bpm, u8 tempo)
 {
     fifoGlobalMsg->data[0] = bpm;
     fifoGlobalMsg->data[1] = tempo;
-    fifoGlobalMsg->command = CMD_SET_BPM_TEMPO;
+    fifoGlobalMsg->command = CMD_APPLY_GLOBAL_SETTINGS;
     IpcSend(FIFO_GLOBAL_SETTINGS);
 }

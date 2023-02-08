@@ -162,7 +162,7 @@ typedef struct
     u8 CurrentGlobalVolume; // 0x40                                 (at startup)
 
     vu8 CurrentSongPosition; //  the pattern in playback now (position in the PatternOrder array)
-    u8 CurrentPatternNumber;       //  the pattern in playback now (its number!)
+    vu8 CurrentPatternNumber;       //  the pattern in playback now (its number!)
     vu16 CurrentLine;      //  the line in playback now (0..length of the pattern)
     vu8 CurrentTick;                         //  the tick in playback now (0..31)
 
@@ -257,6 +257,8 @@ typedef struct
     vu8 ChannelMute[16];  // 1 = mute, 0 = un-mute
     vu8 LoopMode; // 0 = no loop, 1 = pattern loop
     vint8 Transpose;
+
+    vu8 bGotoHotCue; // 0 = normally, 1 = set to signal to go to hotcue next
 
 } XM7_ModuleManager_Type;
 

@@ -10,10 +10,11 @@ void arm7_GlobalSettingsFIFOHandler(u32 p, void *userdata)
     // Extract data from IPC packet
     u8 command = ((FifoMsg*) (p))->command;
 
-    if (command == CMD_SET_BPM_TEMPO)
+    if (command == CMD_APPLY_GLOBAL_SETTINGS)
     {
         setGlobalBpm(((FifoMsg*) (p))->data[0]);
         setGlobalTempo(((FifoMsg*) (p))->data[1]);
+        setHotCuePos(((FifoMsg*) (p))->data[2]);
     }
 
     fifoSendValue32(FIFO_USER_08, 0); // ACK
