@@ -18,6 +18,7 @@ void XM7_FS_displayHeader()
     iprintf("-------------------------------\n");
 }
 
+// Function to count up to UINT16_MAX files in a folder
 u16 getFileCount(DIR *folder)
 {
     u16 counter = 0;
@@ -31,17 +32,20 @@ u16 getFileCount(DIR *folder)
 void strcpy_cut(char *dest, char *src, u8 len, bool fillWSpace)
 {
     u8 c;
+    // Regular string copy up to declared length
     for (c = 0; c < len; c++)
     {
         if (src[c] == '\0') break;
         dest[c] = src[c];
     }
-    // If file was too long
+    // If string is longer than length...
     if (c == len)
     {
-        dest[len - 2] = '~'; // Ugliest fuckery ever made to show file has a long name
+        // Apply ugliest fuckery ever conceived to show that the string was cut
+        dest[len - 2] = '~';
         dest[len - 1] = '\0';
     }
+    // Fill with spaces if required
     else if (fillWSpace)
     {
         for (; c < len; c++)
@@ -52,6 +56,7 @@ void strcpy_cut(char *dest, char *src, u8 len, bool fillWSpace)
                 dest[c] = ' ';
         }
     }
+    // In any other case apply termination character at latest index
     else
         dest[c] = '\0';
 }
@@ -64,9 +69,11 @@ void listFolderOnPosition(DIR *folder, u16 pPosition, u16 fileCount)
     char dir[4] = "dir";
 
     consoleSelect(&bottom);
-    if (pPosition > 255) iprintf("ERROR\nNot supported!\n");
 
-    seekdir(folder, (u32) (pPosition / ENTRIES_PER_SCREEN)*ENTRIES_PER_SCREEN);
+    // pPosition represents the pointed file position,
+    // and since we show ENTRIES_PER_SCREEN file at every moment,
+    // the file seek is based on integer multiples of ENTRIES_PER_SCREEN
+    seekdir(folder, (u32) (pPosition / ENTRIES_PER_SCREEN) * ENTRIES_PER_SCREEN);
     dirContent = readdir(folder);
     char filename[20] = "";
 
@@ -74,23 +81,31 @@ void listFolderOnPosition(DIR *folder, u16 pPosition, u16 fileCount)
     {
         char p = (ff == (pPosition % ENTRIES_PER_SCREEN)) ? pc : ' ';
         char *d = (dirContent->d_type == TYPE_FOLDER) ? dir : "   ";
+
+        // File name is cut to fit in 20 chars
         strcpy_cut(filename, dirContent->d_name, 20, TRUE);
+
         consoleSelect(&bottom);
+        // Print filename
         iprintf("\x1b[%d;%dH%c %s %s \n", ff + 4, 0, p, d, filename);
         dirContent = readdir(folder);
         ff++;
     }
+    // Fill rest with empty spaces to clear the remaining part of the screen
     while (ff < ENTRIES_PER_SCREEN)
     {
         consoleSelect(&bottom);
         iprintf("\x1b[%d;%dH  %s \n", ff + 4, 0, "                               ");
         ff++;
     }
-
+    // Rewind folder for next read
     rewinddir(folder);
+
+    // Print current file position
     consoleSelect(&bottom);
     iprintf("\x1b[21;0H-------------------------------");
-    iprintf("\x1b[22;0H%03d/%03d", pPosition + 1, fileCount);
+    // Spaces in the string are used to clean if screen gets dirty
+    iprintf("\x1b[22;0H%d/%d          ", pPosition + 1, fileCount);
     iprintf("\x1b[23;0H-------------------------------");
 }
 
