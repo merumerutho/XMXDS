@@ -4,7 +4,7 @@
 // ARMv9 INCLUDES
 #include "arm9_defines.h"
 #include "arm9_fifo.h"
-#include "nitroFSmenu.h"
+#include "filesystem.h"
 #include "play.h"
 #include "libXMX.h"
 #include "channelMatrix.h"
@@ -14,6 +14,7 @@
 #include "../../arm7/source/libxm7.h"
 #include "../../arm7/source/tempo.h"
 #include "../../arm7/source/arm7_fifo.h"
+
 
 #define DEFAULT_ROOT_PATH "./"
 

@@ -1,5 +1,5 @@
-#ifndef ARM9_SOURCE_NITROFSMENU_H_
-#define ARM9_SOURCE_NITROFSMENU_H_
+#ifndef ARM9_SOURCE_FILESYSTEM_H_
+#define ARM9_SOURCE_FILESYSTEM_H_
 
 #include <nds.h>
 #include <dirent.h>
@@ -21,4 +21,4 @@ bool XM7_FS_init();
 u8 XM7_FS_selectModule(char *folderPath);
 void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type);
 
-#endif /* ARM9_SOURCE_NITROFSMENU_H_ */
+#endif /* ARM9_SOURCE_FILESYSTEM_H_ */
