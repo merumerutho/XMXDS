@@ -66,7 +66,7 @@ void listFolderOnPosition(DIR *folder, u16 pPosition, u16 fileCount)
     consoleSelect(&bottom);
     if (pPosition > 255) iprintf("ERROR\nNot supported!\n");
 
-    seekdir(folder, (u32) (pPosition & ENTRIES_PER_SCREEN));
+    seekdir(folder, (u32) (pPosition / ENTRIES_PER_SCREEN)*ENTRIES_PER_SCREEN);
     dirContent = readdir(folder);
     char filename[20] = "";
 
