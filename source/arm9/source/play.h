@@ -8,6 +8,6 @@
 
 // ---
 
-void play_stop(XMX_DeckInfo *module);
+void play_stop();
 
 #endif /* ARM9_SOURCE_PLAY_H_ */

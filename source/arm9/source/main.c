@@ -139,17 +139,10 @@ int main(int argc, char **argv)
             // CUE PLAY
             if (keysDown() & KEY_A)
             {
-                // If playing, stop
-                if (MODULE->State == XM7_STATE_PLAYING)
+                // If playing, stop, otherwise play.
                 {
-                    play_stop(&deckInfo);
-                    updateArmV7();
-                }
-                else
-                {
+                    play_stop();
                     updateArmV7();  // This can be used to 'notify' armv7 of changes
-                    // Then start playing module again
-                    play_stop(&deckInfo);
                 }
             }
 

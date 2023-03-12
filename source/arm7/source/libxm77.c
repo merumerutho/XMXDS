@@ -60,6 +60,7 @@ u16 VeryFineTunes[129];
 #define ENVELOPE_SUSTAIN        2
 #define ENVELOPE_RELEASE        3
 
+// Interpolation of fine tuning values
 void CalculateVeryFineTunes()
 {
     u8 i, j;
@@ -68,14 +69,10 @@ void CalculateVeryFineTunes()
     {
         j = i >> 3;
         if ((i & 0x07) == 0)
-        {
             VeryFineTunes[i] = FineTunes[j];
-        }
         else
-        {
-            // interpolation (linear)
+            // linear interpolation
             VeryFineTunes[i] = FineTunes[j] + (((FineTunes[j + 1] - FineTunes[j]) * (i & 0x07)) >> 3);
-        }
     }
 }
 
@@ -120,36 +117,6 @@ u8 FindClosestNoteToAmigaPeriod(u16 period)        // note from 0 to 95
     else
         return (note - 1);
 }
-
-/*
- void CalculateRealPanningArray (u8 halfvalue)           // halfvalue = 0..128
- {
- u8 i,j,k;
-
- // resets values
- for (i=0;i<=128;i++)
- RealPanning [i] = 0xff;
-
- // set start values
- RealPanning [0]     = 0;
- RealPanning [128] = 128;
- RealPanning [64]    = halfvalue;
-
- for (j=5;j>0;j--)
- {
-
- halfvalue >>= 1;        // half of halfvalue
- k = (0x01 << j);
-
- for (i=k;i<128;i=i+k)
- {
- if (RealPanning[i]==0xff)
- RealPanning[i]=RealPanning[i-k] + halfvalue;
-
- }
- }
- }
- */
 
 void XM7_lowlevel_stopSound(u8 channel)
 {
@@ -218,14 +185,14 @@ void XM7_lowlevel_setVolume(u8 channel, u8 vol)
 {
     // use channels starting from last!
     channel = 15 - channel;
-    SCHANNEL_VOL (channel) = (vol & 0x7f);
+    SCHANNEL_VOL(channel) = (vol & 0x7f);
 }
 
 void XM7_lowlevel_setPanning(u8 channel, u8 pan)
 {
     // use channels starting from last!
     channel = 15 - channel;
-    SCHANNEL_PAN (channel) = (pan & 0x7f);
+    SCHANNEL_PAN(channel) = (pan & 0x7f);
 }
 
 void XM7_lowlevel_setVolumeandPanning(u8 channel, u8 vol, u8 pan)
@@ -260,16 +227,23 @@ void XM7_lowlevel_changeSample(const void *data, u32 looplength, u32 loopstart, 
 
 void SetTimerSpeedBPM(u8 BPM)
 {
-    // calculate the main timer freq
-    // - the freq is 33.513.982 Hz, when prescaler is F/1024 then it's 32.728,5 Hz (circa)
-    // = 1.963.710 clicks/minute , then divided by 6 because there are 6 ticks/line
-    //   then divided by 4 because BPM is on 4/4th,
+    // Set the Timer1 counter reset (which triggers the callback).
+    // The CPU is clocked at 33.513.982 Hz, but the timer is set with a prescaler of F/1024,
+    // so it counts cycles at 32.728,5 Hz (32kHz is enough for audio playback).
 
-    // set the timer
+    // In 1 minute that corresponds to 1963710 timer counts.
+    // This value is then divided by 6 because there are 6 ticks/line (hard-coded tempo?),
+    // then the value is divided by 4 because BPM is on 4/4th => (division by 24).
+
+    // This is the number of timer counts necessary to invoke the timer callback
+    // in order to play the song at specified tempo and BPM.
+
     u16 timer = 1963710 / (BPM * 24);
+
+    // Set the timer
     TIMER1_DATA = -timer;
 
-    // start/restart it!
+    // Start / restart
     TIMER1_CR &= ~TIMER_ENABLE;
     TIMER1_CR |= TIMER_ENABLE;
 }
@@ -1016,15 +990,15 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
             switch (tmpvalue)
             {
                 case 0:
-                    resvalue = 0;
+                    resvalue = 0;  // base note
                     break;
 
                 case 1:
-                    resvalue = effpar & 0x0f;
+                    resvalue = effpar & 0x0f;  // least significant nibble (first arpeggio note offset)
                     break;
 
                 case 2:
-                    resvalue = effpar >> 4;
+                    resvalue = effpar >> 4;  // most significant nibble (second arpeggio note offset)
                     break;
             }
             break;
@@ -1376,7 +1350,7 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
                 else if ((effpar != 0x00) && (effpar >= 0x20))
                 {
                     // values 20 – FF    :set the BPM
-#ifdef ALLOW_BPM_FX
+#ifndef ALLOW_BPM_FX
                     module->CurrentBPM = effpar;
                     SetTimerSpeedBPM(effpar);
 #endif

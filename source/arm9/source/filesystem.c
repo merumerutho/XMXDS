@@ -6,7 +6,6 @@
 #include "libXMX.h"
 #include "screens.h"
 
-//#include "../../arm7/source/libxm7.h"
 
 void XM7_FS_displayHeader()
 {
@@ -28,10 +27,10 @@ u16 getFileCount(DIR *folder)
     return counter;
 }
 
-void strcpy_cut(char *dest, char *src, u8 len, bool fillWSpace)
+void my_snprintf(char *dest, char *src, u8 len, bool fillWSpace)
 {
     u8 c;
-    // Regular string copy up to declared length
+    // Regular char copy up to declared length
     for (c = 0; c < len; c++)
     {
         if (src[c] == '\0') break;
@@ -82,7 +81,7 @@ void listFolderOnPosition(DIR *folder, u16 pPosition, u16 fileCount)
         char *d = (dirContent->d_type == TYPE_FOLDER) ? dir : "   ";
 
         // File name is cut to fit in 20 chars
-        strcpy_cut(filename, dirContent->d_name, 20, TRUE);
+        my_snprintf(filename, dirContent->d_name, 20, TRUE);
 
         consoleSelect(&bottom);
         // Print filename
@@ -273,7 +272,8 @@ u8 XM7_FS_selectModule(char *folderPath)
                     if (deckInfo.modManager != NULL)
                     {
                         // Stop if playing
-                        if (deckInfo.modManager->State == XM7_STATE_PLAYING) play_stop(&deckInfo);
+                        if (deckInfo.modManager->State == XM7_STATE_PLAYING)
+                            play_stop();
                         // Unload module
                         XMX_UnloadXM();
                     }
@@ -286,7 +286,7 @@ u8 XM7_FS_selectModule(char *folderPath)
                     // MODULE NAME
                     if (deckInfo.xmData != NULL)
                     {
-                        strcpy_cut(deckInfo.modManager->ModuleName, selection->d_name, 16, FALSE);
+                        my_snprintf(deckInfo.modManager->ModuleName, selection->d_name, 16, FALSE);
                         closedir(folder);
                         return 0; // Loaded successfully
                     }
