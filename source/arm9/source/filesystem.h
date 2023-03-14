@@ -19,6 +19,6 @@
 
 bool XM7_FS_init();
 u8 XM7_FS_selectModule(char *folderPath);
-void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type);
+void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath);
 
 #endif /* ARM9_SOURCE_FILESYSTEM_H_ */

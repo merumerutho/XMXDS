@@ -402,6 +402,9 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position);
 void XM7_StopModule(XM7_ModuleManager_Type *module);
 void XM7_PauseModule(XM7_ModuleManager_Type *module);
 
+// Timer handler function is exposed to allow wrappers
+void XM7_Timer1Handler(void);
+
 void SetTimerSpeedBPM(u8 BPM);
 
 // ARM9 functions (... well, you can use them even on ARM7 if you want...)

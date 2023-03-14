@@ -5,9 +5,6 @@
 
 #include "libxm7.h"
 
-#include "arm7_fifo.h"
-#include "tempo.h"
-
 // Modules handled by the library
 XM7_ModuleManager_Type *XM7_Module;
 
@@ -1822,7 +1819,7 @@ void ChangeSample(XM7_ModuleManager_Type *module, u8 chn)
         XM7_lowlevel_changeSample(&module->Silence, 4, 0, chn, 0);
 }
 
-void Timer1Handler(void)
+void XM7_Timer1Handler(void)
 {
     // this gets called each time Timer1 'overflows'
     XM7_SingleNoteArray_Type *CurrNoteLine;
@@ -1867,9 +1864,6 @@ void Timer1Handler(void)
 
     XM7_ModuleManager_Type *module = XM7_Module;
 
-    // Execute stuff in the FIFO queue
-    while (fifoCheckValue32(FIFO_GLOBAL_SETTINGS))
-        arm7_GlobalSettingsFIFOHandler(fifoGetValue32(FIFO_GLOBAL_SETTINGS), NULL);
 
     if (module == NULL || module->State != XM7_STATE_PLAYING) return;
 
@@ -2341,10 +2335,6 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
 
     // Prepare for playback, set everything to default values ...
 
-    // re-set the Module tempo & bpm & global volume
-    module->CurrentBPM = arm7_globalBpm;
-    module->CurrentTempo = arm7_globalTempo;
-
     // re-set the Module position
     module->CurrentSongPosition = (position < module->ModuleLength) ? position : 0;
     module->CurrentPatternNumber = module->PatternOrder[module->CurrentSongPosition];
@@ -2415,28 +2405,21 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
     // the silence sample
     module->Silence = 0x00000000;
 
-    {
-        // Set IRQ for Timer1
-        irqSet(IRQ_TIMER1, Timer1Handler);
-        irqEnable(IRQ_TIMER1);
+    // Set IRQ for Timer1
+    irqSet(IRQ_TIMER1, XM7_Timer1Handler);
+    irqEnable(IRQ_TIMER1);
 
-        // Set Timer divider and BPM
-        TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-        SetTimerSpeedBPM(arm7_globalBpm);
+    // Set Timer divider and BPM
+    TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
 
-        // Module has to start playing already
-        module->State = XM7_STATE_PLAYING;
-    }
+    // Module can start playing
+    module->State = XM7_STATE_PLAYING;
 
-    fifoSendValue32(FIFO_USER_08, 0); // just to trigger callback
+    return;
 }
 
 void XM7_PlayModule(XM7_ModuleManager_Type *module)
 {
-    // Execute stuff in the FIFO queue (be sure to get CurrentSongPosition information
-    while (fifoCheckValue32(FIFO_GLOBAL_SETTINGS))
-        arm7_GlobalSettingsFIFOHandler(fifoGetValue32(FIFO_GLOBAL_SETTINGS), NULL);
-    module->CurrentSongPosition = arm7_globalHotCuePosition;
     XM7_PlayModuleFromPos(module, module->CurrentSongPosition);
 }
 

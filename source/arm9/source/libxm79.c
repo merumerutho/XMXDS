@@ -4,10 +4,8 @@
 #include <stddef.h>
 
 #include <stdio.h>
-#include "libXMX.h"
 
 #include "../../arm7/source/libxm7.h"
-#include "arm9_fifo.h"
 
 // MOD octave 0 difference
 #define AMIGABASEOCTAVE 2
@@ -713,18 +711,6 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     // Set to false by default
     Module->bGotoHotCue = FALSE;
 
-    // Set current bpm/tempo and hot cue position
-    arm9_globalBpm = Module->DefaultBPM;
-    arm9_globalTempo = Module->DefaultTempo;
-    arm9_globalHotCuePosition = Module->CurrentSongPosition;
-
-    iprintf("Done.");
-    while (1)
-    {
-        scanKeys();
-        if (keysDown()) break;
-    }
-
     // end OK!
     return (0);
 }
@@ -756,8 +742,6 @@ void XM7_UnloadXM(XM7_ModuleManager_Type *Module)
         free(Module->Pattern[i]);
 
     Module->State = XM7_STATE_EMPTY;
-    // Reset hot cue position to 0
-    arm9_globalHotCuePosition = 0;
 }
 
 void XM7_SetPanningStyle(XM7_ModuleManager_Type *Module, u8 style, u8 displacement)

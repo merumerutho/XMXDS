@@ -6,6 +6,7 @@
 #include "libXMX.h"
 #include "screens.h"
 
+#include "arm9_fifo.h"
 
 void XM7_FS_displayHeader()
 {
@@ -274,15 +275,18 @@ u8 XM7_FS_selectModule(char *folderPath)
                         // Stop if playing
                         if (deckInfo.modManager->State == XM7_STATE_PLAYING)
                             play_stop();
-                        // Unload module
-                        XMX_UnloadXM();
+                        // Unload module TODO: (this must be moved to a dedicated function)
+                        {
+                            XMX_UnloadXM();
+                            // Reset Hot cue position to 0
+                            arm9_globalHotCuePosition = 0;
+                        }
                     }
                     deckInfo.modManager = malloc(sizeof(XM7_ModuleManager_Type));
 
                     // LOADING MODULE
                     deckInfo.xmData = (XM7_XMModuleHeader_Type*)
-                                            XM7_FS_loadModule(deckInfo.modManager, filepath,
-                                                              FS_TYPE_XM);
+                                            XM7_FS_loadModule(deckInfo.modManager, filepath);
                     // MODULE NAME
                     if (deckInfo.xmData != NULL)
                     {
@@ -306,7 +310,7 @@ u8 XM7_FS_selectModule(char *folderPath)
     return 3; // should never happen
 }
 
-void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type)
+void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath)
 {
     FILE *moduleFile = fopen(filepath, "rb");
     u16 ret;
@@ -330,13 +334,26 @@ void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath, u8 type)
     // Load module
     if (size > 0)
     {
-        if (type == FS_TYPE_XM)
+        // TODO: this must be moved to a function somewhere else
         {
             ret = XM7_LoadXM(pMod, modHeader);
             if (ret > 0) return NULL;
+
+            iprintf("Done.");
+            while (1)
+            {
+                scanKeys();
+                if (keysDown()) break;
+            }
+
+            // Update bpm, tempo, hotcuepos (no longer done inside XM7_LoadXM)
+            arm9_globalBpm = pMod->DefaultBPM;
+            arm9_globalTempo = pMod->DefaultTempo;
+            arm9_globalHotCuePosition = pMod->CurrentSongPosition;
+
+            // Ensure data gets written to main RAM (leave no data in cache)
+            DC_FlushAll();
         }
-        // Ensure data gets written to main RAM (leave no data in cache)
-        DC_FlushAll();
     }
 
     return modHeader;
