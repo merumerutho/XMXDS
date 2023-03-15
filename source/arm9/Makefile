@@ -7,6 +7,9 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
+LIBXM7_ARM7 := $(CURDIR)/../../lib/libxm7/arm7
+LIBXM7_ARM9 := $(CURDIR)/../../lib/libxm7/arm9
+
 #---------------------------------------------------------------------------------
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
@@ -16,7 +19,7 @@ include $(DEVKITARM)/ds_rules
 #---------------------------------------------------------------------------------
 BUILD		:=	build
 SOURCES		:=	source  
-INCLUDES	:=	include
+INCLUDES	:=	include $(LIBXM7_ARM7)/include
 SPRITES		:=  assets
 
 #---------------------------------------------------------------------------------
@@ -39,13 +42,13 @@ LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-lfilesystem -lfat -lnds9 
+LIBS	:=	-lfilesystem -lfat -lnds9 -lxm79
  
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:=	$(LIBNDS)
+LIBDIRS	:=	$(LIBNDS) $(LIBXM7_ARM9) $(LIBXM7_ARM7)
  
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional

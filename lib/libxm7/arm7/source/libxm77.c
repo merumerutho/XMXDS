@@ -3,7 +3,7 @@
 #include <stddef.h>
 //#include <interrupts.h>
 
-#include "libxm7.h"
+#include "../include/libxm7.h"
 
 // Modules handled by the library
 XM7_ModuleManager_Type *XM7_Module;

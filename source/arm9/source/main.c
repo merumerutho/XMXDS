@@ -11,7 +11,7 @@
 #include "screens.h"
 
 // ARMv7 INCLUDES
-#include "../../arm7/source/libxm7.h"
+#include "libxm7.h"
 #include "../../arm7/source/tempo.h"
 #include "../../arm7/source/arm7_fifo.h"
 

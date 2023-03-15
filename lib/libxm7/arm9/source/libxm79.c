@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#include "../../arm7/source/libxm7.h"
+#include "../../arm7/include/libxm7.h"
 
 // MOD octave 0 difference
 #define AMIGABASEOCTAVE 2

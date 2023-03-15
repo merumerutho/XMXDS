@@ -9,7 +9,7 @@
 #include "screens.h"
 
 #include "libXMX.h"
-#include "../../arm7/source/libxm7.h"
+#include "libxm7.h"
 
 void drawChannelStatus(u8 idx)
 {

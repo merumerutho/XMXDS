@@ -3,7 +3,7 @@
 
 #include <nds.h>
 
-#include "../../arm7/source/libxm7.h"
+#include "libxm7.h"
 #include "libXMX.h"
 
 // ---

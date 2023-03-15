@@ -7,8 +7,6 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
-LIBXM7_ARM7 := $(CURDIR)/../../lib/libxm7/arm7
-
 #---------------------------------------------------------------------------------
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
@@ -17,7 +15,7 @@ LIBXM7_ARM7 := $(CURDIR)/../../lib/libxm7/arm7
 # all directories are relative to this makefile
 #---------------------------------------------------------------------------------
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES	:=	source  
 INCLUDES	:=	include build
 DATA		:=
  
@@ -36,15 +34,16 @@ CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions -fno-rtti
 
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-specs=ds_arm7.specs -g $(ARCH) -Wl,--nmagic -Wl,-Map,$(notdir $*).map
+LDFLAGS	=	-specs=ds_arm7.specs -g $(ARCH) -Wl,-Map,$(notdir $*).map
 
-LIBS	:=	-lnds7 -lxm77
+#LIBS	:=	-ldswifi7 -lnds7
+LIBS	:=	-lnds7
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:=	$(LIBNDS) $(LIBXM7_ARM7)
+LIBDIRS	:=	$(LIBNDS)
  
   
 #---------------------------------------------------------------------------------
@@ -53,8 +52,8 @@ LIBDIRS	:=	$(LIBNDS) $(LIBXM7_ARM7)
 #---------------------------------------------------------------------------------
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
- 
-export ARM7ELF	:=	$(CURDIR)/$(TARGET).elf
+
+export LIB	:=	$(CURDIR)/lib
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
@@ -63,6 +62,8 @@ CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+
+export AFILES   :=  $(CFILES:.c=.a)
  
 export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
 			$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
@@ -92,13 +93,12 @@ endif
 #---------------------------------------------------------------------------------
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
  
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) *.elf
- 
+	@rm -fr $(BUILD) $(LIB)
  
 #---------------------------------------------------------------------------------
 else
@@ -108,9 +108,9 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-$(ARM7ELF)	:	$(OFILES)
-	@echo linking $(notdir $@)
-	@$(LD)  $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) -o $@
+$(LIB)	:	$(OFILES)
+	@[ -d $@ ] || mkdir -p $@
+	@$(AR) -rc $@/$(AFILES) $(OFILES)
 
 
 #---------------------------------------------------------------------------------

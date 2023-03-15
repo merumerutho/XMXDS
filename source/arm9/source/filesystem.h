@@ -7,7 +7,7 @@
 
 #include "libXMX.h"
 
-#include "../../arm7/source/libxm7.h"
+#include "libxm7.h"
 
 #define ENTRIES_PER_SCREEN  16
 

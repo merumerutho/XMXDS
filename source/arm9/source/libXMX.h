@@ -2,7 +2,7 @@
 #define ARM9_SOURCE_LIBXMX_H_
 
 #include <nds.h>
-#include "../../arm7/source/libxm7.h"
+#include "libxm7.h"
 
 typedef struct
 {
