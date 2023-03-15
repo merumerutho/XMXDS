@@ -104,7 +104,7 @@ int main(int argc, char **argv)
     char folderPath[255] = DEFAULT_ROOT_PATH;
 
     // Install the debugging (for now, only way to print stuff from ARMv7)
-    fifoSetValue32Handler(FIFO_USER_08, arm9_DebugFIFOHandler, NULL);
+    fifoSetValue32Handler(FIFO_XMX, arm9_DebugFIFOHandler, NULL);
 
     // turn on master sound
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);

@@ -6,6 +6,7 @@
 
 // FIFO 07 for libxm7
 #define FIFO_XM7    (FIFO_USER_07)
+#define FIFO_XMX    (FIFO_USER_08)
 
 #define SCREEN_WIDTH    256
 #define SCREEN_HEIGHT   192

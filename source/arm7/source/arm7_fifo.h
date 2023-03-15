@@ -4,6 +4,7 @@
 #include <nds.h>
 
 #define CMD_APPLY_GLOBAL_SETTINGS   0
+#define FIFO_XMX                    (FIFO_USER_08)
 
 // Inter-processor communication packet (address sent via FIFO queue)
 typedef struct

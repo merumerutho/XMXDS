@@ -17,5 +17,5 @@ void arm7_GlobalSettingsFIFOHandler(u32 p, void *userdata)
         setHotCuePos(((FifoMsg*) (p))->data[2]);
     }
 
-    fifoSendValue32(FIFO_USER_08, 0); // ACK
+    fifoSendValue32(FIFO_XMX, 0); // ACK
 }

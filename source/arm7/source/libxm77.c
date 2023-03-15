@@ -2298,7 +2298,6 @@ void XM7_Timer1Handler(void)
                 // now check if pattern is over (or should be breaked!)
                 if (BreakThisPattern || ((module->CurrentLine) >= (module->PatternLength[module->CurrentPatternNumber])))
                 {
-                    fifoSendValue32(FIFO_USER_08, 0); // just to trigger callback
                     // next pattern!
                     module->CurrentLine = NextPatternStartLine; // should be 0 when not using Dxx
 
@@ -2409,7 +2408,7 @@ void XM7_PlayModuleFromPos(XM7_ModuleManager_Type *module, u8 position)
     irqSet(IRQ_TIMER1, XM7_Timer1Handler);
     irqEnable(IRQ_TIMER1);
 
-    // Set Timer divider and BPM
+    // Set Timer divider to 1024
     TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
 
     // Module can start playing

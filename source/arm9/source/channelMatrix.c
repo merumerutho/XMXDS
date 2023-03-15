@@ -45,6 +45,7 @@ void drawChannelMatrix()
         for (u8 j = 0; j < 4; j++)
             iprintf("\x1b[%d;%dHCh.%d", 1 + i * 6, 2 + j * 8, i * 4 + j + 1);
 
+    // Draw status (muted/unmuted)
     for (u8 i = 0; i < 16; i++)
         drawChannelStatus(i);
 }
@@ -57,6 +58,7 @@ int8 handleChannelMute(touchPosition *touchPos)
     y = (touchPos->rawy - Y_MIN) * Y_NORM;
 
     u8 idx = 0;
+    // Get idx from 0 to 15 based on x and y
     idx = (u8) (x * 4) + ((int) (y * 4) % 4) * 4;
 
     deckInfo.modManager->ChannelMute[idx] = !(deckInfo.modManager->ChannelMute[idx]);
