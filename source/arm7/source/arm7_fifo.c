@@ -15,6 +15,7 @@ void arm7_GlobalSettingsFIFOHandler(u32 p, void *userdata)
         setGlobalBpm(((FifoMsg*) (p))->data[0]);
         setGlobalTempo(((FifoMsg*) (p))->data[1]);
         setHotCuePos(((FifoMsg*) (p))->data[2]);
+        XM7_Module->CurrentTick += ((FifoMsg*) (p))->data[3];
     }
 
     fifoSendValue32(FIFO_XMX, 0); // ACK
