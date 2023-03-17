@@ -8,7 +8,7 @@
 
 #include "arm9_fifo.h"
 
-void XM7_FS_displayHeader()
+void XMX_FileSystem_displayHeader()
 {
     consoleSelect(&bottom);
     consoleClear();
@@ -183,7 +183,7 @@ void composeFileName(char *filepath, char *folder, char *filename)
     iprintf("%s\n", filepath);
 }
 
-u8 XM7_FS_selectModule(char *folderPath)
+u8 XMX_FileSystem_selectModule(char *folderPath)
 {
     DIR *folder = opendir(folderPath);
     u16 fileCount;
@@ -191,7 +191,7 @@ u8 XM7_FS_selectModule(char *folderPath)
     bool bSelectingModule = TRUE;
     char filepath[255] = "";
 
-    XM7_FS_displayHeader();
+    XMX_FileSystem_displayHeader();
 
     fileCount = getFileCount(folder);
     listFolderOnPosition(folder, pPosition, fileCount);
@@ -243,7 +243,7 @@ u8 XM7_FS_selectModule(char *folderPath)
                 {
                     navigateBackwards(folder, folderPath);
                     pPosition = 0;
-                    XM7_FS_displayHeader();
+                    XMX_FileSystem_displayHeader();
                     fileCount = getFileCount(folder);
                     listFolderOnPosition(folder, pPosition, fileCount);
                 }
@@ -251,7 +251,7 @@ u8 XM7_FS_selectModule(char *folderPath)
                 {
                     navigateToFolder(folder, folderPath, selection->d_name);
                     pPosition = 0;
-                    XM7_FS_displayHeader();
+                    XMX_FileSystem_displayHeader();
                     fileCount = getFileCount(folder);
                     listFolderOnPosition(folder, pPosition, fileCount);
                 }
@@ -286,7 +286,7 @@ u8 XM7_FS_selectModule(char *folderPath)
 
                     // LOADING MODULE
                     deckInfo.xmData = (XM7_XMModuleHeader_Type*)
-                                            XM7_FS_loadModule(deckInfo.modManager, filepath);
+                                            XMX_FileSystem_loadModule(deckInfo.modManager, filepath);
                     // MODULE NAME
                     if (deckInfo.xmData != NULL)
                     {
@@ -310,7 +310,7 @@ u8 XM7_FS_selectModule(char *folderPath)
     return 3; // should never happen
 }
 
-void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath)
+void* XMX_FileSystem_loadModule(XM7_ModuleManager_Type *pMod, char *filepath)
 {
     FILE *moduleFile = fopen(filepath, "rb");
     u16 ret;
@@ -359,7 +359,7 @@ void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath)
     return modHeader;
 }
 
-bool XM7_FS_init()
+bool XMX_FileSystem_init()
 {
     // Load nitroFS file system
     return nitroFSInit(NULL);

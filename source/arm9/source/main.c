@@ -110,7 +110,7 @@ int main(int argc, char **argv)
     // turn on master sound
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);
 
-    XM7_FS_init();
+    XMX_FileSystem_init();
     drawChannelMatrix();
 
     bool inputTouching = false;
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
         // SELECT MODULE
         if (keysDown() & KEY_SELECT)
         {
-            XM7_FS_selectModule((char*) folderPath);
+            XMX_FileSystem_selectModule((char*) folderPath);
             drawChannelMatrix();
             updateArmV7(0);
         }

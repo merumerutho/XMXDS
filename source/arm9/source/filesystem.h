@@ -17,8 +17,8 @@
 #define TYPE_FOLDER         4
 #define TYPE_FILE           8
 
-bool XM7_FS_init();
-u8 XM7_FS_selectModule(char *folderPath);
-void* XM7_FS_loadModule(XM7_ModuleManager_Type *pMod, char *filepath);
+bool XMX_FileSystem_init();
+u8 XMX_FileSystem_selectModule(char *folderPath);
+void* XMX_FileSystem_loadModule(XM7_ModuleManager_Type *pMod, char *filepath);
 
 #endif /* ARM9_SOURCE_FILESYSTEM_H_ */
