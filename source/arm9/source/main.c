@@ -41,7 +41,7 @@ void updateArmV7(int32_t nudge)
     fifoGlobalMsg->data[0] = arm9_globalBpm;
     fifoGlobalMsg->data[1] = arm9_globalTempo;
     fifoGlobalMsg->data[2] = arm9_globalHotCuePosition;
-    fifoGlobalMsg->data[3] = arg;
+    fifoGlobalMsg->data[3] = nudge;
     fifoGlobalMsg->command = CMD_APPLY_GLOBAL_SETTINGS;
     IpcSend(FIFO_GLOBAL_SETTINGS);
 }
@@ -113,10 +113,11 @@ int main(int argc, char **argv)
     XM7_FS_init();
     drawChannelMatrix();
 
-    bool touchRelease = true;
+    bool inputTouching = false;
 
     while (TRUE)
     {
+        int nudge = 0;
         drawTitle(0);
         scanKeys();
 
@@ -126,69 +127,48 @@ int main(int argc, char **argv)
             // MUTE / UNMUTE
             if (keysHeld() & KEY_TOUCH)
             {
-                if (touchRelease)
+                if (!inputTouching)
                 {
                     touchRead(&touchPos);
                     handleChannelMute(&touchPos);
-                    touchRelease = false;
-                    updateArmV7(0);
+                    inputTouching = true;
                 }
             }
             else
-                touchRelease = true;
+                inputTouching = false;
 
             // CUE PLAY
             if (keysDown() & KEY_A)
-            {
-                // If playing, stop, otherwise play.
-                {
                     play_stop();
-                    updateArmV7(0);  // This can be used to 'notify' armv7 of changes
-                }
-            }
 
             // TRANSPOSE DOWN
             if (keysDown() & KEY_L)
-            {
                 MODULE->Transpose--;
-                updateArmV7(0);  // This can be used to 'notify' armv7 of changes
-            }
 
             // TRANSPOSE UP
             if (keysDown() & KEY_R)
-            {
                 MODULE->Transpose++;
-                updateArmV7(0);  // This can be used to 'notify' armv7 of changes
-            }
 
             // SET HOT CUE
             if (keysDown() & KEY_B)
-            {
                 arm9_globalHotCuePosition = MODULE->CurrentSongPosition;
-                updateArmV7(0);  // This can be used to 'notify' armv7 of changes
-            }
+
 
             // CUE MOVE
             if (keysHeld() & KEY_B)
             {
                 if (keysDown() & KEY_LEFT)
-                {
-                    if (arm9_globalHotCuePosition > 0) arm9_globalHotCuePosition--;
-                    updateArmV7(0);
-                }
+                    if (arm9_globalHotCuePosition > 0)
+                        arm9_globalHotCuePosition--;
+
                 if (keysDown() & KEY_RIGHT)
-                {
-                    if (arm9_globalHotCuePosition < MODULE->ModuleLength - 1) arm9_globalHotCuePosition++;
-                    updateArmV7(0);
-                }
+                    if (arm9_globalHotCuePosition < MODULE->ModuleLength - 1)
+                        arm9_globalHotCuePosition++;
             }
 
             // LOOP MODE
             if (keysDown() & KEY_X)
-            {
                 MODULE->LoopMode = !(MODULE->LoopMode);
-                updateArmV7(0);  // This can be used to update arm7 of some changes
-            }
 
             // GO TO HOT CUEd PATTERN AT END OF CURRENT PATTERN
             if (keysDown() & KEY_Y)
@@ -197,34 +177,27 @@ int main(int argc, char **argv)
                 // It will be evaluated only at end of pattern by design
                 MODULE->bGotoHotCue = TRUE;
                 MODULE->CurrentSongPosition = arm9_globalHotCuePosition;
-                updateArmV7(0);  // This can be used to update arm7 of some changes
             }
 
             // BPM INCREASE
             if (keysDown() & KEY_UP)
-            {
                 arm9_globalBpm++;
-                updateArmV7(0);
-            }
 
             // BPM DECREASE
             if (keysDown() & KEY_DOWN)
-            {
                 arm9_globalBpm--;
-                updateArmV7(0);
-            }
 
             // NUDGE FORWARD
             if ((keysDown() & KEY_RIGHT) && !(keysHeld() & KEY_B))
-            {
-                updateArmV7(1);
-            }
+                nudge = 1;
+
 
             // NUDGE BACKWARD
             if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_B))
-            {
-                updateArmV7(-1);
-            }
+                nudge = -1;
+
+
+            updateArmV7(nudge);  // This can be used to 'notify' armv7 of changes
         }
 
         // SELECT MODULE
