@@ -39,7 +39,7 @@ int main()
 
     installSoundFIFO();
 
-    // Initialize XM7
+    // Initialize XMX
     XMX_Initialize();
 
     // Install the handler function to the FIFO_XM7 queue

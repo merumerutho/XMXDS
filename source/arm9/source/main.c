@@ -90,27 +90,29 @@ void drawTitle(u32 v)
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+    touchPosition touchPos;
+    char folderPath[255] = DEFAULT_ROOT_PATH;
+
     videoSetMode(MODE_0_2D);
     videoSetModeSub(MODE_0_2D);
 
-    consoleInit(&top, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, true, true);
-    consoleInit(&bottom, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, false, true);
-
-    drawIntro();
-
     IpcInit();
-
-    touchPosition touchPos;
-
-    char folderPath[255] = DEFAULT_ROOT_PATH;
 
     // Install the debugging (for now, only way to print stuff from ARMv7)
     fifoSetValue32Handler(FIFO_XMX, arm9_DebugFIFOHandler, NULL);
 
+    // Initialize two consoles (top and bottom)
+    consoleInit(&top, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, true, true);
+    consoleInit(&bottom, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, false, true);
+    drawIntro();
+
     // turn on master sound
     fifoSendValue32(FIFO_SOUND, SOUND_MASTER_ENABLE);
 
+    // Initialize filesystem
     XMX_FileSystem_init();
+
+    // Draw bottom screen
     drawChannelMatrix();
 
     bool inputTouching = false;
@@ -153,7 +155,6 @@ int main(int argc, char **argv)
             if (keysDown() & KEY_B)
                 arm9_globalHotCuePosition = MODULE->CurrentSongPosition;
 
-
             // CUE MOVE
             if (keysHeld() & KEY_B)
             {
@@ -191,13 +192,11 @@ int main(int argc, char **argv)
             if ((keysDown() & KEY_RIGHT) && !(keysHeld() & KEY_B))
                 nudge = 1;
 
-
             // NUDGE BACKWARD
             if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_B))
                 nudge = -1;
 
-
-            updateArmV7(nudge);  // This can be used to 'notify' armv7 of changes
+            updateArmV7(nudge);  // This is used to pass changes to armv7
         }
 
         // SELECT MODULE
