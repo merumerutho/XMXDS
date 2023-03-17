@@ -7,8 +7,8 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
-LIBXM7_ARM7 := $(CURDIR)/../../lib/libxm7/arm7
-LIBXM7_ARM9 := $(CURDIR)/../../lib/libxm7/arm9
+LIBXM7_ARM7 := $(CURDIR)/../lib/libxm7/arm7
+LIBXM7_ARM9 := $(CURDIR)/../lib/libxm7/arm9
 
 #---------------------------------------------------------------------------------
 # BUILD is the directory where object files & intermediate files will be placed

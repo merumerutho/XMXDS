@@ -203,7 +203,9 @@ int main(int argc, char **argv)
         if (keysDown() & KEY_SELECT)
         {
             XMX_FileSystem_selectModule((char*) folderPath);
+            // After function ends, re-draw bottom screen
             drawChannelMatrix();
+            // Update armv7
             updateArmV7(0);
         }
 
