@@ -1347,10 +1347,8 @@ u16 DecodeEffectsColumn(XM7_ModuleManager_Type *module, u8 chn, u8 effcmd, u8 ef
                 else if ((effpar != 0x00) && (effpar >= 0x20))
                 {
                     // values 20 – FF    :set the BPM
-#ifndef ALLOW_BPM_FX
                     module->CurrentBPM = effpar;
                     SetTimerSpeedBPM(effpar);
-#endif
                 }
             }
             break;

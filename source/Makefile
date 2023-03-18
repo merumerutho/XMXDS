@@ -22,12 +22,16 @@ NITRO_FILES	:= ./data
 
 include $(DEVKITARM)/ds_rules
 
-.PHONY: checkarm7 checkarm9 clean
+.PHONY: checklibxm7 checkarm7 checkarm9 clean
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-all: checkarm7 checkarm9 $(TARGET).nds
+all: checklibxm7 checkarm7 checkarm9 $(TARGET).nds
+
+#---------------------------------------------------------------------------------
+checklibxm7:
+	$(MAKE) -C lib/libxm7
 
 #---------------------------------------------------------------------------------
 checkarm7:
@@ -44,6 +48,10 @@ $(TARGET).nds	: $(NITRO_FILES) arm7/$(TARGET).elf arm9/$(TARGET).elf
 	$(_ADDFILES)
 
 #---------------------------------------------------------------------------------
+libxm7:
+	$(MAKE) -C lib/libxm7
+
+#---------------------------------------------------------------------------------
 arm7/$(TARGET).elf:
 	$(MAKE) -C arm7
 	
@@ -53,6 +61,7 @@ arm9/$(TARGET).elf:
 
 #---------------------------------------------------------------------------------
 clean:
+	$(MAKE) -C lib/libxm7 clean
 	$(MAKE) -C arm9 clean
 	$(MAKE) -C arm7 clean
 	rm -f ../release/$(TARGET).nds $(TARGET).arm7 $(TARGET).arm9

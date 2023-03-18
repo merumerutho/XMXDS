@@ -196,7 +196,8 @@ int main(int argc, char **argv)
             if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_B))
                 nudge = -1;
 
-            updateArmV7(nudge);  // This is used to pass changes to armv7
+            if (MODULE->State == XM7_STATE_PLAYING)
+                updateArmV7(nudge);  // This is used to pass changes to armv7
         }
 
         // SELECT MODULE
