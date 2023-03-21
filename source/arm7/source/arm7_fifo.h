@@ -3,16 +3,21 @@
 
 #include <nds.h>
 
-#define CMD_SET_GLOBAL_SETTINGS   0
-#define FIFO_XMX                    (FIFO_USER_08)
+#define CMD_ARM7_SET_PARAMS             0
+#define CMD_ARM9_UPDATE_BPM_TEMPO       64
 
-// Inter-processor communication packet (address sent via FIFO queue)
+#define FIFO_XMX                        (FIFO_USER_08)
+
+// Service Msg (address sent via FIFO queue)
 typedef struct
 {
     u8 command;
-    u32 data[16];
-} __attribute__ ((packed)) XMXServiceMsg;
+    u32 data[4];
+} XMXServiceMsg;
 
+extern XMXServiceMsg* ServiceMsg7to9;
+
+void arm7_serviceMsgInit();
 void arm7_XMXServiceHandler(u32 p, void *userdata);
 
 #endif /* ARM7_SOURCE_ARM7_FIFO_H_ */

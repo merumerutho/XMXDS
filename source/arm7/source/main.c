@@ -1,6 +1,7 @@
 #include <nds.h>
 
 #include "XMXPlayer.h"
+#include "arm7_fifo.h"
 
 // "reserve" FIFO Channel "FIFO_USER_07"
 #define FIFO_XM7    (FIFO_USER_07)
@@ -38,6 +39,9 @@ int main()
     SetYtrigger(80);
 
     installSoundFIFO();
+
+    // Initialize Service Msg
+    arm7_serviceMsgInit();
 
     // Initialize XMX
     XMX_Initialize();

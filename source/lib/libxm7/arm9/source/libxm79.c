@@ -261,6 +261,10 @@ u16 XM7_LoadXM(XM7_ModuleManager_Type *Module, XM7_XMModuleHeader_Type *XMModule
     Module->DefaultTempo = XMModule->DefaultTempo;
     Module->DefaultBPM = XMModule->DefaultBPM;
 
+    // Set current to defaults
+    Module->CurrentBPM = Module->DefaultBPM;
+    Module->CurrentTempo = Module->DefaultTempo;
+
     // By default un-mute all channels available
     for (u8 i = 0; i < Module->NumberofChannels; i++)
         Module->ChannelMute[i] = 0;

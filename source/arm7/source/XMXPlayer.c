@@ -55,8 +55,6 @@ void XMXPlayer_arm7_StartPlaying()
     
     // Re-calculate timer speed
     SetTimerSpeedBPM(arm7_globalBpm);
-    // This may be used to trigger a callback in arm9
-    fifoSendValue32(FIFO_XMX, 0);
 }
 
 //---------------------------------------------------------------------------------

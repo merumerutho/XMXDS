@@ -11,14 +11,16 @@
 #include "../../arm7/source/arm7_fifo.h"
 #include "../../arm7/source/arm7_defines.h"
 
-extern XMXServiceMsg* fifoGlobalMsg;
+extern XMXServiceMsg* ServiceMsg9to7;
 extern vu8 arm9_globalBpm;
 extern vu8 arm9_globalTempo;
 extern vu8 arm9_globalHotCuePosition;
 
-void IpcInit();
-void IpcSend(u8 fifo);
-void sendBpmTempo(u8 bpm, u8 tempo);
+void arm9_serviceMsgInit();
+void serviceSend(u8 fifo);
+void serviceUpdate(int8 nudge);
+
+void arm9_XMXServiceHandler(u32 p, void *userdata);
 
 
 #endif /* ARM9_SOURCE_ARM9_FIFO_H_ */

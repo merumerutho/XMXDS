@@ -5,18 +5,23 @@
 #include "libxm7.h"
 #include "malloc.h"
 
+XMXServiceMsg* ServiceMsg7to9 = NULL;
+
+void arm7_serviceMsgInit()
+{
+    ServiceMsg7to9 = malloc(sizeof(XMXServiceMsg));
+}
+
 void arm7_XMXServiceHandler(u32 p, void *userdata)
 {
     // Extract data from IPC packet
     u8 command = ((XMXServiceMsg*) (p))->command;
+    u32* data = ((XMXServiceMsg*) (p))->data;
 
-    if (command == CMD_SET_GLOBAL_SETTINGS)
+    if (command == CMD_ARM7_SET_PARAMS)
     {
-        setGlobalBpm(((XMXServiceMsg*) (p))->data[0]);
-        setGlobalTempo(((XMXServiceMsg*) (p))->data[1]);
-        setHotCuePos(((XMXServiceMsg*) (p))->data[2]);
-        XM7_Module->CurrentTick += ((XMXServiceMsg*) (p))->data[3];
+        setGlobalBpm(data[0]);
+        setHotCuePos(data[2]);
+        XM7_Module->CurrentTick += data[3];
     }
-
-    fifoSendValue32(FIFO_XMX, 0); // ACK
 }

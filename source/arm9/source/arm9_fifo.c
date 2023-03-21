@@ -6,28 +6,36 @@
  */
 #include "arm9_fifo.h"
 #include "arm9_defines.h"
+#include "screens.h"
 
 // Initialize fifo_msg
-XMXServiceMsg *fifoGlobalMsg = NULL;
+XMXServiceMsg* ServiceMsg9to7 = NULL;
 
 vu8 arm9_globalBpm = DEFAULT_BPM;
 vu8 arm9_globalTempo = DEFAULT_TEMPO;
 vu8 arm9_globalHotCuePosition = DEFAULT_CUEPOS;
 
-void IpcInit()
+void arm9_serviceMsgInit()
 {
-    fifoGlobalMsg = malloc(sizeof(XMXServiceMsg));
+    ServiceMsg9to7 = malloc(sizeof(XMXServiceMsg));
 }
 
-void IpcSend(u8 fifo)
+void serviceSend(u8 fifo)
 {
-    fifoSendValue32(fifo, (u32) fifoGlobalMsg);
+    fifoSendValue32(fifo, (u32) ServiceMsg9to7);
 }
 
-void sendBpmTempo(u8 bpm, u8 tempo)
+void serviceUpdate(int8 nudge)
 {
-    fifoGlobalMsg->data[0] = bpm;
-    fifoGlobalMsg->data[1] = tempo;
-    fifoGlobalMsg->command = CMD_SET_GLOBAL_SETTINGS;
-    IpcSend(FIFO_XMX);
+    ServiceMsg9to7->data[0] = arm9_globalBpm;
+    ServiceMsg9to7->data[1] = arm9_globalTempo;
+    ServiceMsg9to7->data[2] = arm9_globalHotCuePosition;
+    ServiceMsg9to7->data[3] = nudge;
+    ServiceMsg9to7->command = CMD_ARM7_SET_PARAMS;
+    serviceSend(FIFO_XMX);
+}
+
+void arm9_XMXServiceHandler(u32 p, void *userdata)
+{
+
 }
