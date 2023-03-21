@@ -3,6 +3,6 @@
 
 #include <nds.h>
 
-#define FIFO_GLOBAL_SETTINGS (FIFO_USER_01)
+#define FIFO_XMX (FIFO_USER_08)
 
 #endif /* ARM7_SOURCE_ARM7_DEFINES_H_ */

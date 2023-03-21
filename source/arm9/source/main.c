@@ -42,8 +42,8 @@ void updateArmV7(int32_t nudge)
     fifoGlobalMsg->data[1] = arm9_globalTempo;
     fifoGlobalMsg->data[2] = arm9_globalHotCuePosition;
     fifoGlobalMsg->data[3] = nudge;
-    fifoGlobalMsg->command = CMD_APPLY_GLOBAL_SETTINGS;
-    IpcSend(FIFO_GLOBAL_SETTINGS);
+    fifoGlobalMsg->command = CMD_SET_GLOBAL_SETTINGS;
+    IpcSend(FIFO_XMX);
 }
 
 void drawIntro()

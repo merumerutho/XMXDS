@@ -11,7 +11,7 @@
 #include "../../arm7/source/arm7_fifo.h"
 #include "../../arm7/source/arm7_defines.h"
 
-extern FifoMsg* fifoGlobalMsg;
+extern XMXServiceMsg* fifoGlobalMsg;
 extern vu8 arm9_globalBpm;
 extern vu8 arm9_globalTempo;
 extern vu8 arm9_globalHotCuePosition;
