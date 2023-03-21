@@ -104,6 +104,7 @@ int main(int argc, char **argv)
     while (TRUE)
     {
         bool forceUpdate = false;
+        bool bUsrInput = false;
         int nudge = 0;
         drawTitle();
         scanKeys();
@@ -199,7 +200,9 @@ int main(int argc, char **argv)
             if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_B))
                 nudge = -1;
 
-            if (MODULE->State == XM7_STATE_PLAYING || forceUpdate)
+            bUsrInput = (keysDown() != 0);
+
+            if ((MODULE->State == XM7_STATE_PLAYING && bUsrInput) || forceUpdate)
                 serviceUpdate(nudge);  // This is used to pass changes to armv7
         }
 
