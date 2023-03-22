@@ -6,11 +6,6 @@
 #define CMD_ARM7_SET_PARAMS             0
 #define CMD_ARM9_UPDATE_BPM_TEMPO       64
 
-#define DATA_IDX_BPM                    0
-#define DATA_IDX_TEMPO                  1
-#define DATA_IDX_HOTCUE                 2
-#define DATA_IDX_NUDGE                  3
-
 #define FIFO_XMX                        (FIFO_USER_08)
 
 // Service Msg (address sent via FIFO queue)

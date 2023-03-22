@@ -62,7 +62,7 @@ void drawTitle()
         iprintf("\x1b[5;1HBPM:\t\t\t%3d  Tempo:\t\t%2d", MODULE->CurrentBPM, MODULE->CurrentTempo);
         iprintf("\x1b[8;1HSong position:\t%03d/%03d", MODULE->CurrentSongPosition + 1, MODULE->ModuleLength);
         iprintf("\x1b[9;1HHotCue position:\t%03d/%03d", arm9_globalHotCuePosition + 1, MODULE->ModuleLength);
-        iprintf("\x1b[10;1HPtn. Loop:\t\t\t%s", MODULE->LoopMode ? "ENABLED " : "DISABLED");
+        iprintf("\x1b[10;1HPtn. Loop:\t\t\t%s", MODULE->LoopMode ? "YES" : "NO ");
 
         iprintf("\x1b[12;1HNote position:\t%03d/%03d", MODULE->CurrentLine, MODULE->PatternLength[MODULE->CurrentPatternNumber]);
 
@@ -103,10 +103,9 @@ int main(int argc, char **argv)
 
     while (TRUE)
     {
-        bool bForceUpdate = false;      // used to enforce update even if xm not playing
-        bool bUsrInput = false;         // used to send update if usr has input something
+        bool forceUpdate = false;
+        bool bUsrInput = false;
         int nudge = 0;
-
         drawTitle();
         scanKeys();
 
@@ -142,7 +141,7 @@ int main(int argc, char **argv)
             if (keysDown() & KEY_B)
             {
                 arm9_globalHotCuePosition = MODULE->CurrentSongPosition;
-                bForceUpdate = true;
+                forceUpdate = true;
             }
 
             // CUE MOVE
@@ -152,14 +151,14 @@ int main(int argc, char **argv)
                     if (arm9_globalHotCuePosition > 0)
                     {
                         arm9_globalHotCuePosition--;
-                        bForceUpdate = true;
+                        forceUpdate = true;
                     }
 
                 if (keysDown() & KEY_RIGHT)
                     if (arm9_globalHotCuePosition < MODULE->ModuleLength - 1)
                     {
                         arm9_globalHotCuePosition++;
-                        bForceUpdate = true;
+                        forceUpdate = true;
                     }
             }
 
@@ -167,7 +166,7 @@ int main(int argc, char **argv)
             if (keysDown() & KEY_X)
             {
                 MODULE->LoopMode = !(MODULE->LoopMode);
-                bForceUpdate = true;
+                forceUpdate = true;
             }
 
             // GO TO HOT CUED PATTERN AT END OF CURRENT PATTERN
@@ -183,14 +182,14 @@ int main(int argc, char **argv)
             if (keysDown() & KEY_UP)
             {
                 arm9_globalBpm++;
-                bForceUpdate = true;
+                forceUpdate = true;
             }
 
             // BPM DECREASE
             if (keysDown() & KEY_DOWN)
             {
                 arm9_globalBpm--;
-                bForceUpdate = true;
+                forceUpdate = true;
             }
 
             // NUDGE FORWARD
@@ -203,7 +202,7 @@ int main(int argc, char **argv)
 
             bUsrInput = (keysDown() != 0);
 
-            if ((MODULE->State == XM7_STATE_PLAYING && bUsrInput) || bForceUpdate)
+            if ((MODULE->State == XM7_STATE_PLAYING && bUsrInput) || forceUpdate)
                 serviceUpdate(nudge);  // This is used to pass changes to armv7
         }
 

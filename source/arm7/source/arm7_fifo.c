@@ -14,14 +14,14 @@ void arm7_serviceMsgInit()
 
 void arm7_XMXServiceHandler(u32 p, void *userdata)
 {
+    // Extract data from IPC packet
     u8 command = ((XMXServiceMsg*) (p))->command;
     u32* data = ((XMXServiceMsg*) (p))->data;
 
     if (command == CMD_ARM7_SET_PARAMS)
     {
-        setGlobalBpm(data[DATA_IDX_BPM]);
-        setHotCuePos(data[DATA_IDX_HOTCUE]);
-
-        XM7_Module->CurrentTick += data[DATA_IDX_NUDGE];
+        setGlobalBpm(data[0]);
+        setHotCuePos(data[2]);
+        XM7_Module->CurrentTick += data[3];
     }
 }

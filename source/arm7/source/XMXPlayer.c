@@ -40,9 +40,13 @@ void XMXPlayer_arm7_StartPlaying()
 
     // Set current song position to the hot cue
     XM7_Module->CurrentSongPosition = arm7_globalHotCuePosition;
-    // Set current song BPM
-    XM7_Module->CurrentBPM = arm7_globalBpm;
 
+    // Set current song BPM and Tempo to global values
+    XM7_Module->CurrentBPM = arm7_globalBpm;
+    XM7_Module->CurrentTempo = arm7_globalTempo;
+
+    // Set Timer to match the BPM
+    SetTimerSpeedBPM(arm7_globalBpm);
     // Start playing (here the timer callback associated with a libxm7 function)
     XM7_PlayModule(XM7_Module);
 
