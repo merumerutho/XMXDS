@@ -43,7 +43,7 @@ void XMXPlayer_arm7_StartPlaying()
 
     // Set current song BPM and Tempo to global values
     XM7_Module->CurrentBPM = arm7_globalBpm;
-    XM7_Module->CurrentTempo = arm7_globalTempo;
+    XM7_Module->CurrentTempo = XM7_Module->DefaultTempo;
 
     // Set Timer to match the BPM
     SetTimerSpeedBPM(arm7_globalBpm);

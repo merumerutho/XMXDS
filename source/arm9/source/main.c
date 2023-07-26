@@ -15,7 +15,6 @@
 #include "../../arm7/source/tempo.h"
 #include "../../arm7/source/arm7_fifo.h"
 
-
 #define DEFAULT_ROOT_PATH "./"
 
 #define MODULE (deckInfo.modManager)
@@ -54,11 +53,11 @@ void drawTitle()
     iprintf("\x1b[1;2H( \\/ (  \\/  ( \\/ (  _ \\/ __)\n");
     iprintf("\x1b[2;2H))  ( )    ( )  ( )(_) \\__ \\ \n");
     iprintf("\x1b[3;2H(_/\\_(_/\\/\\_(_/\\_(____/(___/\n");
-    iprintf("\x1b[4;0H--------------------------------");
-    iprintf("\x1b[6;0H--------------------------------");
 
     if (MODULE != NULL)
     {
+        iprintf("\x1b[4;0H--------------------------------");
+        iprintf("\x1b[6;0H--------------------------------");
         iprintf("\x1b[5;1HBPM:\t\t\t%3d  Tempo:\t\t%2d", MODULE->CurrentBPM, MODULE->CurrentTempo);
         iprintf("\x1b[8;1HSong position:\t%03d/%03d", MODULE->CurrentSongPosition + 1, MODULE->ModuleLength);
         iprintf("\x1b[9;1HHotCue position:\t%03d/%03d", arm9_globalHotCuePosition + 1, MODULE->ModuleLength);
