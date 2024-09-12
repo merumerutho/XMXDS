@@ -18,6 +18,7 @@ typedef struct
 extern XMXServiceMsg* ServiceMsg7to9;
 
 void arm7_serviceMsgInit();
-void arm7_XMXServiceHandler(u32 p, void *userdata);
+
+void arm7_XMXServiceHandler(XMXServiceMsg* pMsg, void *userdata);
 
 #endif /* ARM7_SOURCE_ARM7_FIFO_H_ */

@@ -12,11 +12,11 @@ void arm7_serviceMsgInit()
     ServiceMsg7to9 = malloc(sizeof(XMXServiceMsg));
 }
 
-void arm7_XMXServiceHandler(u32 p, void *userdata)
+void arm7_XMXServiceHandler(XMXServiceMsg* p, void *userdata)
 {
     // Extract data from IPC packet
-    u8 command = ((XMXServiceMsg*) (p))->command;
-    u32* data = ((XMXServiceMsg*) (p))->data;
+    u8 command = p->command;
+    u32* data = p->data;
 
     if (command == CMD_ARM7_SET_PARAMS)
     {

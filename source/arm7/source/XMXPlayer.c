@@ -24,7 +24,7 @@ void XMXPlayer_arm7_TimerHandler()
 {
     // Execute everything in the FIFO queue
     while (fifoCheckValue32(FIFO_XMX))
-        arm7_XMXServiceHandler(fifoGetValue32(FIFO_XMX), NULL);
+        arm7_XMXServiceHandler((XMXServiceMsg*) fifoGetAddress(FIFO_XMX), NULL);
 
     // Call libxm7 Timer1Handler
     XM7_Timer1Handler();
@@ -36,7 +36,7 @@ void XMXPlayer_arm7_StartPlaying()
 {
     // Execute stuff in the FIFO queue (be sure to get CurrentSongPosition information)
     while (fifoCheckValue32(FIFO_XMX))
-        arm7_XMXServiceHandler(fifoGetValue32(FIFO_XMX), NULL);
+        arm7_XMXServiceHandler((XMXServiceMsg*) fifoGetAddress(FIFO_XMX), NULL);
 
     // Set current song position to the hot cue
     XM7_Module->CurrentSongPosition = arm7_globalHotCuePosition;
@@ -66,12 +66,13 @@ void XMXPlayer_arm7_StopPlaying()
 
 //---------------------------------------------------------------------------------
 
-void XMXPlayer_arm7_pointerToXmHandler(u32 p, void *userdata)
+void XMXPlayer_arm7_pointerToXmHandler(u32 pModule, void *userdata)
 {
-    if (p != 0)
+    // pModule is a u32 that hides a pointer inside
+    if (pModule != 0)
     {
         // received a pointer to a module that should start now
-        XM7_ModuleManager_Type *module = (XM7_ModuleManager_Type*) p;
+        XM7_ModuleManager_Type *module = (XM7_ModuleManager_Type*) pModule;
         XM7_Module = module;
         // Start or stop
         if (module->State == XM7_STATE_PLAYING)
