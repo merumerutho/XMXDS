@@ -15,8 +15,6 @@ typedef struct
     u32 data[4];
 } XMXServiceMsg;
 
-extern XMXServiceMsg* ServiceMsg7to9;
-
 void arm7_serviceMsgInit();
 
 void arm7_XMXServiceHandler(XMXServiceMsg* pMsg, void *userdata);

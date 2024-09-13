@@ -40,9 +40,6 @@ int main()
 
     installSoundFIFO();
 
-    // Initialize Service Msg
-    arm7_serviceMsgInit();
-
     // Initialize XMX
     XMX_Initialize();
 

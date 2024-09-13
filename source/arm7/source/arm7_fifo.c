@@ -5,16 +5,10 @@
 #include "libxm7.h"
 #include "malloc.h"
 
-XMXServiceMsg* ServiceMsg7to9 = NULL;
-
-void arm7_serviceMsgInit()
-{
-    ServiceMsg7to9 = malloc(sizeof(XMXServiceMsg));
-}
 
 void arm7_XMXServiceHandler(XMXServiceMsg* p, void *userdata)
 {
-    // Extract data from IPC packet
+    // Extract data from service msg
     u8 command = p->command;
     u32* data = p->data;
 

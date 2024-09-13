@@ -8,6 +8,9 @@
 void play_stop()
 {
     // Notifying arm7 to begin playing module loaded onto modManager
-    if (!fifoSendValue32(FIFO_XM7, (u32) deckInfo.modManager)) iprintf("Could not send data correctly...\n");
+    if (!fifoSendValue32(FIFO_XM7, (u32) deckInfo.modManager))
+    {
+        iprintf("Could not send data correctly...\n");
+    }
 }
 
