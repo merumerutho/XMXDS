@@ -14,8 +14,7 @@
 #define FS_TYPE_XM          0
 #define FS_TYPE_MOD         1
 
-#define TYPE_FOLDER         4
-#define TYPE_FILE           8
+#define TYPE_FOLDER         DT_DIR
 
 bool XMX_FileSystem_init();
 u8 XMX_FileSystem_selectModule(char *folderPath);

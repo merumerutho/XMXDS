@@ -187,6 +187,7 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
 {
     DIR *folder = opendir(folderPath);
     u16 fileCount;
+    struct dirent *selection = NULL;
     u32 pPosition = 0;
     bool bSelectingModule = TRUE;
     char filepath[255] = "";
@@ -230,11 +231,10 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
             return 1;  // User exit
         }
 
-        if (keysDown() & (KEY_A | KEY_L | KEY_R))
+        if (keysDown() & (KEY_A))
         {
             seekdir(folder, pPosition);
-            struct dirent *selection = getSelection(folder, pPosition);
-
+            selection = getSelection(folder, pPosition);
             // If selection is a folder
             if (selection->d_type == TYPE_FOLDER)
             {
@@ -256,12 +256,7 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
                     listFolderOnPosition(folder, pPosition, fileCount);
                 }
             }
-        }
-
-        if (keysDown() & KEY_A)
-        {
-            struct dirent *selection = getSelection(folder, pPosition);
-            if (selection->d_type == TYPE_FILE)
+            else
             {
                 // If file selected is a module
                 if (isXM(selection->d_name))
@@ -283,7 +278,6 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
                         }
                     }
                     deckInfo.modManager = malloc(sizeof(XM7_ModuleManager_Type));
-
                     // LOADING MODULE
                     deckInfo.xmData = (XM7_XMModuleHeader_Type*)
                                             XMX_FileSystem_loadModule(deckInfo.modManager, filepath);
@@ -304,6 +298,8 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
                 }
             }
         }
+
+
         swiWaitForVBlank();
     }
     closedir(folder);
@@ -313,29 +309,42 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
 void* XMX_FileSystem_loadModule(XM7_ModuleManager_Type *pMod, char *filepath)
 {
     FILE *moduleFile = fopen(filepath, "rb");
-    u16 ret;
+    XM7_XMModuleHeader_Type *modHeader = NULL;
+    bool ret;
 
-    // Get size
+    iprintf("Load module ... ");
     fseek(moduleFile, 0L, SEEK_END);
-    u32 size = ftell(moduleFile);
+    u32 size = ftell(moduleFile);  // Get size
+    ret = (size > 0);
     rewind(moduleFile);
 
-    // Data destination
-    XM7_XMModuleHeader_Type *modHeader = malloc(sizeof(u8) * (size));
-
-    // Read data from file pointer and write it to modHeader
-    if (fread((void *)modHeader, sizeof(u8), size, moduleFile) != size)
+    if (ret)
     {
-        printf("\tCould not read file correctly!\n");
-        return NULL;
+        modHeader = malloc(sizeof(u8) * (size));  // Allocate memory for module loading
+        ret = (modHeader != NULL);
     }
+    // Check for malloc failure
+    if (!ret)
+    {
+        iprintf("\tNot enough memory!\n");
+    }
+    else
+    {
+        // Read data from file pointer and write it to modHeader
+        if (fread((void *)modHeader, sizeof(u8), size, moduleFile) != size)
+        {
+            printf("\tCould not read file correctly!\n");
+            return NULL;
+        }
+    }
+
     fclose(moduleFile);
 
-    // Load module
-    if (size > 0)
+    if (ret)
     {
         // TODO: this must be moved to a function somewhere else
         {
+            iprintf("Ready to load...");
             ret = XM7_LoadXM(pMod, modHeader);
             if (ret > 0) return NULL;
 
