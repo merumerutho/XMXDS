@@ -1,0 +1,11 @@
+/source/arm7/build
+/source/arm9/build
+data
+data_bak
+/source/.settings
+/source/.cproject
+/source/.project
+*.elf
+*.d
+*.o
+*.a
