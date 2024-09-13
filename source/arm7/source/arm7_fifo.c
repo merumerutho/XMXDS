@@ -9,8 +9,8 @@
 void arm7_XMXServiceHandler(XMXServiceMsg* p, void *userdata)
 {
     // Extract data from service msg
-    u8 command = p->command;
-    u32* data = p->data;
+    vu8 command = p->command;
+    vu32* data = p->data;
 
     if (command == CMD_ARM7_SET_PARAMS)
     {

@@ -44,7 +44,7 @@ int main()
     XMX_Initialize();
 
     // Install the handler function to the FIFO_XM7 queue
-    fifoSetValue32Handler(FIFO_XM7, XMXPlayer_arm7_pointerToXmHandler, 0);
+    fifoSetAddressHandler(FIFO_XM7, XMXPlayer_arm7_ModuleManagerHandler, 0);
 
     installSystemFIFO();
 

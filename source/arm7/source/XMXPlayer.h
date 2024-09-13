@@ -12,6 +12,6 @@ void XMX_Initialize();
 void XMXPlayer_arm7_TimerHandler();
 void XMXPlayer_arm7_StartPlaying();
 void XMXPlayer_arm7_StopPlaying();
-void XMXPlayer_arm7_pointerToXmHandler(u32 pModule, void *userdata);
+void XMXPlayer_arm7_ModuleManagerHandler(void* pModule, void *userdata);
 
 #endif /* ARM7_SOURCE_XMXPLAYER_H_ */

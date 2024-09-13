@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     videoSetModeSub(MODE_0_2D);
 
     // Install the debugging (for now, only way to print stuff from ARMv7)
-    fifoSetValue32Handler(FIFO_XMX, arm9_XMXServiceHandler, NULL);
+    fifoSetAddressHandler(FIFO_XMX, arm9_XMXServiceHandler, NULL);
 
     // Initialize two consoles (top and bottom)
     consoleInit(&top, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, true, true);

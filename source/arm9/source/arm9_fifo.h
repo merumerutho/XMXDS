@@ -19,7 +19,7 @@ void arm9_serviceMsgInit();
 void serviceSend(u8 fifo);
 void serviceUpdate(int8 nudge);
 
-void arm9_XMXServiceHandler(u32 p, void *userdata);
+void arm9_XMXServiceHandler(void* p, void *userdata);
 
 
 #endif /* ARM9_SOURCE_ARM9_FIFO_H_ */

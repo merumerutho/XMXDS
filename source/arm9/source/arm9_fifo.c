@@ -34,7 +34,7 @@ void serviceUpdate(int8 nudge)
     serviceSend(FIFO_XMX);
 }
 
-void arm9_XMXServiceHandler(u32 p, void *userdata)
+void arm9_XMXServiceHandler(void * p, void *userdata)
 {
 
 }
