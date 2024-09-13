@@ -169,8 +169,11 @@ void navigateBackwards(DIR *folder, char *path)
 
 bool isXM(char *filename)
 {
+    // TODO: this looks like a kinda dumb way to find end of string characters... use strlen maybe :|
     for (u8 i = 2; i < 254; i++)
+    {
         if (filename[i] == '\0') return !(strcmp((char*) &(filename[i - 2]), "xm"));
+    }
     return FALSE;  // this never happens
 }
 
@@ -268,16 +271,13 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
                     if (deckInfo.modManager != NULL)
                     {
                         // Stop if playing
-                        if (deckInfo.modManager->State == XM7_STATE_PLAYING)
-                            play_stop();
-                        // Unload module TODO: (this must be moved to a dedicated function)
-                        {
-                            XMX_UnloadXM();
-                            // Reset Hot cue position to 0
-                            arm9_globalHotCuePosition = 0;
-                        }
+                        (deckInfo.modManager->State == XM7_STATE_PLAYING) ? play_stop() : 0 ;
+                        XMX_UnloadXM();  // Unload
+                        // Reset Hot cue position to 0
+                        arm9_globalHotCuePosition = 0;
                     }
                     deckInfo.modManager = malloc(sizeof(XM7_ModuleManager_Type));
+
                     // LOADING MODULE
                     deckInfo.xmData = (XM7_XMModuleHeader_Type*)
                                             XMX_FileSystem_loadModule(deckInfo.modManager, filepath);
