@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     while (TRUE)
     {
         bool forceUpdate = false;
-        bool bUsrInput = false;
+        bool bAnyUsrInput = false;
         int nudge = 0;
         drawTitle();
         scanKeys();
@@ -119,7 +119,9 @@ int main(int argc, char **argv)
                 }
             }
             else
+            {
                 inputTouching = false;
+            }
 
             // CUE PLAY
             if (keysDown() & KEY_A)
@@ -196,9 +198,10 @@ int main(int argc, char **argv)
             if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_B))
                 nudge = -1;
 
-            bUsrInput = (keysDown() != 0);
+            // Track any user input
+            bAnyUsrInput = (keysDown() != 0);
 
-            if ((MODULE->State == XM7_STATE_PLAYING && bUsrInput) || forceUpdate)
+            if ((MODULE->State == XM7_STATE_PLAYING && bAnyUsrInput) || forceUpdate)
                 serviceUpdate(nudge);  // This is used to pass changes to armv7
         }
 
