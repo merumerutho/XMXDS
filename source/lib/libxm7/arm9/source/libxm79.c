@@ -729,10 +729,18 @@ void XM7_UnloadXM(XM7_ModuleManager_Type *Module)
     for (i = (Module->NumberofInstruments - 1); i >= 0; i--)
     {
         CurrentInstrumentPtr = Module->Instrument[i];
+		
+		if (CurrentInstrumentPtr == NULL)
+			continue;
+		
         // samples, from last to first
         for (j = (CurrentInstrumentPtr->NumberofSamples - 1); j >= 0; j--)
         {
             CurrentSamplePtr = CurrentInstrumentPtr->Sample[j];
+			
+			if (CurrentSamplePtr == NULL)  // Safety
+				continue;
+		
             // remove sample data
             free(CurrentSamplePtr->SampleData);
             // remove sample info
