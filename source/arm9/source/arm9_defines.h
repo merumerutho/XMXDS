@@ -15,4 +15,5 @@
 #define DEFAULT_BPM     125
 #define DEFAULT_TEMPO   6
 #define DEFAULT_CUEPOS  0
+#define DEFAULT_NUDGE   0
 #endif /* ARM9_SOURCE_ARM9_DEFINES_H_ */

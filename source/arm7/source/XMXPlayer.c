@@ -25,7 +25,7 @@ void XMXPlayer_arm7_TimerHandler()
     // Execute everything in the FIFO queue
     while (fifoCheckAddress(FIFO_XMX))
     {
-        arm7_XMXServiceHandler((XMXServiceMsg*) fifoGetAddress(FIFO_XMX), NULL);
+        arm7_XMXServiceHandler((XMXServiceMsg_S*) fifoGetAddress(FIFO_XMX), NULL);
     }
 
     // Call libxm7 Timer1Handler
@@ -39,7 +39,7 @@ void XMXPlayer_arm7_StartPlaying()
     // Execute stuff in the FIFO queue (be sure to get CurrentSongPosition information)
     while (fifoCheckAddress(FIFO_XMX))
     {
-        arm7_XMXServiceHandler((XMXServiceMsg*) fifoGetAddress(FIFO_XMX), NULL);
+        arm7_XMXServiceHandler((XMXServiceMsg_S*) fifoGetAddress(FIFO_XMX), NULL);
     }
 
     // Set current song position to the hot cue

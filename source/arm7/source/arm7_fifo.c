@@ -5,17 +5,13 @@
 #include "libxm7.h"
 #include "malloc.h"
 
-
-void arm7_XMXServiceHandler(XMXServiceMsg* p, void *userdata)
+void arm7_XMXServiceHandler(XMXServiceMsg_S* pService, void *userdata)
 {
-    // Extract data from service msg
-    vu8 command = p->command;
-    vu32* data = p->data;
-
-    if (command == CMD_ARM7_SET_PARAMS)
+    /* On SetParams */
+    if (pService->Command == CMD_ARM7_SET_PARAMS)
     {
-        setGlobalBpm(data[0]);
-        setHotCuePos(data[2]);
-        XM7_Module->CurrentTick += data[3];
+        setGlobalBpm(pService->Bpm);
+        setHotCuePos(pService->CuePosition);
+        XM7_Module->CurrentTick += pService->Nudge;
     }
 }
