@@ -127,44 +127,32 @@ void insertSlashAtEnd(char *path)
     }
 }
 
-void navigateToFolder(DIR *folder, char *path, char *folderName)
+void navigateToFolder(DIR **folder, char *path, char *folderName)
 {
-    // Add slash if needed
     insertSlashAtEnd(path);
     strcat(path, folderName);
-    closedir(folder);
-    folder = opendir(path);
+    closedir(*folder);
+    *folder = opendir(path);
 }
 
-void navigateBackwards(DIR *folder, char *path)
+void navigateBackwards(DIR **folder, char *path)
 {
-    closedir(folder);
-    u8 i = 0, counter = 0;
+    closedir(*folder);
 
-    // Count how many slashes present
-    for (u8 i = 0; i < 255; i++)
+    // Find the last '/' in the path and truncate there
+    u8 lastSlash = 0;
+    bool found = false;
+    for (u8 i = 1; i < 255 && path[i] != '\0'; i++)
     {
-        if (path[i] == '/') counter++;
-        if (path[i] == '\0') break;
+        if (path[i] == '/') { lastSlash = i; found = true; }
     }
 
-    // Remove stuff only if there is at least one slash
-    if (counter > 0)
-    {
-        for (u8 k = i; k >= 0; k--)
-        {
-            if (path[k] == '/' && path[k + 1] != '\0')
-            {
-                path[k] = '\0';
-                break;
-            }
-        }
-    }
-    // Otherwise, go to root folder
+    if (found)
+        path[lastSlash] = '\0';
     else
         strcpy(path, ".");
 
-    folder = opendir(path);
+    *folder = opendir(path);
 }
 
 bool isXM(char *filename)
@@ -244,7 +232,7 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
                 if (!strcmp(selection->d_name, ".")) continue;
                 if (!strcmp(selection->d_name, ".."))
                 {
-                    navigateBackwards(folder, folderPath);
+                    navigateBackwards(&folder, folderPath);
                     pPosition = 0;
                     XMX_FileSystem_displayHeader();
                     fileCount = getFileCount(folder);
@@ -252,7 +240,7 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
                 }
                 else
                 {
-                    navigateToFolder(folder, folderPath, selection->d_name);
+                    navigateToFolder(&folder, folderPath, selection->d_name);
                     pPosition = 0;
                     XMX_FileSystem_displayHeader();
                     fileCount = getFileCount(folder);
@@ -355,12 +343,12 @@ void* XMX_FileSystem_loadModule(XM7_ModuleManager_Type *pMod, char *filepath)
                 if (keysDown()) break;
             }
 
-            // Update bpm, tempo, hotcuepos (no longer done inside XM7_LoadXM)
+            // Sync ARM9 shadow state from the freshly loaded module
             arm9_globalBpm = pMod->DefaultBPM;
             arm9_globalTempo = pMod->DefaultTempo;
             arm9_globalHotCuePosition = pMod->CurrentSongPosition;
 
-            // Ensure data gets written to main RAM (leave no data in cache)
+            // Ensure all module data is written to main RAM before ARM7 accesses it
             DC_FlushAll();
         }
     }
