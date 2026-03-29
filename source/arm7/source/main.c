@@ -46,6 +46,10 @@ int main()
     // Install the handler function to the FIFO_XM7 queue
     fifoSetAddressHandler(FIFO_XM7, XMXPlayer_arm7_ModuleManagerHandler, 0);
 
+    // Install FIFO_XMX handlers: address-based for CMD_SET_PARAMS, value32 for all other commands
+    fifoSetAddressHandler(FIFO_XMX, arm7_XMXServiceHandler, 0);
+    fifoSetValue32Handler(FIFO_XMX, arm7_XMXValueHandler, 0);
+
     installSystemFIFO();
 
     irqSet(IRQ_VCOUNT, VcountHandler);
