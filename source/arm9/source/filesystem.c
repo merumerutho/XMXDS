@@ -347,6 +347,7 @@ void* XMX_FileSystem_loadModule(XM7_ModuleManager_Type *pMod, char *filepath)
             arm9_globalBpm = pMod->DefaultBPM;
             arm9_globalTempo = pMod->DefaultTempo;
             arm9_globalHotCuePosition = pMod->CurrentSongPosition;
+            arm9_initChannelMute(pMod->ChannelMute);
 
             // Ensure all module data is written to main RAM before ARM7 accesses it
             DC_FlushAll();

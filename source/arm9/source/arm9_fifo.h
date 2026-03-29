@@ -1,8 +1,5 @@
 /*
  * arm9_fifo.h
- *
- *  Created on: 21 gen 2023
- *      Author: merut
  */
 
 #ifndef ARM9_SOURCE_ARM9_FIFO_H_
@@ -11,15 +8,32 @@
 #include "../../arm7/source/arm7_fifo.h"
 #include "../../arm7/source/arm7_defines.h"
 
-extern vu8 arm9_globalBpm;
-extern vu8 arm9_globalTempo;
-extern vu8 arm9_globalHotCuePosition;
+/*
+ * ARM9-side shadow state.
+ * These are the authoritative values for fields that ARM9 originates.
+ * ARM9 keeps these in sync locally and sends them to ARM7 via IPC.
+ * ARM9 uses these for display rather than reading back from the module struct.
+ */
+extern vu8  arm9_globalBpm;
+extern vu8  arm9_globalTempo;
+extern vu8  arm9_globalHotCuePosition;
+extern vs8  arm9_globalTranspose;
+extern vu8  arm9_globalLoopMode;
+extern vu8  arm9_bpmLock;
+extern u8   arm9_channelMute[16];
+extern vu8  arm9_beatCounter;   /* decremented each frame; non-zero = beat flash active */
 
-void arm9_serviceMsgInit();
-void serviceSend(u8 fifo);
+/* Send a full parameter update to ARM7 (BPM, CuePosition, Nudge) */
 void serviceUpdate(int8 nudge);
 
-void arm9_XMXServiceHandler(void* p, void *userdata);
+/* Send a value32 command to ARM7 (Transpose, LoopMode, GotoHotCue, ChannelMute) */
+void serviceCmd(u32 cmd, s32 param);
 
+/* Initialise arm9_channelMute from the module's initial mute array after loading */
+void arm9_initChannelMute(const vu8 *muteArray);
+
+/* ARM9-side FIFO_XMX handlers */
+void arm9_XMXServiceHandler(void* p, void *userdata);  /* address-based (reserved) */
+void arm9_XMXValueHandler(u32 value, void *userdata);  /* value32-based (beat pulse, etc.) */
 
 #endif /* ARM9_SOURCE_ARM9_FIFO_H_ */

@@ -1,7 +1,6 @@
 #include <nds.h>
 #include <stdio.h>
 
-// ARMv9 INCLUDES
 #include "arm9_defines.h"
 #include "arm9_fifo.h"
 #include "filesystem.h"
@@ -9,24 +8,17 @@
 #include "libXMX.h"
 #include "channelMatrix.h"
 #include "screens.h"
-
-// ARMv7 INCLUDES
 #include "libxm7.h"
-#include "../../arm7/source/tempo.h"
-#include "../../arm7/source/arm7_fifo.h"
 
 #define DEFAULT_ROOT_PATH "./"
 
 #define MODULE (deckInfo.modManager)
-
-//
 
 void drawTitle();
 
 //---------------------------------------------------------------------------------
 void arm9_VBlankHandler()
 {
-
 }
 
 void drawIntro()
@@ -56,16 +48,23 @@ void drawTitle()
 
     if (MODULE != NULL)
     {
+        // Invalidate ARM9 cache so we read ARM7's latest writes from main RAM
+        DC_InvalidateRange(MODULE, sizeof(XM7_ModuleManager_Type));
         iprintf("\x1b[4;0H--------------------------------");
         iprintf("\x1b[6;0H--------------------------------");
         iprintf("\x1b[5;1HBPM:\t\t\t%3d  Tempo:\t\t%2d", MODULE->CurrentBPM, MODULE->CurrentTempo);
         iprintf("\x1b[8;1HSong position:\t%03d/%03d", MODULE->CurrentSongPosition + 1, MODULE->ModuleLength);
         iprintf("\x1b[9;1HHotCue position:\t%03d/%03d", arm9_globalHotCuePosition + 1, MODULE->ModuleLength);
-        iprintf("\x1b[10;1HPtn. Loop:\t\t\t%s", MODULE->LoopMode ? "YES" : "NO ");
 
+        // LoopMode, Transpose, BPM lock read from ARM9 shadow
+        iprintf("\x1b[7;1HBPM Lock: %-3s   %s",
+                arm9_bpmLock ? "ON" : "OFF",
+                arm9_beatCounter > 0 ? "*" : " ");
+        if (arm9_beatCounter > 0) arm9_beatCounter--;
+
+        iprintf("\x1b[10;1HPtn. Loop:\t\t\t%s", arm9_globalLoopMode ? "YES" : "NO ");
         iprintf("\x1b[12;1HNote position:\t%03d/%03d", MODULE->CurrentLine, MODULE->PatternLength[MODULE->CurrentPatternNumber]);
-
-        iprintf("\x1b[14;1HTransposition:\t%d  ", MODULE->Transpose);
+        iprintf("\x1b[14;1HTransposition:\t%d  ", arm9_globalTranspose);
     }
 }
 
@@ -78,8 +77,9 @@ int main(int argc, char **argv)
     videoSetMode(MODE_0_2D);
     videoSetModeSub(MODE_0_2D);
 
-    // Install the debugging (for now, only way to print stuff from ARMv7)
+    // Install FIFO_XMX handlers for ARM7→ARM9 messages
     fifoSetAddressHandler(FIFO_XMX, arm9_XMXServiceHandler, NULL);
+    fifoSetValue32Handler(FIFO_XMX, arm9_XMXValueHandler, NULL);
 
     // Initialize two consoles (top and bottom)
     consoleInit(&top, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, true, true);
@@ -125,15 +125,21 @@ int main(int argc, char **argv)
 
             // CUE PLAY
             if (keysDown() & KEY_A)
-                    play_stop();
+                play_stop();
 
             // TRANSPOSE DOWN
             if (keysDown() & KEY_L)
-                MODULE->Transpose--;
+            {
+                arm9_globalTranspose--;
+                serviceCmd(CMD_SET_TRANSPOSE, arm9_globalTranspose);
+            }
 
             // TRANSPOSE UP
             if (keysDown() & KEY_R)
-                MODULE->Transpose++;
+            {
+                arm9_globalTranspose++;
+                serviceCmd(CMD_SET_TRANSPOSE, arm9_globalTranspose);
+            }
 
             // SET HOT CUE
             if (keysDown() & KEY_B)
@@ -163,18 +169,21 @@ int main(int argc, char **argv)
             // LOOP MODE
             if (keysDown() & KEY_X)
             {
-                MODULE->LoopMode = !(MODULE->LoopMode);
+                arm9_globalLoopMode = !arm9_globalLoopMode;
+                serviceCmd(CMD_SET_LOOPMODE, arm9_globalLoopMode);
                 forceUpdate = true;
+            }
+
+            // BPM LOCK
+            if (keysDown() & KEY_START)
+            {
+                arm9_bpmLock = !arm9_bpmLock;
+                serviceCmd(CMD_SET_BPM_LOCK, arm9_bpmLock);
             }
 
             // GO TO HOT CUED PATTERN AT END OF CURRENT PATTERN
             if (keysDown() & KEY_Y)
-            {
-                // Only necessary to set CurrentSongPosition.
-                // It will be evaluated only at end of pattern by design
-                MODULE->bGotoHotCue = TRUE;
-                MODULE->CurrentSongPosition = arm9_globalHotCuePosition;
-            }
+                serviceCmd(CMD_GOTO_HOTCUE, arm9_globalHotCuePosition);
 
             // BPM INCREASE
             if (keysDown() & KEY_UP)
@@ -202,7 +211,7 @@ int main(int argc, char **argv)
             bAnyUsrInput = (keysDown() != 0);
 
             if ((MODULE->State == XM7_STATE_PLAYING && bAnyUsrInput) || forceUpdate)
-                serviceUpdate(nudge);  // This is used to pass changes to armv7
+                serviceUpdate(nudge);
         }
 
         // SELECT MODULE
@@ -211,7 +220,7 @@ int main(int argc, char **argv)
             XMX_FileSystem_selectModule((char*) folderPath);
             // After function ends, re-draw bottom screen
             drawChannelMatrix();
-            // Update armv7
+            // Update ARM7 with current params
             serviceUpdate(0);
         }
 
