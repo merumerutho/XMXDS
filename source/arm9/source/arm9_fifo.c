@@ -8,23 +8,26 @@
 static XMXServiceMsg_S ServiceMsg9to7;
 
 /* ARM9 shadow state — values that ARM9 originates and sends to ARM7 via IPC */
-vu8 arm9_globalBpm            = DEFAULT_BPM;
-vu8 arm9_globalTempo          = DEFAULT_TEMPO;
-vu8 arm9_globalHotCuePosition = DEFAULT_CUEPOS;
-vs8 arm9_globalTranspose      = 0;
-vu8 arm9_globalLoopMode       = 0;
-vu8 arm9_bpmLock              = 0;
-u8  arm9_channelMute[16]      = {0};
-vu8 arm9_beatCounter          = 0;
-vu8 arm9_rollActive           = 0;
-vu8 arm9_rollN                = 4;   /* default roll length; doubled/halved at runtime */
+vu8 arm9_globalBpm       = DEFAULT_BPM;
+vu8 arm9_globalTempo     = DEFAULT_TEMPO;
+vs8 arm9_globalTranspose = 0;
+vu8 arm9_globalLoopMode  = 0;
+vu8 arm9_bpmLock         = 0;
+u8  arm9_channelMute[16] = {0};
+vu8 arm9_beatCounter     = 0;
+vu8 arm9_rollActive      = 0;
+vu8 arm9_rollN           = 4;   /* default roll length; doubled/halved at runtime */
+
+u8  arm9_cuePoints[N_CUES] = {0};
+s8  arm9_soloChannel        = -1;
+u8  arm9_preSoloMute[16]    = {0};
 
 /* Send full parameter update (BPM, CuePosition, Nudge) to ARM7 via address message */
 void serviceUpdate(int8 nudge)
 {
     ServiceMsg9to7.Command     = CMD_SET_PARAMS;
     ServiceMsg9to7.Bpm         = arm9_globalBpm;
-    ServiceMsg9to7.CuePosition = arm9_globalHotCuePosition;
+    ServiceMsg9to7.CuePosition = arm9_cuePoints[0];
     ServiceMsg9to7.Nudge       = nudge;
 
     // Flush ARM9 cache so ARM7 reads up-to-date data from main RAM
@@ -38,11 +41,15 @@ void serviceCmd(u32 cmd, s32 param)
     fifoSendValue32(FIFO_XMX, XMX_MKCMD(cmd, param));
 }
 
-/* Copy initial mute state from the freshly loaded module into the ARM9 shadow */
+/* Copy initial mute state from the freshly loaded module into the ARM9 shadow.
+   Also resets solo state so the new module starts with a clean slate. */
 void arm9_initChannelMute(const vu8 *muteArray)
 {
-    for (u8 i = 0; i < 16; i++)
-        arm9_channelMute[i] = muteArray[i];
+    arm9_soloChannel = -1;
+    for (u8 i = 0; i < 16; i++) {
+        arm9_channelMute[i]  = muteArray[i];
+        arm9_preSoloMute[i]  = 0;
+    }
 }
 
 void arm9_XMXServiceHandler(void* p, void *userdata)

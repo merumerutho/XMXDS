@@ -261,8 +261,9 @@ u8 XMX_FileSystem_selectModule(char *folderPath)
                         // Stop if playing
                         (deckInfo.modManager->State == XM7_STATE_PLAYING) ? play_stop() : 0 ;
                         XMX_UnloadXM();  // Unload
-                        // Reset Hot cue position to 0
-                        arm9_globalHotCuePosition = 0;
+                        // Reset all cue points to start of module
+                        for (u8 ci = 0; ci < N_CUES; ci++)
+                            arm9_cuePoints[ci] = 0;
                     }
                     deckInfo.modManager = malloc(sizeof(XM7_ModuleManager_Type));
 
@@ -344,9 +345,10 @@ void* XMX_FileSystem_loadModule(XM7_ModuleManager_Type *pMod, char *filepath)
             }
 
             // Sync ARM9 shadow state from the freshly loaded module
-            arm9_globalBpm = pMod->DefaultBPM;
+            arm9_globalBpm   = pMod->DefaultBPM;
             arm9_globalTempo = pMod->DefaultTempo;
-            arm9_globalHotCuePosition = pMod->CurrentSongPosition;
+            for (u8 ci = 0; ci < N_CUES; ci++)
+                arm9_cuePoints[ci] = 0;
             arm9_initChannelMute(pMod->ChannelMute);
 
             // Ensure all module data is written to main RAM before ARM7 accesses it

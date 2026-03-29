@@ -7,6 +7,7 @@
 
 #include "../../arm7/source/arm7_fifo.h"
 #include "../../arm7/source/arm7_defines.h"
+#include "arm9_defines.h"
 
 /*
  * ARM9-side shadow state.
@@ -16,7 +17,6 @@
  */
 extern vu8  arm9_globalBpm;
 extern vu8  arm9_globalTempo;
-extern vu8  arm9_globalHotCuePosition;
 extern vs8  arm9_globalTranspose;
 extern vu8  arm9_globalLoopMode;
 extern vu8  arm9_bpmLock;
@@ -24,6 +24,10 @@ extern u8   arm9_channelMute[16];
 extern vu8  arm9_beatCounter;   /* decremented each frame; non-zero = beat flash active */
 extern vu8  arm9_rollActive;    /* 1 = roll in progress */
 extern vu8  arm9_rollN;         /* current roll length in lines */
+
+extern u8   arm9_cuePoints[N_CUES]; /* cue[0] = hot cue (also mapped to Y button) */
+extern s8   arm9_soloChannel;       /* -1 = no solo; 0..15 = soloed channel index */
+extern u8   arm9_preSoloMute[16];   /* mute snapshot saved before entering solo */
 
 /* Send a full parameter update to ARM7 (BPM, CuePosition, Nudge) */
 void serviceUpdate(int8 nudge);

@@ -6,7 +6,8 @@
 #include "filesystem.h"
 #include "play.h"
 #include "libXMX.h"
-#include "channelMatrix.h"
+#include "cueScreen.h"
+#include "waveScreen.h"
 #include "screens.h"
 #include "libxm7.h"
 
@@ -54,7 +55,7 @@ void drawTitle()
         iprintf("\x1b[6;0H--------------------------------");
         iprintf("\x1b[5;1HBPM:\t\t\t%3d  Tempo:\t\t%2d", MODULE->CurrentBPM, MODULE->CurrentTempo);
         iprintf("\x1b[8;1HSong position:\t%03d/%03d", MODULE->CurrentSongPosition + 1, MODULE->ModuleLength);
-        iprintf("\x1b[9;1HHotCue position:\t%03d/%03d", arm9_globalHotCuePosition + 1, MODULE->ModuleLength);
+        iprintf("\x1b[9;1HHotCue position:\t%03d/%03d", arm9_cuePoints[0] + 1, MODULE->ModuleLength);
 
         // LoopMode, Transpose, BPM lock read from ARM9 shadow
         iprintf("\x1b[7;1HBPM Lock: %-3s   %s",
@@ -69,14 +70,29 @@ void drawTitle()
     }
 }
 
+/* Redraw whichever bottom screen mode is active.
+   BG2 bitmap is shown in CH mode (waveform grid), hidden in CUE mode. */
+static void redrawBottomScreen(ScreenMode mode)
+{
+    if (mode == SCREEN_MODE_CH) {
+        bgShow(sub_bg2);
+        drawWaveScreen();
+    } else {
+        bgHide(sub_bg2);
+        drawCueScreen();
+    }
+}
+
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
     touchPosition touchPos;
     char folderPath[255] = DEFAULT_ROOT_PATH;
+    ScreenMode screenMode = SCREEN_MODE_CH;
 
     videoSetMode(MODE_0_2D);
-    videoSetModeSub(MODE_0_2D);
+    // MODE_5_2D: BG0-1 text (console), BG2-3 extended rotation / bitmap (wave layer)
+    videoSetModeSub(MODE_5_2D);
 
     // Install FIFO_XMX handlers for ARM7-->ARM9 messages
     fifoSetAddressHandler(FIFO_XMX, arm9_XMXServiceHandler, NULL);
@@ -85,6 +101,10 @@ int main(int argc, char **argv)
     // Initialize two consoles (top and bottom)
     consoleInit(&top, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, true, true);
     consoleInit(&bottom, 0, BgType_Text4bpp, BgSize_T_256x256, 2, 0, false, true);
+
+    // Set up sub-screen BG2 bitmap layer for the waveform grid
+    initWaveBg();
+
     drawIntro();
 
     // turn on master sound
@@ -93,8 +113,9 @@ int main(int argc, char **argv)
     // Initialize filesystem
     XMX_FileSystem_init();
 
-    // Draw bottom screen
-    drawChannelMatrix();
+    // Draw bottom screen (default: CH mode — waveform grid with mute/solo)
+    bgShow(sub_bg2);
+    drawWaveScreen();
 
     bool inputTouching = false;
 
@@ -108,24 +129,44 @@ int main(int argc, char **argv)
         u32 keys_down = keysDown();
         u32 keys_held = keysHeld();
 
+        cueScreen_tick();
+        waveScreen_tick();
+
+        // Touch handling — dispatched by screen mode
+        if (keys_held & KEY_TOUCH)
+        {
+            if (!inputTouching)
+            {
+                touchRead(&touchPos);
+                float y_norm = (touchPos.rawy - Y_MIN) * Y_NORM;
+
+                if (y_norm < 1.0f / 24) {
+                    // Tab strip: select tab by x position (16 + 16 = 32 chars)
+                    float x_norm = (touchPos.rawx - X_MIN) * X_NORM;
+                    if (x_norm < 16.0f / 32)
+                        screenMode = SCREEN_MODE_CH;
+                    else
+                        screenMode = SCREEN_MODE_CUE;
+                    redrawBottomScreen(screenMode);
+                } else if (screenMode == SCREEN_MODE_CH) {
+                    handleWaveTouch(&touchPos);
+                } else if (screenMode == SCREEN_MODE_CUE) {
+                    u8 song_pos = (MODULE != NULL)
+                                  ? (u8)MODULE->CurrentSongPosition : 0;
+                    handleCueTouch(&touchPos, (bool)(keys_held & KEY_B), song_pos);
+                }
+
+                inputTouching = true;
+            }
+        }
+        else
+        {
+            inputTouching = false;
+        }
+
         // Commands to execute only if module is loaded
         if (MODULE != NULL)
         {
-            // MUTE / UNMUTE
-            if (keys_held & KEY_TOUCH)
-            {
-                if (!inputTouching)
-                {
-                    touchRead(&touchPos);
-                    handleChannelMute(&touchPos);
-                    inputTouching = true;
-                }
-            }
-            else
-            {
-                inputTouching = false;
-            }
-
             // CUE PLAY
             if (keys_down & KEY_A)
                 play_stop();
@@ -144,27 +185,27 @@ int main(int argc, char **argv)
                 serviceCmd(CMD_SET_TRANSPOSE, arm9_globalTranspose);
             }
 
-            // SET HOT CUE
+            // SET HOT CUE (cue[0])
             if (keys_down & KEY_B)
             {
-                arm9_globalHotCuePosition = MODULE->CurrentSongPosition;
+                arm9_cuePoints[0] = MODULE->CurrentSongPosition;
                 forceUpdate = true;
             }
 
-            // CUE MOVE
+            // CUE MOVE (cue[0])
             if (keys_held & KEY_B)
             {
                 if (keys_down & KEY_LEFT)
-                    if (arm9_globalHotCuePosition > 0)
+                    if (arm9_cuePoints[0] > 0)
                     {
-                        arm9_globalHotCuePosition--;
+                        arm9_cuePoints[0]--;
                         forceUpdate = true;
                     }
 
                 if (keys_down & KEY_RIGHT)
-                    if (arm9_globalHotCuePosition < MODULE->ModuleLength - 1)
+                    if (arm9_cuePoints[0] < MODULE->ModuleLength - 1)
                     {
-                        arm9_globalHotCuePosition++;
+                        arm9_cuePoints[0]++;
                         forceUpdate = true;
                     }
             }
@@ -186,7 +227,7 @@ int main(int argc, char **argv)
 
             // GO TO HOT CUED PATTERN AT END OF CURRENT PATTERN
             if (keys_down & KEY_Y)
-                serviceCmd(CMD_GOTO_HOTCUE, arm9_globalHotCuePosition);
+                serviceCmd(CMD_GOTO_HOTCUE, arm9_cuePoints[0]);
 
             // LOOP ROLL (SELECT held as modifier)
             if (keys_held & KEY_SELECT)
@@ -256,8 +297,8 @@ int main(int argc, char **argv)
         if ((keys_held & KEY_SELECT) && (keys_down & KEY_START))
         {
             XMX_FileSystem_selectModule((char*) folderPath);
-            // After function ends, re-draw bottom screen
-            drawChannelMatrix();
+            // After function ends, re-draw bottom screen (restore active mode)
+            redrawBottomScreen(screenMode);
             // Update ARM7 with current params
             serviceUpdate(0);
         }

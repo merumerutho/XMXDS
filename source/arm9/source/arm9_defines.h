@@ -16,4 +16,14 @@
 #define DEFAULT_TEMPO   6
 #define DEFAULT_CUEPOS  0
 #define DEFAULT_NUDGE   0
+
+// Number of cue points
+#define N_CUES  8
+
+// Bottom screen display modes
+typedef enum {
+    SCREEN_MODE_CH  = 0,  // 4x4 waveform grid with mute/solo controls
+    SCREEN_MODE_CUE = 1,  // Cue points grid + tap tempo
+} ScreenMode;
+
 #endif /* ARM9_SOURCE_ARM9_DEFINES_H_ */
