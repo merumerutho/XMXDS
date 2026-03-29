@@ -63,6 +63,7 @@ void drawTitle()
         if (arm9_beatCounter > 0) arm9_beatCounter--;
 
         iprintf("\x1b[10;1HPtn. Loop:\t\t\t%s", arm9_globalLoopMode ? "YES" : "NO ");
+        iprintf("\x1b[11;1HRoll: %-3d lines %s", arm9_rollN, arm9_rollActive ? "[ON] " : "     ");
         iprintf("\x1b[12;1HNote position:\t%03d/%03d", MODULE->CurrentLine, MODULE->PatternLength[MODULE->CurrentPatternNumber]);
         iprintf("\x1b[14;1HTransposition:\t%d  ", arm9_globalTranspose);
     }
@@ -77,7 +78,7 @@ int main(int argc, char **argv)
     videoSetMode(MODE_0_2D);
     videoSetModeSub(MODE_0_2D);
 
-    // Install FIFO_XMX handlers for ARM7→ARM9 messages
+    // Install FIFO_XMX handlers for ARM7-->ARM9 messages
     fifoSetAddressHandler(FIFO_XMX, arm9_XMXServiceHandler, NULL);
     fifoSetValue32Handler(FIFO_XMX, arm9_XMXValueHandler, NULL);
 
@@ -104,12 +105,14 @@ int main(int argc, char **argv)
         int nudge = 0;
         drawTitle();
         scanKeys();
+        u32 keys_down = keysDown();
+        u32 keys_held = keysHeld();
 
         // Commands to execute only if module is loaded
         if (MODULE != NULL)
         {
             // MUTE / UNMUTE
-            if (keysHeld() & KEY_TOUCH)
+            if (keys_held & KEY_TOUCH)
             {
                 if (!inputTouching)
                 {
@@ -124,41 +127,41 @@ int main(int argc, char **argv)
             }
 
             // CUE PLAY
-            if (keysDown() & KEY_A)
+            if (keys_down & KEY_A)
                 play_stop();
 
             // TRANSPOSE DOWN
-            if (keysDown() & KEY_L)
+            if (keys_down & KEY_L)
             {
                 arm9_globalTranspose--;
                 serviceCmd(CMD_SET_TRANSPOSE, arm9_globalTranspose);
             }
 
             // TRANSPOSE UP
-            if (keysDown() & KEY_R)
+            if (keys_down & KEY_R)
             {
                 arm9_globalTranspose++;
                 serviceCmd(CMD_SET_TRANSPOSE, arm9_globalTranspose);
             }
 
             // SET HOT CUE
-            if (keysDown() & KEY_B)
+            if (keys_down & KEY_B)
             {
                 arm9_globalHotCuePosition = MODULE->CurrentSongPosition;
                 forceUpdate = true;
             }
 
             // CUE MOVE
-            if (keysHeld() & KEY_B)
+            if (keys_held & KEY_B)
             {
-                if (keysDown() & KEY_LEFT)
+                if (keys_down & KEY_LEFT)
                     if (arm9_globalHotCuePosition > 0)
                     {
                         arm9_globalHotCuePosition--;
                         forceUpdate = true;
                     }
 
-                if (keysDown() & KEY_RIGHT)
+                if (keys_down & KEY_RIGHT)
                     if (arm9_globalHotCuePosition < MODULE->ModuleLength - 1)
                     {
                         arm9_globalHotCuePosition++;
@@ -167,55 +170,90 @@ int main(int argc, char **argv)
             }
 
             // LOOP MODE
-            if (keysDown() & KEY_X)
+            if (keys_down & KEY_X)
             {
                 arm9_globalLoopMode = !arm9_globalLoopMode;
                 serviceCmd(CMD_SET_LOOPMODE, arm9_globalLoopMode);
                 forceUpdate = true;
             }
 
-            // BPM LOCK
-            if (keysDown() & KEY_START)
+            // BPM LOCK (not while SELECT held, which is reserved for file browser / roll)
+            if ((keys_down & KEY_START) && !(keys_held & KEY_SELECT))
             {
                 arm9_bpmLock = !arm9_bpmLock;
                 serviceCmd(CMD_SET_BPM_LOCK, arm9_bpmLock);
             }
 
             // GO TO HOT CUED PATTERN AT END OF CURRENT PATTERN
-            if (keysDown() & KEY_Y)
+            if (keys_down & KEY_Y)
                 serviceCmd(CMD_GOTO_HOTCUE, arm9_globalHotCuePosition);
 
-            // BPM INCREASE
-            if (keysDown() & KEY_UP)
+            // LOOP ROLL (SELECT held as modifier)
+            if (keys_held & KEY_SELECT)
+            {
+                // SELECT+UP: toggle roll on/off with current length
+                if (keys_down & KEY_UP)
+                {
+                    if (!arm9_rollActive)
+                    {
+                        arm9_rollActive = 1;
+                        serviceCmd(CMD_ROLL_START, arm9_rollN);
+                    }
+                    else
+                    {
+                        serviceCmd(CMD_ROLL_STOP, 0);
+                        arm9_rollActive = 0;
+                    }
+                }
+
+                // SELECT+RIGHT: double roll length (cap at 128)
+                if (keys_down & KEY_RIGHT)
+                {
+                    if (arm9_rollN < 128) arm9_rollN *= 2;
+                    if (arm9_rollActive) serviceCmd(CMD_ROLL_START, arm9_rollN);
+                    forceUpdate = true;
+                }
+
+                // SELECT+LEFT: halve roll length (floor at 1)
+                if (keys_down & KEY_LEFT)
+                {
+                    if (arm9_rollN > 1) arm9_rollN /= 2;
+                    if (arm9_rollActive) serviceCmd(CMD_ROLL_START, arm9_rollN);
+                    forceUpdate = true;
+                }
+            }
+
+            // BPM INCREASE (not while SELECT held for roll)
+            if ((keys_down & KEY_UP) && !(keys_held & KEY_SELECT))
             {
                 arm9_globalBpm++;
                 forceUpdate = true;
             }
 
-            // BPM DECREASE
-            if (keysDown() & KEY_DOWN)
+            // BPM DECREASE (not while SELECT held for roll)
+            if ((keys_down & KEY_DOWN) && !(keys_held & KEY_SELECT))
             {
                 arm9_globalBpm--;
                 forceUpdate = true;
             }
 
-            // NUDGE FORWARD
-            if ((keysDown() & KEY_RIGHT) && !(keysHeld() & KEY_B))
+            // NUDGE FORWARD (not while SELECT or B held)
+            if ((keys_down & KEY_RIGHT) && !(keys_held & KEY_B) && !(keys_held & KEY_SELECT))
                 nudge = 1;
 
-            // NUDGE BACKWARD
-            if ((keysDown() & KEY_LEFT) && !(keysHeld() & KEY_B))
+            // NUDGE BACKWARD (not while SELECT or B held)
+            if ((keys_down & KEY_LEFT) && !(keys_held & KEY_B) && !(keys_held & KEY_SELECT))
                 nudge = -1;
 
             // Track any user input
-            bAnyUsrInput = (keysDown() != 0);
+            bAnyUsrInput = (keys_down != 0);
 
             if ((MODULE->State == XM7_STATE_PLAYING && bAnyUsrInput) || forceUpdate)
                 serviceUpdate(nudge);
         }
 
-        // SELECT MODULE
-        if (keysDown() & KEY_SELECT)
+        // SELECT MODULE (SELECT + START to avoid conflict with roll modifier)
+        if ((keys_held & KEY_SELECT) && (keys_down & KEY_START))
         {
             XMX_FileSystem_selectModule((char*) folderPath);
             // After function ends, re-draw bottom screen

@@ -22,6 +22,8 @@ extern vu8  arm9_globalLoopMode;
 extern vu8  arm9_bpmLock;
 extern u8   arm9_channelMute[16];
 extern vu8  arm9_beatCounter;   /* decremented each frame; non-zero = beat flash active */
+extern vu8  arm9_rollActive;    /* 1 = roll in progress */
+extern vu8  arm9_rollN;         /* current roll length in lines */
 
 /* Send a full parameter update to ARM7 (BPM, CuePosition, Nudge) */
 void serviceUpdate(int8 nudge);

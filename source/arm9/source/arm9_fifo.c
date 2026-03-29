@@ -16,6 +16,8 @@ vu8 arm9_globalLoopMode       = 0;
 vu8 arm9_bpmLock              = 0;
 u8  arm9_channelMute[16]      = {0};
 vu8 arm9_beatCounter          = 0;
+vu8 arm9_rollActive           = 0;
+vu8 arm9_rollN                = 4;   /* default roll length; doubled/halved at runtime */
 
 /* Send full parameter update (BPM, CuePosition, Nudge) to ARM7 via address message */
 void serviceUpdate(int8 nudge)

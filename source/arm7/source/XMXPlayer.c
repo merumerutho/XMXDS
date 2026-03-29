@@ -42,6 +42,26 @@ void XMXPlayer_arm7_TimerHandler()
     // Drain any FIFO_XMX messages that arrived between interrupt deliveries
     drainFifoXMX();
 
+    // Loop roll: check at the start of each new line, before XM7 processes it.
+    // CurrentTick == 0 here means we are at the boundary where XM7 will trigger
+    // the next line's notes — jump back first so the entry line replays, not the
+    // line past the roll window.
+    if (XM7_Module != NULL && arm7_rollActive && XM7_Module->CurrentTick == 0)
+    {
+        arm7_rollLinesElapsed++;
+
+        u16 rollBoundary = arm7_rollEntry_Line + arm7_rollN;
+
+        if (XM7_Module->CurrentLine >= rollBoundary ||
+            XM7_Module->CurrentSongPosition != arm7_rollEntry_SongPos)
+        {
+            XM7_Module->CurrentSongPosition  = arm7_rollEntry_SongPos;
+            XM7_Module->CurrentPatternNumber = arm7_rollEntry_PatNum;
+            XM7_Module->CurrentLine          = arm7_rollEntry_Line;
+            XM7_Module->bGotoHotCue          = FALSE;
+        }
+    }
+
     // Call libxm7 Timer1Handler
     XM7_Timer1Handler();
 

@@ -50,6 +50,40 @@ void arm7_XMXValueHandler(u32 value, void *userdata)
         case CMD_SET_BPM_LOCK:
             setBpmLock((u8) param);
             break;
+
+        case CMD_ROLL_START:
+            if (arm7_rollActive) {
+                arm7_rollN = (u8) param;    /* update length only while rolling */
+            } else {
+                arm7_rollActive        = 1;
+                arm7_rollN             = (u8) param;
+                arm7_rollEntry_SongPos = XM7_Module->CurrentSongPosition;
+                arm7_rollEntry_PatNum  = XM7_Module->CurrentPatternNumber;
+                arm7_rollEntry_Line    = XM7_Module->CurrentLine;
+                arm7_rollLinesElapsed  = 0;
+            }
+            break;
+
+        case CMD_ROLL_STOP:
+        {
+            /* Compute where playback would be had the song continued normally */
+            u32 targetLine = arm7_rollEntry_Line + arm7_rollLinesElapsed;
+            u8  songPos    = arm7_rollEntry_SongPos;
+            u8  patNum     = arm7_rollEntry_PatNum;
+
+            while (targetLine >= XM7_Module->PatternLength[patNum]) {
+                targetLine -= XM7_Module->PatternLength[patNum];
+                songPos     = (songPos + 1) % XM7_Module->ModuleLength;
+                patNum      = XM7_Module->PatternOrder[songPos];
+            }
+
+            XM7_Module->CurrentSongPosition  = songPos;
+            XM7_Module->CurrentPatternNumber = patNum;
+            XM7_Module->CurrentLine          = (u16) targetLine;
+            XM7_Module->bGotoHotCue          = FALSE;
+            arm7_rollActive                  = 0;
+            break;
+        }
     }
 }
 

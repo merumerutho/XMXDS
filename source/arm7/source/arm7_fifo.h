@@ -41,6 +41,10 @@ typedef struct
 /* Value32-based commands — ARM7 → ARM9 */
 #define CMD_BEAT_PULSE          6   /* param: current line number (informational) */
 
+/* Value32-based commands — ARM9 → ARM7 (roll) */
+#define CMD_ROLL_START          7   /* param: N lines (1, 2, 4, 8, or 16) */
+#define CMD_ROLL_STOP           8   /* param: unused (0) */
+
 #define FIFO_XMX                (FIFO_USER_08)
 
 void arm7_XMXServiceHandler(void* pMsg, void *userdata);
