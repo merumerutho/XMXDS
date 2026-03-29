@@ -9,9 +9,15 @@ XMX_DeckInfo deckInfo =
 
 void XMX_UnloadXM()
 {
-    XM7_UnloadXM((XM7_ModuleManager_Type *)deckInfo.modManager);
-    if (deckInfo.xmData != NULL)
-        free((void*)deckInfo.xmData);
     if (deckInfo.modManager != NULL)
+    {
+        XM7_UnloadXM((XM7_ModuleManager_Type *)deckInfo.modManager);
         free((void*)deckInfo.modManager);
+        deckInfo.modManager = NULL;
+    }
+    if (deckInfo.xmData != NULL)
+    {
+        free((void*)deckInfo.xmData);
+        deckInfo.xmData = NULL;
+    }
 }
