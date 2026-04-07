@@ -1,6 +1,11 @@
 # XMXDS
 ## .XM deck for Nintendo DS
 
+---
+# ARCHIVED
+Note: this repository is archived. It will be replaced by upcoming release of MAXMXDS, with MaxMod engine, and more functionalities.
+---
+
 ![](doc/screen.png)
 
 XMXDS (.XM miX for nintendo DS) is a simple player (with support up to 16 channels) to playback .xm files on Nintendo DS.
